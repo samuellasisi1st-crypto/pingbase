@@ -501,6 +501,35 @@ export type Database = {
           },
         ]
       }
+      channel_secrets: {
+        Row: {
+          channel: string
+          secrets: Json
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          channel: string
+          secrets?: Json
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          channel?: string
+          secrets?: Json
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_secrets_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_channels: {
         Row: {
           channel: string

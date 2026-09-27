@@ -18,3 +18,8 @@
 - All inbound messages from any channel go through `src/lib/pipeline.server.ts` (dedupe → contact → conversation → AI) so every channel shares one inbox and one agent.
 - The AI may only act through the tools in `src/lib/agent.server.ts`; availability comes solely from `src/lib/availability.server.ts`, which re-checks the slot before confirming, so the agent can never invent a booking.
 - Server-only logic lives in `*.server.ts`; the client calls it through `src/lib/concierge.functions.ts` server functions.
+
+## Channels
+- Meta (Instagram + Messenger) share one credential set in `channel_secrets` (service-role only, no RLS policies) because tokens must never reach the browser; non-secret config lives on `channel_connections.config`.
+- All outbound replies (AI and human) go through `deliverOutbound` in `src/lib/channels.server.ts` so delivery failures are logged and stored on the message instead of silently dropped.
+- Meta webhooks hit `/api/public/webhooks/meta/$workspaceId`, verified by X-Hub-Signature-256 with the workspace's app secret.
