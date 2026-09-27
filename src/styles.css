@@ -128,3 +128,16 @@
   }
 }
 
+/* Keep the complete product UI at a compact, workspace-friendly visual scale. */
+.app-scale {
+  width: 125%;
+  min-height: 125dvh;
+  transform: scale(0.8);
+  transform-origin: top left;
+}
+
+.app-scale .h-dvh,
+.app-scale .min-h-screen {
+  height: 125dvh;
+}
+
