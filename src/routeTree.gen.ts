@@ -14,6 +14,7 @@ import { Route as AppointmentsRouteImport } from './routes/appointments'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as ContactsRouteImport } from './routes/contacts'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PayPaymentIdRouteImport } from './routes/pay.$paymentId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +42,11 @@ const ContactsRoute = ContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PayPaymentIdRoute = PayPaymentIdRouteImport.update({
   id: '/pay/$paymentId',
   path: '/pay/$paymentId',
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
+  '/settings': typeof SettingsRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
+  '/settings': typeof SettingsRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
 }
 export interface FileRoutesById {
@@ -70,15 +78,28 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
+  '/settings': typeof SettingsRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/appointments' | '/auth' | '/chat' | '/contacts' | '/pay/$paymentId'
+    | '/'
+    | '/appointments'
+    | '/auth'
+    | '/chat'
+    | '/contacts'
+    | '/settings'
+    | '/pay/$paymentId'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/appointments' | '/auth' | '/chat' | '/contacts' | '/pay/$paymentId'
+    | '/'
+    | '/appointments'
+    | '/auth'
+    | '/chat'
+    | '/contacts'
+    | '/settings'
+    | '/pay/$paymentId'
   id:
     | '__root__'
     | '/'
@@ -86,6 +107,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/chat'
     | '/contacts'
+    | '/settings'
     | '/pay/$paymentId'
   fileRoutesById: FileRoutesById
 }
@@ -95,6 +117,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRoute
   ContactsRoute: typeof ContactsRoute
+  SettingsRoute: typeof SettingsRoute
   PayPaymentIdRoute: typeof PayPaymentIdRoute
 }
 
@@ -135,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pay/$paymentId': {
       id: '/pay/$paymentId'
       path: '/pay/$paymentId'
@@ -151,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ChatRoute: ChatRoute,
   ContactsRoute: ContactsRoute,
+  SettingsRoute: SettingsRoute,
   PayPaymentIdRoute: PayPaymentIdRoute,
 }
 export const routeTree = rootRouteImport
