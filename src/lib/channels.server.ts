@@ -491,6 +491,28 @@ export async function sendWhatsAppChoices(
   });
 }
 
+/** Send a message with one tappable link button (WhatsApp interactive cta_url). */
+export async function sendWhatsAppLinkButton(
+  workspaceId: string,
+  to: string,
+  opts: { header?: string | null; body: string; footer?: string | null; buttonLabel: string; url: string },
+): Promise<SendResult> {
+  return postWhatsApp(workspaceId, {
+    to,
+    type: "interactive",
+    interactive: {
+      type: "cta_url",
+      ...(opts.header ? { header: { type: "text", text: opts.header.slice(0, 60) } } : {}),
+      body: { text: opts.body.slice(0, 1024) },
+      ...(opts.footer ? { footer: { text: opts.footer.slice(0, 60) } } : {}),
+      action: {
+        name: "cta_url",
+        parameters: { display_text: opts.buttonLabel.slice(0, 20), url: opts.url },
+      },
+    },
+  });
+}
+
 /** Upload a file to WhatsApp media storage and return its media id. */
 async function uploadWhatsAppMedia(workspaceId: string, file: Blob, filename: string): Promise<string> {
   const secrets = await getWhatsAppSecrets(workspaceId);

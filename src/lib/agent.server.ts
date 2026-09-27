@@ -4,8 +4,7 @@ import { z } from "zod";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { findAvailableSlots, isSlotStillFree } from "./availability.server";
-import { sendWhatsAppCalendarFile, sendWhatsAppChoices } from "./channels.server";
-import { buildIcs } from "./ics";
+import { sendWhatsAppChoices, sendWhatsAppLinkButton } from "./channels.server";
 import { formatSalonDateTime, formatSalonTime, money, SALON_TZ } from "./time";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
@@ -587,40 +586,41 @@ export function buildTools(ctx: Ctx) {
 
     send_calendar_invite: tool({
       description:
-        "Send the customer a calendar file for a confirmed appointment so they can add it to their phone calendar with one tap. Only after the booking is confirmed.",
+        "Send the customer a confirmation card with a one-tap 'Add to calendar' button for a confirmed appointment. Only after the booking is confirmed.",
       inputSchema: z.object({ appointment_id: z.string() }),
       execute: wrap(ctx, "send_calendar_invite", async ({ appointment_id }) => {
-        if (ctx.channel !== "whatsapp") return { ok: false, error: "Calendar files are only available on WhatsApp." };
+        if (ctx.channel !== "whatsapp") return { ok: false, error: "Calendar buttons are only available on WhatsApp." };
         const to = await recipientFor(ctx);
         if (!to) return { ok: false, error: "No WhatsApp address for this customer." };
-        const [{ data: appt }, { data: settings }, { data: contact }] = await Promise.all([
+        const [{ data: appt }, { data: settings }] = await Promise.all([
           db
             .from("appointments")
             .select("*, service:service_id(name,duration_minutes), staff:staff_id(name)")
             .eq("id", appointment_id)
+            .eq("workspace_id", ctx.workspaceId)
             .maybeSingle(),
-          db.from("business_settings").select("legal_name,address,email").eq("workspace_id", ctx.workspaceId).maybeSingle(),
-          db.from("contacts").select("email").eq("id", ctx.contactId).maybeSingle(),
+          db.from("business_settings").select("legal_name,address").eq("workspace_id", ctx.workspaceId).maybeSingle(),
         ]);
         if (!appt) return { ok: false, error: "Appointment not found" };
         const serviceName = (appt.service as unknown as { name: string })?.name ?? "Appointment";
         const staffName = (appt.staff as unknown as { name: string })?.name ?? "";
-        const business = settings?.legal_name ?? "your appointment";
-        const ics = buildIcs({
-          uid: `${appt.id}@pingbase`,
-          title: `${serviceName} at ${business}`,
-          description: `${serviceName} with ${staffName}. Booked through ${business}.`,
-          location: settings?.address ?? null,
-          startsAt: appt.starts_at,
-          endsAt: appt.ends_at,
-          organizerName: business,
-          organizerEmail: settings?.email ?? null,
-          attendeeEmail: contact?.email ?? null,
+        const business = settings?.legal_name ?? "the salon";
+        const fmt = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+        const params = new URLSearchParams({
+          action: "TEMPLATE",
+          text: `${serviceName} at ${business}`,
+          dates: `${fmt(appt.starts_at)}/${fmt(appt.ends_at)}`,
+          details: `${serviceName}${staffName ? ` with ${staffName}` : ""}. Booked with ${business}.`,
+          ...(settings?.address ? { location: settings.address } : {}),
         });
-        const result = await sendWhatsAppCalendarFile(ctx.workspaceId, to, {
-          ics,
-          filename: `${serviceName.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.ics`,
-          caption: `${serviceName} · ${formatSalonDateTime(appt.starts_at)}–${formatSalonTime(appt.ends_at)}`,
+        const url = `https://calendar.google.com/calendar/render?${params.toString()}`;
+        const when = `${formatSalonDateTime(appt.starts_at)}–${formatSalonTime(appt.ends_at)}`;
+        const result = await sendWhatsAppLinkButton(ctx.workspaceId, to, {
+          header: "You're booked in",
+          body: `${serviceName}${staffName ? ` with ${staffName}` : ""}\n${when}${settings?.address ? `\n${settings.address}` : ""}`,
+          footer: business,
+          buttonLabel: "Add to calendar",
+          url,
         });
         await db.from("messages").insert({
           workspace_id: ctx.workspaceId,
@@ -630,13 +630,13 @@ export function buildTools(ctx: Ctx) {
           direction: "outbound",
           sender_type: "AI",
           sender_name: "AI",
-          content_type: "document",
-          body: `Calendar invite for ${serviceName} on ${formatSalonDateTime(appt.starts_at)}`,
+          content_type: "interactive",
+          body: `Booking card: ${serviceName} on ${when} [Add to calendar]`,
           external_message_id: result.externalMessageId ?? null,
-          metadata: { delivered: result.delivered, delivery_error: result.error ?? null, kind: "calendar_invite" } as never,
+          metadata: { delivered: result.delivered, delivery_error: result.error ?? null, kind: "calendar_link", url } as never,
         });
-        if (!result.delivered) return { ok: false, error: result.error ?? "Could not send the calendar file." };
-        return { ok: true, sent: true };
+        if (!result.delivered) return { ok: false, error: result.error ?? "Could not send the calendar button." };
+        return { ok: true, sent: true, note: "Confirmation card with Add to calendar button sent — do not repeat the details." };
       }),
     }),
 
