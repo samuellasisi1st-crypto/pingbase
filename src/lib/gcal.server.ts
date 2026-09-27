@@ -105,3 +105,42 @@ export async function cancelGoogleEvent(appointmentId: string) {
   }
   return { ok: true };
 }
+
+/** Mirror an appointment onto the salon calendar and invite the customer by email if we have it. */
+export async function syncAppointmentToGoogle(workspaceId: string, appointmentId: string) {
+  try {
+    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
+    const { data: appt } = await db
+      .from("appointments")
+      .select("*, service:service_id(name), staff:staff_id(name), contact:contact_id(full_name,email)")
+      .eq("id", appointmentId)
+      .eq("workspace_id", workspaceId)
+      .maybeSingle();
+    if (!appt) return { ok: false, error: "Appointment not found" };
+    if (appt.status === "CANCELLED") return cancelGoogleEvent(appointmentId);
+    const { data: settings } = await db.from("business_settings").select("legal_name,address").eq("workspace_id", workspaceId).maybeSingle();
+    const service = (appt.service as unknown as { name: string } | null)?.name ?? "Appointment";
+    const staff = (appt.staff as unknown as { name: string } | null)?.name ?? "";
+    const contact = appt.contact as unknown as { full_name: string | null; email: string | null } | null;
+    const business = settings?.legal_name ?? "Salon";
+    const result = await upsertGoogleEvent({
+      appointmentId,
+      title: `${service}${contact?.full_name ? ` — ${contact.full_name}` : ""} (${business})`,
+      description: `${service}${staff ? ` with ${staff}` : ""}. Status: ${appt.status}. Booked via Pingbase.`,
+      location: settings?.address ?? null,
+      startsAt: appt.starts_at,
+      endsAt: appt.ends_at,
+      attendeeEmail: contact?.email ?? null,
+    });
+    await db.from("integration_logs").insert({
+      workspace_id: workspaceId,
+      provider: "google_calendar",
+      level: result.ok ? "info" : "error",
+      message: result.ok ? `Synced appointment ${appointmentId}` : `Sync failed: ${result.error}`,
+    } as never);
+    return result;
+  } catch (e) {
+    console.error("Google sync error", e);
+    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
