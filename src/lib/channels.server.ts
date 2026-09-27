@@ -4,6 +4,10 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const GRAPH = "https://graph.facebook.com/v21.0";
 export const META_CHANNELS = ["instagram", "messenger"] as const;
+
+/** Per-tenant WhatsApp Cloud API credentials. Stored service-role only. */
+export type WhatsAppSecrets = { access_token: string; phone_number_id: string; waba_id?: string | null };
+export type WhatsAppConfig = { phone_number_id?: string; display_phone_number?: string | null; verified_name?: string | null; waba_id?: string | null };
 export const META_SCOPES = [
   "pages_show_list",
   "pages_messaging",
