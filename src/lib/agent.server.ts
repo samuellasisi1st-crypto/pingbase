@@ -725,6 +725,14 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     "- Use escalate_to_human for refunds, complaints, policy exceptions, requests for a person, or repeated tool failures. After escalating, tell the customer a team member will pick it up, and stop.",
     "- Keep set_conversation_state up to date.",
     "- Reply as plain conversational text. No markdown headings or bullet lists unless listing slot options.",
+    ...(ctx.channel === "whatsapp"
+      ? [
+          "- On WhatsApp, whenever you offer times, call send_slot_options so the customer can tap a time instead of typing. Do not also list the same times in your text reply; a one-line lead-in is enough.",
+          "- A message that exactly matches one of the options you sent means the customer tapped that option. Treat it as their choice.",
+          "- Right after an appointment is confirmed (deposit paid, or none required), call send_calendar_invite so they can add it to their phone calendar.",
+        ]
+      : []),
+    "- Keep the CRM profile current: call create_or_update_contact whenever the customer mentions their name, email, a preference, a sensitivity or allergy, who they usually see, or anything a stylist would want to know next time. Add short tags and keep summary to one sentence.",
   ].join("\n");
 
   const transcript = (history ?? [])
