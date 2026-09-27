@@ -55,8 +55,11 @@ export function WhatsAppConnectForm() {
       if (!String(e.origin).endsWith("facebook.com")) return;
       try {
         const d = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
-        if (d?.type === "WA_EMBEDDED_SIGNUP" && d.data?.waba_id) {
-          sessionRef.current = { wabaId: d.data.waba_id, phoneNumberId: d.data.phone_number_id };
+        if (d?.type === "WA_EMBEDDED_SIGNUP" && (d.data?.waba_id || d.data?.phone_number_id)) {
+          sessionRef.current = {
+            wabaId: d.data.waba_id ?? sessionRef.current.wabaId,
+            phoneNumberId: d.data.phone_number_id ?? sessionRef.current.phoneNumberId,
+          };
         }
       } catch {
         /* not ours */
@@ -80,9 +83,10 @@ export function WhatsAppConnectForm() {
           extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
         }),
       );
-      const { wabaId, phoneNumberId } = sessionRef.current;
       if (!code) { toast.error("WhatsApp setup was cancelled."); return; }
-      if (!wabaId || !phoneNumberId) { toast.error("Meta didn't tell us which number you picked. Please try again."); return; }
+      // Meta's "which number" message can land just after the login callback.
+      if (!sessionRef.current.phoneNumberId) await new Promise((r) => setTimeout(r, 1500));
+      const { wabaId, phoneNumberId } = sessionRef.current;
       const res = await complete({ data: { code, wabaId, phoneNumberId } });
       if (res.ok) toast.success(`WhatsApp connected${res.displayPhoneNumber ? ` · ${res.displayPhoneNumber}` : ""}`);
       else toast.error(res.error);
