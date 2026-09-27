@@ -188,7 +188,7 @@ function SettingsPage() {
               </div>
             ))}
             <p className="text-xs text-muted-foreground">
-              Instagram and Messenger go live once connected above. WhatsApp, Telegram, Gmail and Outlook still need their
+              Instagram, Messenger and WhatsApp go live once connected above. Telegram, Gmail and Outlook still need their
               credentials before they can receive messages.
             </p>
           </TabsContent>
