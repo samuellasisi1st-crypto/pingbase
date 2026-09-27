@@ -351,7 +351,6 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
           <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
             <AIHandlingPill state={pill} />
             <button title="Pause AI" onClick={() => mode.mutate("PAUSED")} className="rounded-md p-2 text-secondary hover:bg-hover"><Clock className="size-4" /></button>
-            <button title="Return to AI" onClick={() => mode.mutate("AI")} className="rounded-md p-2 text-secondary hover:bg-hover"><Check className="size-4" /></button>
             {c.handling_mode !== "HUMAN" && (
               <Button size="sm" variant="secondary" onClick={() => mode.mutate("HUMAN")}><Users className="mr-1.5 size-3.5" />Take over</Button>
             )}
