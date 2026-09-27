@@ -81,8 +81,8 @@ export function WhatsAppConnectForm() {
         }),
       );
       const { wabaId, phoneNumberId } = sessionRef.current;
-      if (!code) return toast.error("WhatsApp setup was cancelled.");
-      if (!wabaId || !phoneNumberId) return toast.error("Meta didn't tell us which number you picked. Please try again.");
+      if (!code) { toast.error("WhatsApp setup was cancelled."); return; }
+      if (!wabaId || !phoneNumberId) { toast.error("Meta didn't tell us which number you picked. Please try again."); return; }
       const res = await complete({ data: { code, wabaId, phoneNumberId } });
       if (res.ok) toast.success(`WhatsApp connected${res.displayPhoneNumber ? ` · ${res.displayPhoneNumber}` : ""}`);
       else toast.error(res.error);

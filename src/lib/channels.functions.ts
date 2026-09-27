@@ -147,8 +147,8 @@ export const getEmbeddedSignupConfig = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
     return {
-      appId: process.env.META_APP_ID ?? null,
-      configId: process.env.META_WA_CONFIG_ID ?? null,
+      appId: process.env['META_APP_ID'] ?? null,
+      configId: process.env['META_WA_CONFIG_ID'] ?? null,
     };
   });
 
@@ -168,8 +168,8 @@ export const completeEmbeddedSignup = createServerFn({ method: "POST" })
     await assertMember(context.supabase as never);
     const { connectWhatsApp, logIntegration } = await import("@/lib/channels.server");
     const GRAPH = "https://graph.facebook.com/v21.0";
-    const appId = process.env.META_APP_ID;
-    const appSecret = process.env.META_APP_SECRET;
+    const appId = process.env['META_APP_ID'];
+    const appSecret = process.env['META_APP_SECRET'];
     if (!appId || !appSecret) return { ok: false as const, error: "Pingbase's Meta app isn't configured yet." };
 
     const tokenRes = await fetch(
