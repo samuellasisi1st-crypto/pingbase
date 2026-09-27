@@ -899,6 +899,8 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     "- When a deposit is required, create the booking first, then send the payment link, and explain the slot is held until the deposit is paid.",
     "- Use escalate_to_human for refunds, complaints, policy exceptions, requests for a person, or repeated tool failures. After escalating, tell the customer a team member will pick it up, and stop.",
     "- Keep set_conversation_state up to date.",
+    "- The customer is one person across WhatsApp, Instagram and Messenger. If they already spoke to you or booked on another channel, use that history naturally (e.g. 'I see the booking you made on WhatsApp') instead of starting over, and never re-ask for details you already hold.",
+    "- As soon as you learn their email or phone number, save it with create_or_update_contact; that is how we recognise the same person across channels.",
     "- Reply as plain conversational text. No markdown headings or bullet lists unless listing slot options.",
     ...(ctx.channel === "whatsapp"
       ? [
