@@ -352,10 +352,11 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
             <AIHandlingPill state={pill} />
             <button title="Pause AI" onClick={() => mode.mutate("PAUSED")} className="rounded-md p-2 text-secondary hover:bg-hover"><Clock className="size-4" /></button>
             <button title="Return to AI" onClick={() => mode.mutate("AI")} className="rounded-md p-2 text-secondary hover:bg-hover"><Check className="size-4" /></button>
-            {c.handling_mode !== "HUMAN" ? (
+            {c.handling_mode !== "HUMAN" && (
               <Button size="sm" variant="secondary" onClick={() => mode.mutate("HUMAN")}><Users className="mr-1.5 size-3.5" />Take over</Button>
-            ) : (
-              <Button size="sm" variant="secondary" onClick={() => mode.mutate("AI")}><Bot className="mr-1.5 size-3.5" />Return to AI</Button>
+            )}
+            {c.handling_mode !== "AI" && (
+              <Button size="sm" onClick={() => mode.mutate("AI")}><Bot className="mr-1.5 size-3.5" />Return to AI</Button>
             )}
           </div>
         </div>
