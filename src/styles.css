@@ -70,46 +70,48 @@
   --color-surface-muted: var(--surface-muted);
 }
 
+/*
+ * Shadcn-style aliases resolved from the Veya design system primitives
+ * defined in src/design-system/styles/theme.css. The design system is the
+ * single source of truth for colour, radius, shadow and spacing.
+ */
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.985 0.008 85);
-  --foreground: oklch(0.22 0.02 40);
-  --surface: oklch(1 0 0);
-  --surface-muted: oklch(0.965 0.012 80);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 40);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 40);
-  --primary: oklch(0.33 0.07 340);
-  --primary-foreground: oklch(0.98 0.01 85);
-  --secondary: oklch(0.945 0.017 80);
-  --secondary-foreground: oklch(0.3 0.03 40);
-  --muted: oklch(0.955 0.012 80);
-  --muted-foreground: oklch(0.53 0.02 50);
-  --accent: oklch(0.74 0.14 55);
-  --accent-foreground: oklch(0.24 0.04 40);
-  --destructive: oklch(0.55 0.2 25);
-  --destructive-foreground: oklch(0.98 0.01 85);
-  --success: oklch(0.58 0.11 155);
-  --success-foreground: oklch(0.98 0.01 85);
-  --warning: oklch(0.75 0.14 75);
-  --warning-foreground: oklch(0.25 0.04 60);
-  --border: oklch(0.9 0.012 70);
-  --input: oklch(0.9 0.012 70);
-  --ring: oklch(0.33 0.07 340);
-  --chart-1: oklch(0.33 0.07 340);
-  --chart-2: oklch(0.74 0.14 55);
-  --chart-3: oklch(0.58 0.11 155);
-  --chart-4: oklch(0.6 0.09 260);
-  --chart-5: oklch(0.7 0.13 25);
-  --sidebar: oklch(0.24 0.03 335);
-  --sidebar-foreground: oklch(0.95 0.01 80);
-  --sidebar-primary: oklch(0.74 0.14 55);
-  --sidebar-primary-foreground: oklch(0.2 0.03 40);
-  --sidebar-accent: oklch(0.3 0.04 335);
-  --sidebar-accent-foreground: oklch(0.96 0.01 80);
-  --sidebar-border: oklch(0.32 0.03 335);
-  --sidebar-ring: oklch(0.74 0.14 55);
+  --radius: var(--radius-xl);
+  --background: var(--bg-app);
+  --foreground: var(--text-primary);
+  --surface: var(--bg-panel);
+  --surface-muted: var(--bg-panel-subtle);
+  --card: var(--bg-panel);
+  --card-foreground: var(--text-primary);
+  --popover: var(--bg-panel);
+  --popover-foreground: var(--text-primary);
+  --primary-foreground: var(--white);
+  --secondary-foreground: var(--text-primary);
+  --muted: var(--bg-hover);
+  --muted-foreground: var(--text-secondary);
+  --accent: var(--bg-active-neutral);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--red-500);
+  --destructive-foreground: var(--white);
+  --success: var(--green-600);
+  --success-foreground: var(--white);
+  --warning: var(--yellow-500);
+  --warning-foreground: var(--gray-900);
+  --input: var(--border-default);
+  --ring: var(--action-primary);
+  --chart-1: var(--cyan-500);
+  --chart-2: var(--purple-500);
+  --chart-3: var(--green-500);
+  --chart-4: var(--yellow-400);
+  --chart-5: var(--red-500);
+  --sidebar: var(--gray-900);
+  --sidebar-foreground: var(--gray-100);
+  --sidebar-primary: var(--cyan-400);
+  --sidebar-primary-foreground: var(--gray-950);
+  --sidebar-accent: var(--gray-800);
+  --sidebar-accent-foreground: var(--gray-50);
+  --sidebar-border: var(--gray-800);
+  --sidebar-ring: var(--cyan-400);
 }
 
 
