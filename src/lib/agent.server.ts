@@ -424,6 +424,10 @@ export function buildTools(ctx: Ctx) {
           .update({ status: "CANCELLED" })
           .eq("appointment_id", appt.id)
           .eq("status", "SCHEDULED");
+        try {
+          const { deleteGoogleEvent } = await import("@/lib/gcal.server");
+          await deleteGoogleEvent(ctx.workspaceId, appt.id);
+        } catch { /* the cancellation stands even if Google can't be reached */ }
         return { ok: true, cancelled: true, hours_notice: Math.round((new Date(appt.starts_at).getTime() - Date.now()) / 3600000) };
       }),
     }),
