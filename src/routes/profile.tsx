@@ -7,7 +7,7 @@ import { Avatar } from "@/design-system/components/Avatar";
 import { Button } from "@/design-system/components/Button";
 
 export const Route = createFileRoute("/profile")({
-  head: () => meta("My profile", "Your Pink OS account."),
+  head: () => meta("My profile", "Your Pingbase account."),
   component: ProfilePage,
 });
 
@@ -18,7 +18,7 @@ function ProfilePage() {
   return (
     <AppShell>
       <Page>
-        <PageHeader title="My profile" subtitle="Your Pink OS account." />
+        <PageHeader title="My profile" subtitle="Your Pingbase account." />
         <div className="max-w-xl rounded-xl border border-border p-6">
           <div className="flex items-center gap-4">
             <Avatar name={email || "You"} size="xl" />

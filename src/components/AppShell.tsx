@@ -63,7 +63,7 @@ export function AppShell({
           <span className="grid size-8 place-items-center rounded-lg bg-foreground text-[13px] font-bold text-panel">P</span>
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[13px] font-semibold text-foreground">Studio Nine Hair</span>
-            <span className="block text-[11px] text-tertiary">Pink OS</span>
+            <span className="block text-[11px] text-tertiary">Pingbase</span>
           </span>
           <ChevronDown className="size-3.5 text-tertiary" />
         </button>

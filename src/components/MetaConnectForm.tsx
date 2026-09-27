@@ -102,7 +102,7 @@ export function MetaConnectForm(_: { connected: boolean }) {
 
       {!s.connected && s.pendingPages.length > 0 && (
         <div className="mt-4 space-y-2">
-          <p className="text-sm font-medium">Which Page should Pink OS use?</p>
+          <p className="text-sm font-medium">Which Page should Pingbase use?</p>
           {s.pendingPages.map((p) => (
             <button
               key={p.id}

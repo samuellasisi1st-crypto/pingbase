@@ -8,9 +8,9 @@ import { money } from "@/lib/time";
 export const Route = createFileRoute("/analytics")({
   head: () => ({
     meta: [
-      { title: "Analytics — Pink OS" },
+      { title: "Analytics — Pingbase" },
       { name: "description", content: "Conversations, bookings and revenue handled by your AI concierge." },
-      { property: "og:title", content: "Analytics — Pink OS" },
+      { property: "og:title", content: "Analytics — Pingbase" },
       { property: "og:description", content: "Conversations, bookings and revenue handled by your AI concierge." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -42,7 +42,7 @@ function AnalyticsPage() {
   return (
     <AppShell>
       <Page>
-        <PageHeader title="Analytics" subtitle="How Pink OS is working for Studio Nine Hair." />
+        <PageHeader title="Analytics" subtitle="How Pingbase is working for Studio Nine Hair." />
         <div className="grid gap-4 md:grid-cols-4">
           <StatCard label="Conversations" value={convs.length} hint="All channels" />
           <StatCard label="Handled by AI" value={`${aiShare}%`} hint="No team reply needed" />

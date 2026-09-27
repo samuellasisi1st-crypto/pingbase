@@ -11,9 +11,9 @@ import { MetaConnectForm } from "@/components/MetaConnectForm";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — Pink OS" },
+      { title: "Settings — Pingbase" },
       { name: "description", content: "Services, staff, policies, knowledge and channel connections for the concierge." },
-      { property: "og:title", content: "Settings — Pink OS" },
+      { property: "og:title", content: "Settings — Pingbase" },
       { property: "og:description", content: "Services, staff, policies, knowledge and channel connections for the concierge." },
     ],
   }),

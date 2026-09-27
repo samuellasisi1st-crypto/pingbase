@@ -12,9 +12,9 @@ import { formatSalonDateTime } from "@/lib/time";
 export const Route = createFileRoute("/automations")({
   head: () => ({
     meta: [
-      { title: "Automations — Pink OS" },
+      { title: "Automations — Pingbase" },
       { name: "description", content: "Confirmations, reminders and follow-ups sent automatically through each customer's own channel." },
-      { property: "og:title", content: "Automations — Pink OS" },
+      { property: "og:title", content: "Automations — Pingbase" },
       { property: "og:description", content: "Confirmations, reminders and follow-ups sent automatically through each customer's own channel." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

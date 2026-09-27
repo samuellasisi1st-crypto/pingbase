@@ -8,7 +8,7 @@ type MetaMessaging = {
 };
 type MetaPayload = { object?: string; entry?: Array<{ id?: string; messaging?: MetaMessaging[] }> };
 
-// One platform-wide webhook for every Pink OS business. Events are routed to a workspace by Page / Instagram ID.
+// One platform-wide webhook for every Pingbase business. Events are routed to a workspace by Page / Instagram ID.
 export const Route = createFileRoute("/api/public/webhooks/meta")({
   server: {
     handlers: {

@@ -13,9 +13,9 @@ import { formatSalonDateTime } from "@/lib/time";
 export const Route = createFileRoute("/contacts")({
   head: () => ({
     meta: [
-      { title: "Contacts — Pink OS" },
+      { title: "Contacts — Pingbase" },
       { name: "description", content: "One customer profile per person, linked across every channel they message from." },
-      { property: "og:title", content: "Contacts — Pink OS" },
+      { property: "og:title", content: "Contacts — Pingbase" },
       { property: "og:description", content: "One customer profile per person, linked across every channel they message from." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
