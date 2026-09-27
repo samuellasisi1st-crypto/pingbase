@@ -880,6 +880,15 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     `Customer: ${contact?.full_name ?? "unknown name"}${contact?.email ? `, ${contact.email}` : ""}${contact?.phone ? `, ${contact.phone}` : ""}. Channel: ${ctx.channel}.`,
     `Their appointments: ${(appointments ?? []).length ? (appointments ?? []).map((a) => `${a.id} ${formatSalonDateTime(a.starts_at)} ${(a.service as unknown as { name: string })?.name} with ${(a.staff as unknown as { name: string })?.name} [${a.status}/${a.deposit_status}]`).join("; ") : "none"}`,
     `Conversation state: ${conversation?.state ?? "DISCOVERY"}.`,
+    `Channels this same person uses: ${(linkedChannels ?? []).length ? (linkedChannels ?? []).map((c) => `${c.channel}${c.display_name ? ` (${c.display_name})` : ""}`).join(", ") : ctx.channel}.`,
+    ...((otherChannelHistory ?? []).length
+      ? [
+          "Recent messages with this same person on their other channels (most recent first):",
+          ...(otherChannelHistory ?? []).map(
+            (m) => `- [${m.channel}] ${m.direction === "inbound" ? "customer" : m.sender_type === "AI" ? "you" : "staff"}: ${String(m.body).slice(0, 200)}`,
+          ),
+        ]
+      : []),
     "",
     "RULES:",
     "- Never invent availability, prices, services, policies, payments or appointments. Always use your tools.",
