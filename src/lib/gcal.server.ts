@@ -2,7 +2,12 @@
 // We only READ busy times (free/busy) so booked slots never clash with the owner's calendar.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-export const GOOGLE_SCOPES = ["openid", "email", "https://www.googleapis.com/auth/calendar.freebusy"];
+export const GOOGLE_SCOPES = [
+  "openid",
+  "email",
+  "https://www.googleapis.com/auth/calendar.events.freebusy",
+  "https://www.googleapis.com/auth/calendar.events",
+];
 
 export function googlePlatform() {
   const clientId = process.env["GOOGLE_OAUTH_CLIENT_ID"];
