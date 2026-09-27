@@ -42,7 +42,8 @@ export const Route = createFileRoute("/api/public/webhooks/meta")({
       POST: async ({ request }) => {
         const raw = await request.text();
         const appSecret = process.env["META_APP_SECRET"];
-        const { verifyMetaSignature, findWorkspaceForMetaId, logIntegration, fetchMetaProfileName } = await import("@/lib/channels.server");
+        const { verifyMetaSignature, findWorkspaceForMetaId, findWorkspaceForWhatsAppPhoneId, logIntegration, fetchMetaProfileName } =
+          await import("@/lib/channels.server");
         if (!appSecret || !verifyMetaSignature(raw, request.headers.get("x-hub-signature-256"), appSecret)) {
           return new Response("Invalid signature", { status: 401 });
         }
