@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { money } from "@/lib/time";
 import { MetaConnectForm } from "@/components/MetaConnectForm";
+import { WhatsAppConnectForm } from "@/components/WhatsAppConnectForm";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
