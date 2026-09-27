@@ -14,7 +14,7 @@ import {
 
 type FBType = {
   init: (o: Record<string, unknown>) => void;
-  login: (cb: (r: { authResponse?: { code?: string } }) => void, o: Record<string, unknown>) => void;
+  login: (cb: (r: { authResponse?: { code?: string; accessToken?: string } }) => void, o: Record<string, unknown>) => void;
 };
 
 function loadFacebookSdk(appId: string): Promise<FBType> {
@@ -75,19 +75,19 @@ export function WhatsAppConnectForm() {
     setBusy(true);
     try {
       const FB = await loadFacebookSdk(cfg.appId);
-      const code = await new Promise<string | null>((resolve) =>
-        FB.login((r) => resolve(r.authResponse?.code ?? null), {
+      const auth = await new Promise<{ code?: string; accessToken?: string } | null>((resolve) =>
+        FB.login((r) => resolve(r.authResponse ?? null), {
           config_id: cfg.configId,
-          response_type: "code",
-          override_default_response_type: true,
           extras: { setup: {}, featureType: "", sessionInfoVersion: "3" },
         }),
       );
-      if (!code) { toast.error("WhatsApp setup was cancelled."); return; }
+      const code = auth?.code;
+      const accessToken = auth?.accessToken;
+      if (!code && !accessToken) { toast.error("WhatsApp setup was cancelled."); return; }
       // Meta's "which number" message can land just after the login callback.
       if (!sessionRef.current.phoneNumberId) await new Promise((r) => setTimeout(r, 1500));
       const { wabaId, phoneNumberId } = sessionRef.current;
-      const res = await complete({ data: { code, wabaId, phoneNumberId, pageUrl: window.location.href } });
+      const res = await complete({ data: { code, accessToken, wabaId, phoneNumberId, pageUrl: window.location.href } });
       if (res.ok) toast.success(`WhatsApp connected${res.displayPhoneNumber ? ` · ${res.displayPhoneNumber}` : ""}`);
       else toast.error(res.error);
     } catch (e) {
