@@ -33,6 +33,24 @@ export const Route = createFileRoute("/")({
 type Notice = { ok: boolean; message: string } | null;
 const TEMPLATE_NAME = "appointment_reminder";
 
+const CHANNEL_FILTERS = [
+  { value: "all", label: "All channels" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "instagram", label: "Instagram" },
+  { value: "messenger", label: "Messenger" },
+] as const;
+
+const CHANNEL_LABELS: Record<string, { label: string; variant: "green" | "purple" | "cyan" | "neutral" }> = {
+  whatsapp: { label: "WhatsApp", variant: "green" },
+  instagram: { label: "Instagram", variant: "purple" },
+  messenger: { label: "Messenger", variant: "cyan" },
+};
+
+function ChannelBadge({ channel }: { channel: string }) {
+  const meta = CHANNEL_LABELS[channel] ?? { label: channel, variant: "neutral" as const };
+  return <Badge variant={meta.variant}>{meta.label}</Badge>;
+}
+
 function WhatsAppTestPage() {
   const send = useServerFn(sendWhatsAppTest);
   const listTemplates = useServerFn(listWhatsAppTemplates);
