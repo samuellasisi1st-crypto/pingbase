@@ -31,7 +31,7 @@ const FOOT = [
 ] as const;
 
 const itemCls =
-  "flex h-9 items-center gap-2.5 rounded-md border border-transparent px-2.5 text-[13px] text-secondary transition-colors hover:bg-hover hover:text-foreground";
+  "flex min-h-9 items-center gap-2.5 rounded-md border border-transparent px-2.5 text-sm text-secondary transition-colors hover:bg-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 const activeCls = "border-border bg-panel font-semibold text-foreground shadow-xs";
 
 export function AppShell({
@@ -57,7 +57,8 @@ export function AppShell({
   const email = session.user.email ?? "You";
 
   return (
-    <div className="flex h-screen overflow-hidden bg-app">
+    <div className="flex h-dvh overflow-hidden bg-app">
+      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-panel focus:px-3 focus:py-2 focus:text-sm">Skip to content</a>
       <aside className="hidden w-56 shrink-0 flex-col border-r border-border-subtle bg-panel px-3 py-4 md:flex">
         <button className="mb-5 flex items-center gap-2 rounded-md px-1.5 py-1 text-left hover:bg-hover">
           <span className="grid size-8 place-items-center rounded-lg bg-foreground text-[13px] font-bold text-panel">P</span>
@@ -67,17 +68,17 @@ export function AppShell({
           </span>
           <ChevronDown className="size-3.5 text-tertiary" />
         </button>
-        <nav className="flex flex-1 flex-col gap-0.5">
+        <nav aria-label="Main" className="flex flex-1 flex-col gap-0.5">
           {NAV.map((i) => (
             <Link key={i.to} to={i.to} activeOptions={{ exact: i.to === "/" }} className={itemCls} activeProps={{ className: activeCls }}>
-              <i.icon className="size-4" /> {i.label}
+              <i.icon className="size-4 shrink-0" aria-hidden="true" /> {i.label}
             </Link>
           ))}
         </nav>
-        <nav className="flex flex-col gap-0.5">
+        <nav aria-label="Account" className="flex flex-col gap-0.5">
           {FOOT.map((i) => (
             <Link key={i.to} to={i.to} className={itemCls} activeProps={{ className: activeCls }}>
-              <i.icon className="size-4" /> {i.label}
+              <i.icon className="size-4 shrink-0" aria-hidden="true" /> {i.label}
             </Link>
           ))}
           <div className="mt-1 flex items-center gap-2 px-1.5 py-1">
@@ -101,15 +102,15 @@ export function AppShell({
       </aside>
 
       {secondary && (
-        <aside className="hidden w-60 shrink-0 flex-col overflow-y-auto border-r border-border-subtle bg-panel px-3 py-4 lg:flex">
+        <aside aria-label="Views" className="hidden w-60 shrink-0 flex-col overflow-y-auto border-r border-border-subtle bg-panel px-3 py-4 lg:flex">
           {secondary}
         </aside>
       )}
 
-      <main className="min-w-0 flex-1 overflow-y-auto bg-panel">
+      <main id="main" className="min-w-0 flex-1 overflow-y-auto bg-panel">
         {title ? (
-          <div className="px-8 py-7">
-            <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+          <div className="px-8 pb-8 pt-5">
+            <h1 className="flex h-10 items-center text-2xl font-semibold text-foreground">{title}</h1>
             <div className="mt-6">{children}</div>
           </div>
         ) : (
@@ -120,12 +121,15 @@ export function AppShell({
   );
 }
 
-export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: ReactNode }) {
+export function PageHeader({ title, subtitle, actions, count }: { title: string; subtitle?: string; actions?: ReactNode; count?: number }) {
   return (
-    <div className="flex items-start justify-between gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
-        {subtitle && <p className="mt-1 text-[13px] text-secondary">{subtitle}</p>}
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+      <div className="min-w-0">
+        <h1 className="flex h-10 items-center gap-2 text-2xl font-semibold text-foreground">
+          <span className="truncate">{title}</span>
+          {count !== undefined && <span className="rounded-md bg-hover px-2 py-0.5 text-xs font-medium text-secondary">{count}</span>}
+        </h1>
+        {subtitle && <p className="mt-1 text-sm text-secondary">{subtitle}</p>}
       </div>
       {actions && <div className="flex items-center gap-2">{actions}</div>}
     </div>
@@ -133,20 +137,20 @@ export function PageHeader({ title, subtitle, actions }: { title: string; subtit
 }
 
 export function Page({ children }: { children: ReactNode }) {
-  return <div className="mx-auto max-w-[1400px] space-y-6 px-8 py-7">{children}</div>;
+  return <div className="mx-auto max-w-[1400px] space-y-6 px-8 pb-8 pt-5">{children}</div>;
 }
 
 export function SideLabel({ children }: { children: ReactNode }) {
-  return <p className="mb-1 mt-5 px-2 text-[11px] font-medium text-tertiary">{children}</p>;
+  return <p className="mb-1 mt-5 px-2 text-xs font-medium text-secondary">{children}</p>;
 }
 
 export function SideItem({ active, icon: Icon, label, count, onClick }: {
   active?: boolean; icon: React.ComponentType<{ className?: string }>; label: string; count?: number | undefined; onClick?: () => void;
 }) {
   return (
-    <button onClick={onClick} className={`${itemCls} w-full ${active ? activeCls : ""}`}>
-      <Icon className="size-4" /> <span className="flex-1 text-left">{label}</span>
-      {count ? <span className="text-[11px] text-tertiary">{count}</span> : null}
+    <button type="button" aria-pressed={active} onClick={onClick} className={`${itemCls} w-full ${active ? activeCls : ""}`}>
+      <Icon className="size-4 shrink-0" aria-hidden="true" /> <span className="min-w-0 flex-1 truncate text-left">{label}</span>
+      {count ? <span className="text-xs tabular-nums text-secondary">{count}</span> : null}
     </button>
   );
 }

@@ -70,6 +70,7 @@ function ContactsPage() {
       <Page>
         <PageHeader
           title={view === "all" ? "All contacts" : view === "multi" ? "Linked across channels" : "Regulars & VIPs"}
+          count={list.length}
           subtitle={`${list.length} people · one profile per person across every channel`}
           actions={<><Button variant="secondary" disabled>Export all</Button><Button disabled title="Contacts are created automatically when customers message you"><Plus className="mr-1.5 size-4" />New contact</Button></>}
         />
