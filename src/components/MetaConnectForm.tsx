@@ -1,68 +1,62 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 
-import { Button, Input } from "@/design-system";
-import { connectMeta, disconnectMeta, getMetaSetup } from "@/lib/channels.functions";
+import { Button } from "@/design-system";
+import { disconnectMeta, getMetaStatus, selectMetaPage, startMetaConnect } from "@/lib/channels.functions";
 
-function CopyField({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="space-y-1">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <div className="flex gap-2">
-        <Input readOnly value={value} className="font-mono text-xs" onFocus={(e) => e.currentTarget.select()} />
-        <Button
-          variant="secondary"
-          onClick={() => {
-            void navigator.clipboard.writeText(value);
-            toast.success(`${label} copied`);
-          }}
-        >
-          Copy
-        </Button>
-      </div>
-    </div>
-  );
-}
+const REASONS: Record<string, string> = {
+  expired: "The sign-in took too long. Please try again.",
+  nopages: "No Facebook Pages were shared. Make sure you tick your Page when Facebook asks.",
+  subscribe: "Facebook didn't let us listen for messages on that Page. Check you're an admin of the Page.",
+  oauth: "Facebook sign-in failed. Please try again.",
+  nocode: "Facebook sign-in failed. Please try again.",
+};
 
-export function MetaConnectForm({ connected }: { connected: boolean }) {
+export function MetaConnectForm(_: { connected: boolean }) {
   const qc = useQueryClient();
-  const fetchSetup = useServerFn(getMetaSetup);
-  const connect = useServerFn(connectMeta);
+  const fetchStatus = useServerFn(getMetaStatus);
+  const start = useServerFn(startMetaConnect);
+  const select = useServerFn(selectMetaPage);
   const disconnect = useServerFn(disconnectMeta);
-  const setup = useQuery({ queryKey: ["meta-setup"], queryFn: () => fetchSetup() });
-
-  const [pageId, setPageId] = useState("");
-  const [pageAccessToken, setToken] = useState("");
-  const [appSecret, setSecret] = useState("");
+  const status = useQuery({ queryKey: ["meta-status"], queryFn: () => fetchStatus() });
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const refresh = () => {
     void qc.invalidateQueries({ queryKey: ["settings"] });
-    void qc.invalidateQueries({ queryKey: ["meta-setup"] });
+    void qc.invalidateQueries({ queryKey: ["meta-status"] });
   };
 
-  const onConnect = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const m = p.get("meta");
+    if (!m) return;
+    if (m === "connected") toast.success("Instagram & Messenger connected");
+    if (m === "cancelled") toast("Facebook sign-in was cancelled");
+    if (m === "error") toast.error(REASONS[p.get("reason") ?? ""] ?? "Couldn't connect. Please try again.");
+    window.history.replaceState({}, "", window.location.pathname);
+    refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onConnect = async () => {
     setBusy(true);
-    setError(null);
     try {
-      const res = await connect({ data: { pageId: pageId || setup.data?.pageId || "", pageAccessToken, appSecret } });
-      if (res.ok) {
-        toast.success(
-          res.instagramLinked
-            ? `Connected ${res.pageName} and Instagram @${res.igUsername ?? ""}`
-            : `Connected ${res.pageName}. No Instagram account is linked to this Page yet.`,
-        );
-        setToken("");
-        setSecret("");
-      } else {
-        setError(res.error);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message.replace(/^\[.*?\]\s*/, "") : "Something went wrong");
+      const { url } = await start({ data: { origin: window.location.origin } });
+      window.location.href = url;
+    } catch {
+      toast.error("Couldn't start Facebook sign-in.");
+      setBusy(false);
+    }
+  };
+
+  const onPick = async (pageId: string) => {
+    setBusy(true);
+    try {
+      const res = await select({ data: { pageId } });
+      if (res.ok) toast.success("Instagram & Messenger connected");
+      else toast.error(res.error);
     } finally {
       setBusy(false);
       refresh();
@@ -80,85 +74,49 @@ export function MetaConnectForm({ connected }: { connected: boolean }) {
     }
   };
 
-  if (setup.isLoading) return <p className="text-sm text-muted-foreground">Loading Meta setup…</p>;
-  if (setup.error || !setup.data)
-    return <p className="text-sm text-destructive">Couldn't load Meta setup. Refresh and try again.</p>;
-
-  const origin = typeof window !== "undefined" ? window.location.origin : "";
-  const s = setup.data;
+  if (status.isLoading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (status.error || !status.data) return <p className="text-sm text-destructive">Couldn't load this. Refresh and try again.</p>;
+  const s = status.data;
 
   return (
     <div className="rounded-xl border bg-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-medium">Instagram &amp; Messenger (Meta)</p>
+          <p className="font-medium">Instagram &amp; Messenger</p>
           <p className="text-sm text-muted-foreground">
-            {connected && s.pageName
-              ? `Connected to ${s.pageName}${s.igUsername ? ` · Instagram @${s.igUsername}` : ""}`
-              : "Customers message your Facebook Page or Instagram; Nia replies here in the unified inbox."}
+            {s.connected && s.pageName
+              ? `Connected to ${s.pageName}${s.igUsername ? ` · Instagram @${s.igUsername}` : " · no Instagram account linked"}`
+              : "Sign in with Facebook and pick your business Page. Nia will answer DMs from your Page and Instagram."}
           </p>
         </div>
-        {s.hasSecrets && (
+        {s.connected ? (
           <Button variant="destructive" size="sm" onClick={onDisconnect} disabled={busy}>
             Disconnect
+          </Button>
+        ) : (
+          <Button onClick={onConnect} disabled={busy}>
+            {busy ? "Opening Facebook…" : "Connect with Facebook"}
           </Button>
         )}
       </div>
 
-      <div className="mt-4 space-y-3">
-        <p className="text-sm font-medium">Step 1 — In your Meta app, open Webhooks and paste these</p>
-        <CopyField label="Callback URL" value={`${origin}${s.webhookPath}`} />
-        <CopyField label="Verify token" value={s.verifyToken} />
-        <p className="text-xs text-muted-foreground">
-          Subscribe to <span className="font-mono">messages</span> and{" "}
-          <span className="font-mono">messaging_postbacks</span> for both the Page and Instagram objects. Use your
-          published site address for the callback so Meta can always reach it.
-        </p>
-      </div>
-
-      <form onSubmit={onConnect} className="mt-5 space-y-3">
-        <p className="text-sm font-medium">Step 2 — Enter your Page credentials</p>
-        <label className="block space-y-1">
-          <span className="text-xs font-medium text-muted-foreground">Facebook Page ID</span>
-          <Input
-            required
-            inputMode="numeric"
-            placeholder={s.pageId || "e.g. 104857392019283"}
-            value={pageId}
-            onChange={(e) => setPageId(e.target.value)}
-          />
-        </label>
-        <label className="block space-y-1">
-          <span className="text-xs font-medium text-muted-foreground">Page access token (long-lived)</span>
-          <Input
-            required
-            type="password"
-            autoComplete="off"
-            placeholder={s.hasSecrets ? "Saved — enter a new one to replace" : "EAAG…"}
-            value={pageAccessToken}
-            onChange={(e) => setToken(e.target.value)}
-          />
-        </label>
-        <label className="block space-y-1">
-          <span className="text-xs font-medium text-muted-foreground">App secret</span>
-          <Input
-            required
-            type="password"
-            autoComplete="off"
-            placeholder={s.hasSecrets ? "Saved — enter a new one to replace" : "32-character app secret"}
-            value={appSecret}
-            onChange={(e) => setSecret(e.target.value)}
-          />
-        </label>
-        <p className="text-xs text-muted-foreground">
-          Token needs: pages_show_list, pages_messaging, pages_manage_metadata, pages_read_engagement,
-          instagram_basic, instagram_manage_messages. Credentials are stored privately and never shown again.
-        </p>
-        {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button type="submit" disabled={busy}>
-          {busy ? "Checking with Meta…" : s.hasSecrets ? "Update & reconnect" : "Connect"}
-        </Button>
-      </form>
+      {!s.connected && s.pendingPages.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <p className="text-sm font-medium">Which Page should Pink OS use?</p>
+          {s.pendingPages.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              disabled={busy}
+              onClick={() => onPick(p.id)}
+              className="flex w-full items-center justify-between rounded-lg border p-3 text-left text-sm hover:bg-muted"
+            >
+              <span className="font-medium">{p.name}</span>
+              <span className="text-muted-foreground">{p.igUsername ? `@${p.igUsername}` : "No Instagram linked"}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

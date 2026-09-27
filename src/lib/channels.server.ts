@@ -4,15 +4,38 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const GRAPH = "https://graph.facebook.com/v21.0";
 export const META_CHANNELS = ["instagram", "messenger"] as const;
+export const META_SCOPES = [
+  "pages_show_list",
+  "pages_messaging",
+  "pages_manage_metadata",
+  "pages_read_engagement",
+  "business_management",
+  "instagram_basic",
+  "instagram_manage_messages",
+];
 
-export type MetaSecrets = { page_access_token: string; app_secret: string };
+/** Per-tenant secret: only the Page token. App secret + verify token are platform-level env vars. */
+export type MetaSecrets = { page_access_token: string };
 export type MetaConfig = {
   page_id?: string;
   page_name?: string;
   ig_account_id?: string | null;
   ig_username?: string | null;
-  verify_token?: string;
 };
+export type MetaPage = {
+  id: string;
+  name: string;
+  access_token: string;
+  instagram_business_account?: { id: string; username?: string } | null;
+};
+
+export function metaPlatform() {
+  const appId = process.env["META_APP_ID"];
+  const appSecret = process.env["META_APP_SECRET"];
+  const verifyToken = process.env["META_WEBHOOK_VERIFY_TOKEN"];
+  if (!appId || !appSecret || !verifyToken) throw new Error("Meta platform credentials are not configured.");
+  return { appId, appSecret, verifyToken };
+}
 
 // channel_secrets is service-role only (no RLS policies), never exposed to the browser.
 const secretsTable = () => (supabaseAdmin as unknown as { from: (t: string) => any }).from("channel_secrets");
@@ -20,7 +43,7 @@ const secretsTable = () => (supabaseAdmin as unknown as { from: (t: string) => a
 export async function getMetaSecrets(workspaceId: string): Promise<MetaSecrets | null> {
   const { data } = await secretsTable().select("secrets").eq("workspace_id", workspaceId).eq("channel", "meta").maybeSingle();
   const s = data?.secrets as Partial<MetaSecrets> | undefined;
-  return s?.page_access_token && s.app_secret ? (s as MetaSecrets) : null;
+  return s?.page_access_token ? (s as MetaSecrets) : null;
 }
 
 export async function saveMetaSecrets(workspaceId: string, secrets: MetaSecrets) {
@@ -32,7 +55,26 @@ export async function saveMetaSecrets(workspaceId: string, secrets: MetaSecrets)
 }
 
 export async function deleteMetaSecrets(workspaceId: string) {
-  await secretsTable().delete().eq("workspace_id", workspaceId).eq("channel", "meta");
+  await secretsTable().delete().eq("workspace_id", workspaceId).in("channel", ["meta", "meta_pending"]);
+}
+
+/** Pages returned by OAuth, waiting for the owner to pick one (tokens stay server-side). */
+export async function savePendingPages(workspaceId: string, pages: MetaPage[]) {
+  const { error } = await secretsTable().upsert(
+    { workspace_id: workspaceId, channel: "meta_pending", secrets: { pages }, updated_at: new Date().toISOString() },
+    { onConflict: "workspace_id,channel" },
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function getPendingPages(workspaceId: string): Promise<MetaPage[]> {
+  const { data } = await secretsTable()
+    .select("secrets,updated_at")
+    .eq("workspace_id", workspaceId)
+    .eq("channel", "meta_pending")
+    .maybeSingle();
+  if (!data || Date.now() - new Date(data.updated_at).getTime() > 30 * 60 * 1000) return [];
+  return ((data.secrets as { pages?: MetaPage[] }).pages ?? []) as MetaPage[];
 }
 
 export async function getMetaConfig(workspaceId: string): Promise<MetaConfig> {
@@ -45,12 +87,88 @@ export async function getMetaConfig(workspaceId: string): Promise<MetaConfig> {
   return (data?.config ?? {}) as MetaConfig;
 }
 
+/** Route a platform webhook entry (Page ID or Instagram account ID) to its workspace. */
+export async function findWorkspaceForMetaId(channel: "messenger" | "instagram", id: string) {
+  const key = channel === "messenger" ? "config->>page_id" : "config->>ig_account_id";
+  const { data } = await supabaseAdmin
+    .from("channel_connections")
+    .select("workspace_id")
+    .eq("channel", channel)
+    .filter(key, "eq", id)
+    .limit(1)
+    .maybeSingle();
+  return data?.workspace_id ?? null;
+}
+
 export function verifyMetaSignature(rawBody: string, header: string | null, appSecret: string) {
   if (!header?.startsWith("sha256=")) return false;
   const expected = createHmac("sha256", appSecret).update(rawBody).digest("hex");
   const a = Buffer.from(header.slice(7));
   const b = Buffer.from(expected);
   return a.length === b.length && timingSafeEqual(a, b);
+}
+
+/** Signed OAuth state so the callback knows which workspace started the flow. */
+export function signState(payload: { w: string; u: string; o: string }) {
+  const body = Buffer.from(JSON.stringify({ ...payload, t: Date.now() })).toString("base64url");
+  const sig = createHmac("sha256", metaPlatform().appSecret).update(body).digest("base64url");
+  return `${body}.${sig}`;
+}
+
+export function readState(state: string | null): { w: string; u: string; o: string } | null {
+  if (!state) return null;
+  const [body, sig] = state.split(".");
+  if (!body || !sig) return null;
+  const expected = createHmac("sha256", metaPlatform().appSecret).update(body).digest("base64url");
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  const p = JSON.parse(Buffer.from(body, "base64url").toString()) as { w: string; u: string; o: string; t: number };
+  if (Date.now() - p.t > 15 * 60 * 1000) return null;
+  return p;
+}
+
+/** Subscribe a Page to the platform app and mark Messenger/Instagram connected. */
+export async function connectMetaPage(workspaceId: string, page: MetaPage) {
+  const now = new Date().toISOString();
+  const subRes = await fetch(`${GRAPH}/${page.id}/subscribed_apps?access_token=${encodeURIComponent(page.access_token)}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: "subscribed_fields=messages,messaging_postbacks",
+  });
+  const sub = (await subRes.json().catch(() => ({}))) as { success?: boolean; error?: { message?: string } };
+  if (!subRes.ok || !sub.success) {
+    const msg = sub.error?.message ?? "Could not subscribe the Page to messages.";
+    await supabaseAdmin
+      .from("channel_connections")
+      .update({ status: "ERROR", last_error: msg, updated_at: now })
+      .eq("workspace_id", workspaceId)
+      .in("channel", ["instagram", "messenger"]);
+    await logIntegration(workspaceId, "meta", "error", `Connect failed: ${msg}`);
+    return { ok: false as const, error: msg };
+  }
+
+  await saveMetaSecrets(workspaceId, { page_access_token: page.access_token });
+  await secretsTable().delete().eq("workspace_id", workspaceId).eq("channel", "meta_pending");
+  const ig = page.instagram_business_account ?? null;
+  const config: MetaConfig = { page_id: page.id, page_name: page.name, ig_account_id: ig?.id ?? null, ig_username: ig?.username ?? null };
+  await supabaseAdmin
+    .from("channel_connections")
+    .update({ status: "CONNECTED", last_error: null, config: config as never, updated_at: now })
+    .eq("workspace_id", workspaceId)
+    .eq("channel", "messenger");
+  await supabaseAdmin
+    .from("channel_connections")
+    .update({
+      status: ig ? "CONNECTED" : "ERROR",
+      last_error: ig ? null : "No Instagram professional account is linked to this Facebook Page.",
+      config: config as never,
+      updated_at: now,
+    })
+    .eq("workspace_id", workspaceId)
+    .eq("channel", "instagram");
+  await logIntegration(workspaceId, "meta", "info", `Connected Page "${page.name}"${ig ? ` and Instagram @${ig.username ?? ig.id}` : ""}`);
+  return { ok: true as const };
 }
 
 export async function logIntegration(
