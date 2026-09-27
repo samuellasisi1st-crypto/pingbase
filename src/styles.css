@@ -132,10 +132,12 @@
 .app-scale {
   width: 125%;
   min-height: 125dvh;
-  zoom: 0.8;
+  transform: scale(0.8);
+  transform-origin: top left;
 }
 
-.app-scale .h-dvh {
+.app-scale .h-dvh,
+.app-scale .min-h-screen {
   height: 125dvh;
 }
 
