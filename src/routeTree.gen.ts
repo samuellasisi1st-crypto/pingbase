@@ -19,6 +19,8 @@ import { Route as CampaignsRouteImport } from './routes/campaigns'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as HelpRouteImport } from './routes/help'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
@@ -78,6 +80,16 @@ const HelpRoute = HelpRouteImport.update({
   path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReviewsRoute = ReviewsRouteImport.update({
   id: '/reviews',
   path: '/reviews',
@@ -131,6 +143,8 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
   '/help': typeof HelpRoute
+  '/notifications': typeof NotificationsRoute
+  '/profile': typeof ProfileRoute
   '/reviews': typeof ReviewsRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
@@ -151,6 +165,8 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
   '/help': typeof HelpRoute
+  '/notifications': typeof NotificationsRoute
+  '/profile': typeof ProfileRoute
   '/reviews': typeof ReviewsRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
@@ -172,6 +188,8 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
   '/help': typeof HelpRoute
+  '/notifications': typeof NotificationsRoute
+  '/profile': typeof ProfileRoute
   '/reviews': typeof ReviewsRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
@@ -194,6 +212,8 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contacts'
     | '/help'
+    | '/notifications'
+    | '/profile'
     | '/reviews'
     | '/search'
     | '/settings'
@@ -214,6 +234,8 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contacts'
     | '/help'
+    | '/notifications'
+    | '/profile'
     | '/reviews'
     | '/search'
     | '/settings'
@@ -234,6 +256,8 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contacts'
     | '/help'
+    | '/notifications'
+    | '/profile'
     | '/reviews'
     | '/search'
     | '/settings'
@@ -255,6 +279,8 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   ContactsRoute: typeof ContactsRoute
   HelpRoute: typeof HelpRoute
+  NotificationsRoute: typeof NotificationsRoute
+  ProfileRoute: typeof ProfileRoute
   ReviewsRoute: typeof ReviewsRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
@@ -337,6 +363,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reviews': {
       id: '/reviews'
       path: '/reviews'
@@ -407,6 +447,8 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   ContactsRoute: ContactsRoute,
   HelpRoute: HelpRoute,
+  NotificationsRoute: NotificationsRoute,
+  ProfileRoute: ProfileRoute,
   ReviewsRoute: ReviewsRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
