@@ -170,6 +170,13 @@ export async function processInboundMessage(msg: InboundMessage) {
       channel: msg.channel,
     });
     if (reply) {
+      const { deliverOutbound } = await import("./channels.server");
+      const delivery = await deliverOutbound({
+        workspaceId: msg.workspaceId,
+        channel: msg.channel,
+        recipientId: msg.externalId,
+        text: reply,
+      });
       await db.from("messages").insert({
         workspace_id: msg.workspaceId,
         conversation_id: conversation.id,
@@ -179,6 +186,8 @@ export async function processInboundMessage(msg: InboundMessage) {
         sender_type: "AI",
         sender_name: "AI",
         body: reply,
+        external_message_id: delivery.externalMessageId ?? null,
+        metadata: { delivered: delivery.delivered, delivery_error: delivery.error ?? null } as never,
       });
       await db
         .from("conversations")

@@ -188,6 +188,23 @@ export const sendHumanReply = createServerFn({ method: "POST" })
       .eq("id", context.userId)
       .maybeSingle();
 
+    const { deliverOutbound } = await import("@/lib/channels.server");
+    const { data: link } = await supabaseAdmin
+      .from("contact_channels")
+      .select("external_id")
+      .eq("workspace_id", conversation.workspace_id)
+      .eq("contact_id", conversation.contact_id)
+      .eq("channel", conversation.channel)
+      .maybeSingle();
+    const delivery = link
+      ? await deliverOutbound({
+          workspaceId: conversation.workspace_id,
+          channel: conversation.channel,
+          recipientId: link.external_id,
+          text: data.body,
+        })
+      : { delivered: false, error: "No channel identity for this contact", externalMessageId: undefined };
+
     await supabaseAdmin.from("messages").insert({
       workspace_id: conversation.workspace_id,
       conversation_id: conversation.id,
@@ -197,16 +214,9 @@ export const sendHumanReply = createServerFn({ method: "POST" })
       sender_type: "HUMAN",
       sender_name: profile?.full_name ?? profile?.email ?? "Team",
       body: data.body,
+      external_message_id: delivery.externalMessageId ?? null,
+      metadata: { delivered: delivery.delivered, delivery_error: delivery.error ?? null } as never,
     });
-
-    if (conversation.channel !== "test") {
-      await supabaseAdmin.from("integration_logs").insert({
-        workspace_id: conversation.workspace_id,
-        channel: conversation.channel,
-        level: "warn",
-        message: `Reply could not be delivered: ${conversation.channel} is not connected yet.`,
-      });
-    }
 
     await supabaseAdmin
       .from("conversations")
