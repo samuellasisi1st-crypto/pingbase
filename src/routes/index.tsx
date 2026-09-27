@@ -1,8 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, MessageSquareText, RefreshCw, Send, XCircle } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 import { Badge, Button, Input, Tabs, Textarea } from "@/design-system";
 import {
@@ -40,14 +41,38 @@ function WhatsAppTestPage() {
   const [creating, setCreating] = useState(false);
   const [notice, setNotice] = useState<Notice>(null);
 
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session));
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setSignedIn(!!session));
+    return () => sub.subscription.unsubscribe();
+  }, []);
+
   const templates = useQuery({
     queryKey: ["whatsapp-templates"],
     queryFn: () => listTemplates(),
-    enabled: tab === "templates",
+    enabled: tab === "templates" && signedIn === true,
   });
 
   const validNumber = /^\+?\d{7,15}$/.test(to.trim());
   const preset = templates.data?.templates.find((template) => template.name === TEMPLATE_NAME);
+
+  if (signedIn === false) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-sm rounded-2xl border border-border bg-panel p-6 text-center shadow-sm">
+          <h1 className="text-lg font-semibold text-foreground">Sign in to continue</h1>
+          <p className="mt-1 text-sm text-secondary">You need to be signed in to send WhatsApp messages.</p>
+          <Link
+            to="/auth"
+            className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-sm font-semibold text-primary-foreground shadow-button-glow"
+          >
+            Sign in
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   async function submitMessage() {
     setSending(true);
