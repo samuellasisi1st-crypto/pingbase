@@ -91,7 +91,8 @@ async function resolveConversation(msg: InboundMessage, contactId: string) {
     .limit(1);
   if (msg.threadId) query = query.eq("external_thread_id", msg.threadId);
   const { data } = await query;
-  if (data && data.length) return data[0];
+  const existing = data?.[0];
+  if (existing) return existing;
 
   const { data: created, error } = await db
     .from("conversations")
