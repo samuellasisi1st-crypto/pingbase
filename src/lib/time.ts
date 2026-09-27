@@ -20,12 +20,12 @@ function parts(date: Date, tz: string) {
 export function tzOffsetMinutes(date: Date, tz = SALON_TZ) {
   const p = parts(date, tz);
   const asUTC = Date.UTC(
-    Number(p.year),
-    Number(p.month) - 1,
-    Number(p.day),
-    Number(p.hour) % 24,
-    Number(p.minute),
-    Number(p.second),
+    Number(p['year']),
+    Number(p['month']) - 1,
+    Number(p['day']),
+    Number(p['hour']) % 24,
+    Number(p['minute']),
+    Number(p['second']),
   );
   return (asUTC - date.getTime()) / 60000;
 }
@@ -56,12 +56,12 @@ export function zonedParts(date: Date, tz = SALON_TZ) {
     Sat: 6,
   };
   return {
-    year: Number(p.year),
-    month: Number(p.month),
-    day: Number(p.day),
-    hour: Number(p.hour) % 24,
-    minute: Number(p.minute),
-    weekday: weekdayMap[p.weekday] ?? 0,
+    year: Number(p['year']),
+    month: Number(p['month']),
+    day: Number(p['day']),
+    hour: Number(p['hour']) % 24,
+    minute: Number(p['minute']),
+    weekday: weekdayMap[p['weekday'] ?? 'Sun'] ?? 0,
   };
 }
 
