@@ -175,6 +175,7 @@ function SettingsPage() {
                 (c) => c.channel === "messenger" && c.status === "CONNECTED",
               )}
             />
+            <WhatsAppConnectForm />
             {(d.channels as unknown as Array<{ id: string; channel: string; status: string; last_error: string | null }>).map((c) => (
               <div key={c.id} className="flex items-center justify-between rounded-xl border bg-surface p-4">
                 <div>
