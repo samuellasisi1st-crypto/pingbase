@@ -220,6 +220,7 @@ export async function deliverOutbound(opts: {
 }): Promise<{ delivered: boolean; externalMessageId?: string | undefined; error?: string | undefined }> {
   const { workspaceId, channel, recipientId, text } = opts;
   if (channel === "test") return { delivered: true };
+  if (channel === "whatsapp") return deliverWhatsApp(workspaceId, recipientId, text);
   if (!(META_CHANNELS as readonly string[]).includes(channel)) {
     const error = `${channel} is not connected yet.`;
     await logIntegration(workspaceId, channel, "warn", `Reply could not be delivered: ${error}`);
