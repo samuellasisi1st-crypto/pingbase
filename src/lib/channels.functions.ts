@@ -387,3 +387,50 @@ export const createWhatsAppTemplate = createServerFn({ method: "POST" })
     await logIntegration(WORKSPACE, "whatsapp", "info", `Template ${data.name} created (${json.status})`);
     return { ok: true as const, id: String(json.id), status: String(json.status ?? "PENDING") };
   });
+
+// ---------- WhatsApp inbox (real messages only) ----------
+
+export const listWhatsAppInbox = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = context.supabase as any;
+    const { data, error } = await sb
+      .from("messages")
+      .select("id, direction, sender_type, sender_name, body, created_at, contact_id, contacts(display_name, phone)")
+      .eq("workspace_id", WORKSPACE)
+      .eq("channel", "whatsapp")
+      .like("external_message_id", "wamid%")
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) throw new Error(error.message);
+    return ((data ?? []) as any[]).map((m) => ({
+      id: String(m.id),
+      direction: String(m.direction) as "inbound" | "outbound",
+      sender: String(m.sender_type ?? ""),
+      name: (m.contacts?.display_name ?? m.sender_name ?? null) as string | null,
+      phone: (m.contacts?.phone ?? null) as string | null,
+      body: String(m.body ?? ""),
+      createdAt: String(m.created_at),
+    }));
+  });
+
+/** Tells Meta to forward this WhatsApp account's incoming messages to Pingbase's webhook. */
+export const subscribeWhatsAppWebhook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertMember(context.supabase as never);
+    const { GRAPH, secrets, wabaId, logIntegration } = await waContext();
+    if (!wabaId) return { ok: false as const, error: "No WhatsApp Business Account ID saved." };
+    const res = await fetch(`${GRAPH}/${wabaId}/subscribed_apps`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${secrets.access_token}` },
+    });
+    const json = (await res.json().catch(() => ({}))) as any;
+    if (!res.ok) {
+      const error = graphError(json, `Meta returned ${res.status}`);
+      await logIntegration(WORKSPACE, "whatsapp", "error", `Webhook subscribe failed: ${error}`);
+      return { ok: false as const, error };
+    }
+    await logIntegration(WORKSPACE, "whatsapp", "info", `Subscribed WABA ${wabaId} to webhook`);
+    return { ok: true as const, error: null };
+  });
