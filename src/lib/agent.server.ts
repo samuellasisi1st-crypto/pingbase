@@ -178,19 +178,38 @@ export function buildTools(ctx: Ctx) {
     }),
 
     create_or_update_contact: tool({
-      description: "Save details the customer gives you, such as their name, phone number or email.",
+      description:
+        "Save anything you learn about the customer into their CRM profile: name, email, phone, preferences, hair type, allergies, sensitivities, who they usually see, how they were referred. Call this as soon as they mention something worth remembering. Notes are appended, never overwritten.",
       inputSchema: z.object({
         full_name: z.string().nullable(),
         email: z.string().nullable(),
         phone: z.string().nullable(),
         notes: z.string().nullable(),
+        tags: z.array(z.string()).nullable(),
+        summary: z.string().nullable(),
       }),
       execute: wrap(ctx, "create_or_update_contact", async (args) => {
-        const patch: Record<string, string> = {};
+        const { data: current } = await db
+          .from("contacts")
+          .select("notes,tags,ai_summary")
+          .eq("id", ctx.contactId)
+          .maybeSingle();
+
+        const patch: Record<string, unknown> = {};
         if (args.full_name) patch['full_name'] = args.full_name;
         if (args.email) patch['email'] = args.email;
         if (args.phone) patch['phone'] = args.phone;
-        if (args.notes) patch['notes'] = args.notes;
+        if (args.summary) patch['ai_summary'] = args.summary;
+        if (args.notes) {
+          const existing = (current?.notes ?? "").trim();
+          patch['notes'] = existing.includes(args.notes.trim())
+            ? existing
+            : [existing, `${new Date().toISOString().slice(0, 10)}: ${args.notes.trim()}`].filter(Boolean).join("\n");
+        }
+        if (args.tags?.length) {
+          const merged = new Set([...(current?.tags ?? []), ...args.tags.map((t) => t.trim().toLowerCase()).filter(Boolean)]);
+          patch['tags'] = [...merged];
+        }
         if (!Object.keys(patch).length) return { ok: true, updated: false };
         const { data, error } = await db
           .from("contacts")
