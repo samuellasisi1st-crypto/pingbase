@@ -85,6 +85,8 @@ function WhatsAppTestPage() {
     enabled: tab === "inbox" && signedIn === true,
     refetchInterval: 4000,
   });
+  const [channelFilter, setChannelFilter] = useState<(typeof CHANNEL_FILTERS)[number]["value"]>("all");
+  const visibleMessages = (inbox.data ?? []).filter((m) => channelFilter === "all" || m.channel === channelFilter);
   const enableIncoming = async () => {
     setSubscribing(true);
     setNotice(null);
