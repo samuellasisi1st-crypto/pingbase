@@ -1,0 +1,5 @@
+import { forwardRef, type HTMLAttributes } from "react";
+import { Button } from "./Button";
+import { cn } from "../lib/utils";
+export interface HandoverCardProps extends HTMLAttributes<HTMLDivElement> { reason:string; summary:string; recommendedAction?:string; onTakeOver?:()=>void; }
+export const HandoverCard=forwardRef<HTMLDivElement,HandoverCardProps>(function HandoverCard({reason,summary,recommendedAction,onTakeOver,className,...props},ref){return <div ref={ref} className={cn("w-full max-w-[420px] rounded-xl border border-yellow-strong/40 bg-yellow-soft p-3",className)} {...props}><p className="text-xs font-semibold text-foreground">AI handed this conversation over</p><dl className="mt-2 space-y-2 text-[11px]"><div><dt className="font-semibold text-secondary">Reason</dt><dd className="mt-0.5 text-foreground">{reason}</dd></div><div><dt className="font-semibold text-secondary">Summary</dt><dd className="mt-0.5 leading-relaxed text-foreground">{summary}</dd></div></dl>{onTakeOver&&<Button variant="dark" size="sm" className="mt-3" onClick={onTakeOver}>{recommendedAction||"Take over"}</Button>}</div>});
