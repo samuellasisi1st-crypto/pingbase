@@ -20,11 +20,13 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TeamChatRouteImport } from './routes/team-chat'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WhatsNewRouteImport } from './routes/whats-new'
 import { Route as PayPaymentIdRouteImport } from './routes/pay.$paymentId'
 import { Route as ApiPublicWebhooksMetaRouteImport } from './routes/api/public/webhooks/meta'
@@ -85,6 +87,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -108,6 +115,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const TeamChatRoute = TeamChatRouteImport.update({
   id: '/team-chat',
   path: '/team-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WhatsNewRoute = WhatsNewRouteImport.update({
@@ -144,11 +156,13 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof ContactsRoute
   '/help': typeof HelpRoute
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/reviews': typeof ReviewsRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/team-chat': typeof TeamChatRoute
+  '/terms': typeof TermsRoute
   '/whats-new': typeof WhatsNewRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
@@ -166,11 +180,13 @@ export interface FileRoutesByTo {
   '/contacts': typeof ContactsRoute
   '/help': typeof HelpRoute
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/reviews': typeof ReviewsRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/team-chat': typeof TeamChatRoute
+  '/terms': typeof TermsRoute
   '/whats-new': typeof WhatsNewRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
@@ -189,11 +205,13 @@ export interface FileRoutesById {
   '/contacts': typeof ContactsRoute
   '/help': typeof HelpRoute
   '/notifications': typeof NotificationsRoute
+  '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
   '/reviews': typeof ReviewsRoute
   '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
   '/team-chat': typeof TeamChatRoute
+  '/terms': typeof TermsRoute
   '/whats-new': typeof WhatsNewRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
@@ -213,11 +231,13 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/help'
     | '/notifications'
+    | '/privacy'
     | '/profile'
     | '/reviews'
     | '/search'
     | '/settings'
     | '/team-chat'
+    | '/terms'
     | '/whats-new'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
@@ -235,11 +255,13 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/help'
     | '/notifications'
+    | '/privacy'
     | '/profile'
     | '/reviews'
     | '/search'
     | '/settings'
     | '/team-chat'
+    | '/terms'
     | '/whats-new'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
@@ -257,11 +279,13 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/help'
     | '/notifications'
+    | '/privacy'
     | '/profile'
     | '/reviews'
     | '/search'
     | '/settings'
     | '/team-chat'
+    | '/terms'
     | '/whats-new'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
@@ -280,11 +304,13 @@ export interface RootRouteChildren {
   ContactsRoute: typeof ContactsRoute
   HelpRoute: typeof HelpRoute
   NotificationsRoute: typeof NotificationsRoute
+  PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
   ReviewsRoute: typeof ReviewsRoute
   SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
   TeamChatRoute: typeof TeamChatRoute
+  TermsRoute: typeof TermsRoute
   WhatsNewRoute: typeof WhatsNewRoute
   PayPaymentIdRoute: typeof PayPaymentIdRoute
   ApiPublicWebhooksMetaRoute: typeof ApiPublicWebhooksMetaRoute
@@ -370,6 +396,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -403,6 +436,13 @@ declare module '@tanstack/react-router' {
       path: '/team-chat'
       fullPath: '/team-chat'
       preLoaderRoute: typeof TeamChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/whats-new': {
@@ -448,11 +488,13 @@ const rootRouteChildren: RootRouteChildren = {
   ContactsRoute: ContactsRoute,
   HelpRoute: HelpRoute,
   NotificationsRoute: NotificationsRoute,
+  PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
   ReviewsRoute: ReviewsRoute,
   SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
   TeamChatRoute: TeamChatRoute,
+  TermsRoute: TermsRoute,
   WhatsNewRoute: WhatsNewRoute,
   PayPaymentIdRoute: PayPaymentIdRoute,
   ApiPublicWebhooksMetaRoute: ApiPublicWebhooksMetaRoute,
