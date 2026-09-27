@@ -161,6 +161,7 @@ export const completeEmbeddedSignup = createServerFn({ method: "POST" })
         code: z.string().min(10).max(2000),
         wabaId: z.string().regex(/^\d{5,25}$/).optional(),
         phoneNumberId: z.string().regex(/^\d{5,25}$/).optional(),
+        pageUrl: z.string().url().max(2000).optional(),
       })
       .parse(d),
   )
@@ -172,12 +173,26 @@ export const completeEmbeddedSignup = createServerFn({ method: "POST" })
     const appSecret = process.env['META_APP_SECRET'];
     if (!appId || !appSecret) return { ok: false as const, error: "Pingbase's Meta app isn't configured yet." };
 
-    const tokenRes = await fetch(
-      `${GRAPH}/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&code=${encodeURIComponent(data.code)}`,
-    );
-    const tokenJson = (await tokenRes.json().catch(() => ({}))) as { access_token?: string; error?: { message?: string } };
-    if (!tokenRes.ok || !tokenJson.access_token) {
-      const error = tokenJson.error?.message ?? `Meta returned ${tokenRes.status}`;
+    // Codes from Meta's JS popup are tied to whichever redirect the popup used, which varies.
+    // Try the known variants; a mismatched attempt doesn't use up the code.
+    const redirects: Array<string | null> = [null, ""];
+    if (data.pageUrl) {
+      const u = new URL(data.pageUrl);
+      redirects.push(`${u.origin}/`, u.origin, `${u.origin}${u.pathname}`, data.pageUrl);
+    }
+    let tokenRes: Response | null = null;
+    let tokenJson: { access_token?: string; error?: { message?: string } } = {};
+    for (const r of Array.from(new Set(redirects))) {
+      const rq = r === null ? "" : `&redirect_uri=${encodeURIComponent(r)}`;
+      tokenRes = await fetch(
+        `${GRAPH}/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&code=${encodeURIComponent(data.code)}${rq}`,
+      );
+      tokenJson = (await tokenRes.json().catch(() => ({}))) as typeof tokenJson;
+      if (tokenRes.ok && tokenJson.access_token) break;
+      if (!/redirect_uri/i.test(tokenJson.error?.message ?? "")) break;
+    }
+    if (!tokenRes || !tokenRes.ok || !tokenJson.access_token) {
+      const error = tokenJson.error?.message ?? `Meta returned ${tokenRes?.status}`;
       await logIntegration(WORKSPACE, "whatsapp", "error", `Embedded signup token exchange failed: ${error}`);
       return { ok: false as const, error };
     }

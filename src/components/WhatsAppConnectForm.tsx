@@ -87,7 +87,7 @@ export function WhatsAppConnectForm() {
       // Meta's "which number" message can land just after the login callback.
       if (!sessionRef.current.phoneNumberId) await new Promise((r) => setTimeout(r, 1500));
       const { wabaId, phoneNumberId } = sessionRef.current;
-      const res = await complete({ data: { code, wabaId, phoneNumberId } });
+      const res = await complete({ data: { code, wabaId, phoneNumberId, pageUrl: window.location.href } });
       if (res.ok) toast.success(`WhatsApp connected${res.displayPhoneNumber ? ` · ${res.displayPhoneNumber}` : ""}`);
       else toast.error(res.error);
     } catch (e) {
