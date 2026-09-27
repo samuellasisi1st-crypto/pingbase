@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { money } from "@/lib/time";
+import { MetaConnectForm } from "@/components/MetaConnectForm";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -168,6 +169,11 @@ function SettingsPage() {
           </TabsContent>
 
           <TabsContent value="channels" className="mt-4 grid gap-3">
+            <MetaConnectForm
+              connected={(d.channels as unknown as Array<{ channel: string; status: string }>).some(
+                (c) => c.channel === "messenger" && c.status === "CONNECTED",
+              )}
+            />
             {(d.channels as unknown as Array<{ id: string; channel: string; status: string; last_error: string | null }>).map((c) => (
               <div key={c.id} className="flex items-center justify-between rounded-xl border bg-surface p-4">
                 <div>
