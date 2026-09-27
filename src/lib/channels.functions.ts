@@ -34,9 +34,9 @@ export const startMetaConnect = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertMember(context.supabase as never);
     const { metaPlatform, signState, META_SCOPES } = await import("@/lib/channels.server");
-    const { getRequest } = await import("@tanstack/react-start/server");
     const { appId } = metaPlatform();
-    const serverOrigin = new URL(getRequest().url).origin;
+    // Must match exactly one of the redirect URIs whitelisted in the Meta app.
+    const serverOrigin = data.origin;
     const state = signState({ w: WORKSPACE, u: context.userId, o: data.origin });
     const params = new URLSearchParams({
       client_id: appId,
