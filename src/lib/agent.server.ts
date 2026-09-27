@@ -823,6 +823,8 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     { data: services },
     { data: staff },
     { data: appointments },
+    { data: linkedChannels },
+    { data: otherChannelHistory },
   ] = await Promise.all([
     db.from("business_settings").select("*").eq("workspace_id", ctx.workspaceId).maybeSingle(),
     db.from("ai_agent_settings").select("*").eq("workspace_id", ctx.workspaceId).maybeSingle(),
@@ -841,6 +843,19 @@ export async function runAgent(ctx: Ctx): Promise<string> {
       .select("id,starts_at,status,deposit_status,service:service_id(name),staff:staff_id(name)")
       .eq("contact_id", ctx.contactId)
       .order("starts_at"),
+    db
+      .from("contact_channels")
+      .select("channel,external_id,display_name")
+      .eq("workspace_id", ctx.workspaceId)
+      .eq("contact_id", ctx.contactId),
+    db
+      .from("messages")
+      .select("channel,direction,sender_type,body,created_at")
+      .eq("contact_id", ctx.contactId)
+      .neq("conversation_id", ctx.conversationId)
+      .neq("direction", "internal")
+      .order("created_at", { ascending: false })
+      .limit(12),
   ]);
 
   const now = new Date();
