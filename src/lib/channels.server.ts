@@ -4,6 +4,10 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 export const GRAPH = "https://graph.facebook.com/v21.0";
 export const META_CHANNELS = ["instagram", "messenger"] as const;
+
+/** Per-tenant WhatsApp Cloud API credentials. Stored service-role only. */
+export type WhatsAppSecrets = { access_token: string; phone_number_id: string; waba_id?: string | null };
+export type WhatsAppConfig = { phone_number_id?: string; display_phone_number?: string | null; verified_name?: string | null; waba_id?: string | null };
 export const META_SCOPES = [
   "pages_show_list",
   "pages_messaging",
@@ -216,6 +220,7 @@ export async function deliverOutbound(opts: {
 }): Promise<{ delivered: boolean; externalMessageId?: string | undefined; error?: string | undefined }> {
   const { workspaceId, channel, recipientId, text } = opts;
   if (channel === "test") return { delivered: true };
+  if (channel === "whatsapp") return deliverWhatsApp(workspaceId, recipientId, text);
   if (!(META_CHANNELS as readonly string[]).includes(channel)) {
     const error = `${channel} is not connected yet.`;
     await logIntegration(workspaceId, channel, "warn", `Reply could not be delivered: ${error}`);
@@ -257,6 +262,137 @@ export async function deliverOutbound(opts: {
   } catch (e) {
     const error = e instanceof Error ? e.message : String(e);
     await logIntegration(workspaceId, channel, "error", `Send failed: ${error}`);
+    return { delivered: false, error };
+  }
+}
+
+/* ------------------------------ WhatsApp Cloud API ------------------------------ */
+
+const WA = () => (supabaseAdmin as unknown as { from: (t: string) => any }).from("channel_secrets");
+
+export async function getWhatsAppSecrets(workspaceId: string): Promise<WhatsAppSecrets | null> {
+  const { data } = await WA().select("secrets").eq("workspace_id", workspaceId).eq("channel", "whatsapp").maybeSingle();
+  const s = data?.secrets as Partial<WhatsAppSecrets> | undefined;
+  return s?.access_token && s?.phone_number_id ? (s as WhatsAppSecrets) : null;
+}
+
+export async function saveWhatsAppSecrets(workspaceId: string, secrets: WhatsAppSecrets) {
+  const { error } = await WA().upsert(
+    { workspace_id: workspaceId, channel: "whatsapp", secrets, updated_at: new Date().toISOString() },
+    { onConflict: "workspace_id,channel" },
+  );
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteWhatsAppSecrets(workspaceId: string) {
+  await WA().delete().eq("workspace_id", workspaceId).eq("channel", "whatsapp");
+}
+
+export async function getWhatsAppConfig(workspaceId: string): Promise<WhatsAppConfig> {
+  const { data } = await supabaseAdmin
+    .from("channel_connections")
+    .select("config")
+    .eq("workspace_id", workspaceId)
+    .eq("channel", "whatsapp")
+    .maybeSingle();
+  return (data?.config ?? {}) as WhatsAppConfig;
+}
+
+/** Route a WhatsApp webhook entry (phone number ID) to its workspace. */
+export async function findWorkspaceForWhatsAppPhoneId(phoneNumberId: string) {
+  const { data } = await supabaseAdmin
+    .from("channel_connections")
+    .select("workspace_id")
+    .eq("channel", "whatsapp")
+    .filter("config->>phone_number_id", "eq", phoneNumberId)
+    .limit(1)
+    .maybeSingle();
+  return data?.workspace_id ?? null;
+}
+
+/** Verify credentials against Meta, store them and mark WhatsApp connected. */
+export async function connectWhatsApp(workspaceId: string, input: WhatsAppSecrets) {
+  const now = new Date().toISOString();
+  let res: Response;
+  try {
+    res = await fetch(
+      `${GRAPH}/${input.phone_number_id}?fields=display_phone_number,verified_name&access_token=${encodeURIComponent(input.access_token)}`,
+    );
+  } catch (e) {
+    return { ok: false as const, error: e instanceof Error ? e.message : "Could not reach WhatsApp." };
+  }
+  const json = (await res.json().catch(() => ({}))) as {
+    display_phone_number?: string;
+    verified_name?: string;
+    error?: { message?: string };
+  };
+  if (!res.ok) {
+    const error = json.error?.message ?? `WhatsApp returned ${res.status}`;
+    await supabaseAdmin
+      .from("channel_connections")
+      .update({ status: "ERROR", last_error: error, updated_at: now })
+      .eq("workspace_id", workspaceId)
+      .eq("channel", "whatsapp");
+    await logIntegration(workspaceId, "whatsapp", "error", `Connect failed: ${error}`);
+    return { ok: false as const, error };
+  }
+
+  await saveWhatsAppSecrets(workspaceId, input);
+  const config: WhatsAppConfig = {
+    phone_number_id: input.phone_number_id,
+    display_phone_number: json.display_phone_number ?? null,
+    verified_name: json.verified_name ?? null,
+    waba_id: input.waba_id ?? null,
+  };
+  await supabaseAdmin
+    .from("channel_connections")
+    .update({ status: "CONNECTED", last_error: null, config: config as never, updated_at: now })
+    .eq("workspace_id", workspaceId)
+    .eq("channel", "whatsapp");
+  await logIntegration(workspaceId, "whatsapp", "info", `Connected WhatsApp number ${json.display_phone_number ?? input.phone_number_id}`);
+  return { ok: true as const, displayPhoneNumber: json.display_phone_number ?? null, verifiedName: json.verified_name ?? null };
+}
+
+async function deliverWhatsApp(
+  workspaceId: string,
+  recipientId: string,
+  text: string,
+): Promise<{ delivered: boolean; externalMessageId?: string | undefined; error?: string | undefined }> {
+  const { data: conn } = await supabaseAdmin
+    .from("channel_connections")
+    .select("status")
+    .eq("workspace_id", workspaceId)
+    .eq("channel", "whatsapp")
+    .maybeSingle();
+  const secrets = await getWhatsAppSecrets(workspaceId);
+  if (!conn || conn.status !== "CONNECTED" || !secrets) {
+    const error = "WhatsApp is not connected.";
+    await logIntegration(workspaceId, "whatsapp", "warn", `Reply could not be delivered: ${error}`);
+    return { delivered: false, error };
+  }
+  try {
+    const res = await fetch(`${GRAPH}/${secrets.phone_number_id}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${secrets.access_token}` },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        recipient_type: "individual",
+        to: recipientId,
+        type: "text",
+        text: { preview_url: false, body: text.slice(0, 4000) },
+      }),
+    });
+    const json = (await res.json().catch(() => ({}))) as { messages?: Array<{ id?: string }>; error?: { message?: string } };
+    if (!res.ok) {
+      const error = json.error?.message ?? `WhatsApp returned ${res.status}`;
+      await logIntegration(workspaceId, "whatsapp", "error", `Send failed: ${error}`, { status: res.status });
+      await setChannelError(workspaceId, "whatsapp", error);
+      return { delivered: false, error };
+    }
+    return { delivered: true, externalMessageId: json.messages?.[0]?.id };
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e);
+    await logIntegration(workspaceId, "whatsapp", "error", `Send failed: ${error}`);
     return { delivered: false, error };
   }
 }

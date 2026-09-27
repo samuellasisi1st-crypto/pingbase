@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { money } from "@/lib/time";
 import { MetaConnectForm } from "@/components/MetaConnectForm";
+import { WhatsAppConnectForm } from "@/components/WhatsAppConnectForm";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -174,6 +175,7 @@ function SettingsPage() {
                 (c) => c.channel === "messenger" && c.status === "CONNECTED",
               )}
             />
+            <WhatsAppConnectForm />
             {(d.channels as unknown as Array<{ id: string; channel: string; status: string; last_error: string | null }>).map((c) => (
               <div key={c.id} className="flex items-center justify-between rounded-xl border bg-surface p-4">
                 <div>
@@ -186,7 +188,7 @@ function SettingsPage() {
               </div>
             ))}
             <p className="text-xs text-muted-foreground">
-              Instagram and Messenger go live once connected above. WhatsApp, Telegram, Gmail and Outlook still need their
+              Instagram, Messenger and WhatsApp go live once connected above. Telegram, Gmail and Outlook still need their
               credentials before they can receive messages.
             </p>
           </TabsContent>
