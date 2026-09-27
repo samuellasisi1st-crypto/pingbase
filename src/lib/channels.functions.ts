@@ -80,3 +80,64 @@ export const disconnectMeta = createServerFn({ method: "POST" })
     await logIntegration(WORKSPACE, "meta", "info", "Disconnected Instagram and Messenger");
     return { ok: true };
   });
+
+/** WhatsApp connection status. Never returns the token. */
+export const getWhatsAppStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertMember(context.supabase as never);
+    const { getWhatsAppConfig, getWhatsAppSecrets } = await import("@/lib/channels.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const config = await getWhatsAppConfig(WORKSPACE);
+    const connected = Boolean(await getWhatsAppSecrets(WORKSPACE));
+    const { data } = await supabaseAdmin
+      .from("channel_connections")
+      .select("status,last_error")
+      .eq("workspace_id", WORKSPACE)
+      .eq("channel", "whatsapp")
+      .maybeSingle();
+    return {
+      connected,
+      status: (data?.status as string | undefined) ?? "NOT_CONNECTED",
+      lastError: data?.last_error ?? null,
+      displayPhoneNumber: connected ? (config.display_phone_number ?? null) : null,
+      verifiedName: connected ? (config.verified_name ?? null) : null,
+    };
+  });
+
+export const saveWhatsAppCredentials = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        phoneNumberId: z.string().regex(/^\d{5,25}$/, "Phone Number ID should be digits only."),
+        wabaId: z.string().regex(/^\d{5,25}$/).optional().or(z.literal("")),
+        accessToken: z.string().min(20).max(5000),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertMember(context.supabase as never);
+    const { connectWhatsApp } = await import("@/lib/channels.server");
+    return connectWhatsApp(WORKSPACE, {
+      access_token: data.accessToken.trim(),
+      phone_number_id: data.phoneNumberId.trim(),
+      waba_id: data.wabaId ? data.wabaId.trim() : null,
+    });
+  });
+
+export const disconnectWhatsApp = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertMember(context.supabase as never);
+    const { deleteWhatsAppSecrets, logIntegration } = await import("@/lib/channels.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await deleteWhatsAppSecrets(WORKSPACE);
+    await supabaseAdmin
+      .from("channel_connections")
+      .update({ status: "NOT_CONNECTED", last_error: null, config: {} as never, updated_at: new Date().toISOString() })
+      .eq("workspace_id", WORKSPACE)
+      .eq("channel", "whatsapp");
+    await logIntegration(WORKSPACE, "whatsapp", "info", "Disconnected WhatsApp");
+    return { ok: true };
+  });
