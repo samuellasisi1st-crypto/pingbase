@@ -97,6 +97,81 @@ async function recipientFor(ctx: Ctx): Promise<string | null> {
   return data?.external_id ?? null;
 }
 
+/**
+ * One person = one contact. When a verified email or phone matches an older profile
+ * (same person arriving from a different channel), fold this channel into that profile.
+ * Never merges on names alone.
+ */
+async function linkToExistingPerson(ctx: Ctx, identity: { email?: string | null; phone?: string | null }) {
+  const db = supabaseAdmin;
+  const email = identity.email?.trim() || null;
+  const phone = identity.phone?.trim() || null;
+  if (!email && !phone) return null;
+
+  let match: { id: string; created_at: string } | null = null;
+  if (email) {
+    const { data } = await db
+      .from("contacts")
+      .select("id,created_at")
+      .eq("workspace_id", ctx.workspaceId)
+      .neq("id", ctx.contactId)
+      .ilike("email", email)
+      .order("created_at")
+      .limit(1);
+    match = data?.[0] ?? null;
+  }
+  if (!match && phone) {
+    const { data } = await db
+      .from("contacts")
+      .select("id,created_at")
+      .eq("workspace_id", ctx.workspaceId)
+      .neq("id", ctx.contactId)
+      .eq("phone", phone)
+      .order("created_at")
+      .limit(1);
+    match = data?.[0] ?? null;
+  }
+  if (!match) return null;
+
+  const survivorId = match.id;
+  const duplicateId = ctx.contactId;
+
+  const [{ data: survivor }, { data: duplicate }] = await Promise.all([
+    db.from("contacts").select("*").eq("id", survivorId).maybeSingle(),
+    db.from("contacts").select("*").eq("id", duplicateId).maybeSingle(),
+  ]);
+
+  // Move every record from the newly-created profile onto the known person.
+  await db.from("contact_channels").update({ contact_id: survivorId }).eq("contact_id", duplicateId);
+  await db.from("conversations").update({ contact_id: survivorId }).eq("contact_id", duplicateId);
+  await db.from("messages").update({ contact_id: survivorId }).eq("contact_id", duplicateId);
+  await db.from("appointments").update({ contact_id: survivorId }).eq("contact_id", duplicateId);
+  await db.from("payments").update({ contact_id: survivorId }).eq("contact_id", duplicateId);
+
+  const mergedNotes = [survivor?.notes ?? "", duplicate?.notes ?? ""]
+    .map((n) => n.trim())
+    .filter(Boolean)
+    .filter((n, i, all) => all.indexOf(n) === i)
+    .join("\n");
+  await db
+    .from("contacts")
+    .update({
+      full_name: survivor?.full_name ?? duplicate?.full_name ?? null,
+      email: survivor?.email ?? duplicate?.email ?? null,
+      phone: survivor?.phone ?? duplicate?.phone ?? null,
+      notes: mergedNotes || null,
+      tags: [...new Set([...(survivor?.tags ?? []), ...(duplicate?.tags ?? [])])],
+      ai_summary: survivor?.ai_summary ?? duplicate?.ai_summary ?? null,
+      last_interaction_at: new Date().toISOString(),
+    } as never)
+    .eq("id", survivorId);
+
+  await db.from("contacts").delete().eq("id", duplicateId);
+
+  ctx.contactId = survivorId;
+  return { merged: true, contact_id: survivorId };
+}
+
 export function buildTools(ctx: Ctx) {
   const db = supabaseAdmin;
 
