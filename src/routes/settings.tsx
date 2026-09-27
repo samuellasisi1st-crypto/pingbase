@@ -10,9 +10,9 @@ import { money } from "@/lib/time";
 export const Route = createFileRoute("/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — Studio Nine concierge" },
+      { title: "Settings — Pink OS" },
       { name: "description", content: "Services, staff, policies, knowledge and channel connections for the concierge." },
-      { property: "og:title", content: "Settings — Studio Nine concierge" },
+      { property: "og:title", content: "Settings — Pink OS" },
       { property: "og:description", content: "Services, staff, policies, knowledge and channel connections for the concierge." },
     ],
   }),

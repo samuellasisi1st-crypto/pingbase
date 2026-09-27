@@ -11,9 +11,9 @@ import { formatSalonDateTime } from "@/lib/time";
 export const Route = createFileRoute("/contacts")({
   head: () => ({
     meta: [
-      { title: "Contacts — Studio Nine concierge" },
+      { title: "Contacts — Pink OS" },
       { name: "description", content: "One customer profile per person, linked across every channel they message from." },
-      { property: "og:title", content: "Contacts — Studio Nine concierge" },
+      { property: "og:title", content: "Contacts — Pink OS" },
       { property: "og:description", content: "One customer profile per person, linked across every channel they message from." },
     ],
   }),

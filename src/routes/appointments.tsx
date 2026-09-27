@@ -10,9 +10,9 @@ import { formatSalonDateTime, money } from "@/lib/time";
 export const Route = createFileRoute("/appointments")({
   head: () => ({
     meta: [
-      { title: "Appointments — Studio Nine concierge" },
+      { title: "Appointments — Pink OS" },
       { name: "description", content: "Every booking the concierge has made, with deposits and staff assignment." },
-      { property: "og:title", content: "Appointments — Studio Nine concierge" },
+      { property: "og:title", content: "Appointments — Pink OS" },
       { property: "og:description", content: "Every booking the concierge has made, with deposits and staff assignment." },
     ],
   }),
