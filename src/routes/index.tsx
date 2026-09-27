@@ -149,7 +149,7 @@ function InboxPage() {
                   key={f}
                   onClick={() => setFilter(f)}
                   className={`rounded-full px-2.5 py-1 text-xs transition-colors ${
-                    filter === f ? "bg-primary text-primary-foreground" : "bg-surface-muted text-muted-foreground hover:bg-secondary"
+                    filter === f ? "bg-primary text-primary-foreground" : "bg-surface-muted text-muted-foreground hover:bg-hover"
                   }`}
                 >
                   {f}

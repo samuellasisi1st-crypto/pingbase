@@ -9,6 +9,11 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
+## Design system
+- All UI must use the Veya design system in `src/design-system/` (components + `styles/theme.css` tokens), imported from the "Cozy Code Library" project, because it is the single source of truth for colour, radius, shadow, spacing and typography.
+- `src/styles.css` only aliases shadcn-style names onto Veya primitives; never hardcode colours or redefine tokens the design system already owns.
+- Re-sync by re-copying `src/design-system/` from the Cozy Code Library project; changes there do not propagate automatically.
+
 ## Booking concierge architecture
 - All inbound messages from any channel go through `src/lib/pipeline.server.ts` (dedupe → contact → conversation → AI) so every channel shares one inbox and one agent.
 - The AI may only act through the tools in `src/lib/agent.server.ts`; availability comes solely from `src/lib/availability.server.ts`, which re-checks the slot before confirming, so the agent can never invent a booking.
