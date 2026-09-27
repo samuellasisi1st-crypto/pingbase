@@ -186,7 +186,7 @@ function SettingsPage() {
               </div>
             ))}
             <p className="text-xs text-muted-foreground">
-              Only the internal test chat is live. Instagram, Messenger, WhatsApp, Telegram, Gmail and Outlook need their
+              Instagram and Messenger go live once connected above. WhatsApp, Telegram, Gmail and Outlook still need their
               credentials before they can receive messages.
             </p>
           </TabsContent>
