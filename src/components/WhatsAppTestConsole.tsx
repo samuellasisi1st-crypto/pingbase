@@ -100,8 +100,8 @@ export function WhatsAppTestConsole() {
                 value={`${tplName}|${tplLang}`}
                 onChange={(e) => {
                   const [n, l] = e.target.value.split("|");
-                  setTplName(n);
-                  setTplLang(l);
+                  setTplName(n ?? "hello_world");
+                  setTplLang(l ?? "en_US");
                 }}
               >
                 <option value="hello_world|en_US">hello_world (en_US)</option>
