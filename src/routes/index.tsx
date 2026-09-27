@@ -5,6 +5,7 @@ import { CheckCircle2, MessageSquareText, RefreshCw, Send, XCircle } from "lucid
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GoogleCalendarConnectForm } from "@/components/GoogleCalendarConnectForm";
+import { MetaConnectForm } from "@/components/MetaConnectForm";
 
 import { Badge, Button, Input, Tabs, Textarea } from "@/design-system";
 import {
@@ -154,6 +155,7 @@ function WhatsAppTestPage() {
             { value: "send", label: "Send message" },
             { value: "inbox", label: "Incoming" },
             { value: "templates", label: "Templates" },
+            { value: "social", label: "Instagram & Messenger" },
             { value: "calendar", label: "Calendar" },
           ]}
           value={tab}
@@ -246,6 +248,12 @@ function WhatsAppTestPage() {
                 ))}
               </div>
             )}
+          </section>
+        ) : tab === "social" ? (
+          <section className="max-w-xl" aria-labelledby="social-title">
+            <h2 id="social-title" className="sr-only">Instagram and Messenger</h2>
+
+            {signedIn ? <MetaConnectForm connected={false} /> : <p className="text-sm text-secondary">Sign in to connect Instagram.</p>}
           </section>
         ) : tab === "calendar" ? (
           <section className="max-w-xl">
