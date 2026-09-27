@@ -304,6 +304,21 @@ export function buildTools(ctx: Ctx) {
           .select()
           .maybeSingle();
         if (error) throw error;
+
+        // A verified email or phone can reveal this is someone we already know from another channel.
+        let linked: Awaited<ReturnType<typeof linkToExistingPerson>> = null;
+        if (args.email || args.phone) {
+          linked = await linkToExistingPerson(ctx, { email: args.email, phone: args.phone });
+        }
+        if (linked) {
+          const { data: person } = await db.from("contacts").select("*").eq("id", ctx.contactId).maybeSingle();
+          return {
+            ok: true,
+            contact: person,
+            recognised_from_another_channel: true,
+            note: "This is an existing customer who previously messaged on another channel. Their bookings and history are now available.",
+          };
+        }
         return { ok: true, contact: data };
       }),
     }),
