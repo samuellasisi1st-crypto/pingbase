@@ -1,146 +1,111 @@
-// Salon's Google Calendar (workspace-owned connection via the connector gateway).
-// Internal DB stays the source of truth; Google is mirrored + its busy blocks respected.
-const GATEWAY = "https://connector-gateway.lovable.dev/google_calendar/calendar/v3";
+// Per-business Google Calendar, connected via Pingbase's own Google OAuth app.
+// We only READ busy times (free/busy) so booked slots never clash with the owner's calendar.
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-function headers() {
-  const lovable = process.env["LOVABLE_API_KEY"];
-  const conn = process.env["GOOGLE_CALENDAR_API_KEY"];
-  if (!lovable || !conn) return null;
-  return { Authorization: `Bearer ${lovable}`, "X-Connection-Api-Key": conn, "Content-Type": "application/json" };
+export const GOOGLE_SCOPES = ["openid", "email", "https://www.googleapis.com/auth/calendar.freebusy"];
+
+export function googlePlatform() {
+  const clientId = process.env["GOOGLE_OAUTH_CLIENT_ID"];
+  const clientSecret = process.env["GOOGLE_OAUTH_CLIENT_SECRET"];
+  if (!clientId || !clientSecret) throw new Error("Google sign-in is not set up yet.");
+  return { clientId, clientSecret };
 }
 
-/** Google event id derived from our appointment id (UUID hex is valid base32hex). */
-export const eventIdFor = (appointmentId: string) => `pb${appointmentId.replace(/-/g, "")}`;
-
-export async function getGoogleBusy(fromISO: string, toISO: string): Promise<Array<{ start: string; end: string }>> {
-  const h = headers();
-  if (!h) return [];
-  try {
-    const res = await fetch(`${GATEWAY}/freeBusy`, {
-      method: "POST",
-      headers: h,
-      body: JSON.stringify({ timeMin: fromISO, timeMax: toISO, items: [{ id: "primary" }] }),
-    });
-    if (!res.ok) {
-      console.error(`Google freeBusy failed [${res.status}]: ${await res.text()}`);
-      return [];
-    }
-    const json = (await res.json()) as { calendars?: Record<string, { busy?: Array<{ start: string; end: string }> }> };
-    return json.calendars?.["primary"]?.busy ?? [];
-  } catch (e) {
-    console.error("Google freeBusy error", e);
-    return [];
-  }
-}
-
-/** Busy blocks that are not our own mirrored appointments. */
-export async function getExternalBusy(fromISO: string, toISO: string, ownEventIds: Set<string>) {
-  const h = headers();
-  if (!h) return [];
-  try {
-    const q = new URLSearchParams({ timeMin: fromISO, timeMax: toISO, singleEvents: "true", maxResults: "250" });
-    const res = await fetch(`${GATEWAY}/calendars/primary/events?${q}`, { headers: h });
-    if (!res.ok) {
-      console.error(`Google events list failed [${res.status}]: ${await res.text()}`);
-      return getGoogleBusy(fromISO, toISO);
-    }
-    const json = (await res.json()) as {
-      items?: Array<{ id: string; status?: string; transparency?: string; start?: { dateTime?: string; date?: string }; end?: { dateTime?: string; date?: string } }>;
-    };
-    return (json.items ?? [])
-      .filter((e) => e.status !== "cancelled" && e.transparency !== "transparent" && !e.id.startsWith("pb") && !ownEventIds.has(e.id))
-      .map((e) => ({ start: e.start?.dateTime ?? e.start?.date ?? "", end: e.end?.dateTime ?? e.end?.date ?? "" }))
-      .filter((b) => b.start && b.end);
-  } catch (e) {
-    console.error("Google events error", e);
-    return [];
-  }
-}
-
-export async function upsertGoogleEvent(ev: {
-  appointmentId: string;
-  title: string;
-  description: string;
-  location?: string | null;
-  startsAt: string;
-  endsAt: string;
-  attendeeEmail?: string | null;
-}): Promise<{ ok: boolean; error?: string; invited?: boolean }> {
-  const h = headers();
-  if (!h) return { ok: false, error: "Google Calendar is not connected." };
-  const id = eventIdFor(ev.appointmentId);
-  const body = {
-    id,
-    summary: ev.title,
-    description: ev.description,
-    ...(ev.location ? { location: ev.location } : {}),
-    start: { dateTime: ev.startsAt },
-    end: { dateTime: ev.endsAt },
-    ...(ev.attendeeEmail ? { attendees: [{ email: ev.attendeeEmail }] } : {}),
-    reminders: { useDefault: false, overrides: [{ method: "popup", minutes: 120 }] },
-  };
-  const q = "sendUpdates=all";
-  let res = await fetch(`${GATEWAY}/calendars/primary/events/${id}?${q}`, { method: "PUT", headers: h, body: JSON.stringify(body) });
-  if (res.status === 404) {
-    res = await fetch(`${GATEWAY}/calendars/primary/events?${q}`, { method: "POST", headers: h, body: JSON.stringify(body) });
-  }
-  if (!res.ok) {
-    const error = `Google Calendar [${res.status}]: ${await res.text()}`;
-    console.error(error);
-    return { ok: false, error };
-  }
-  return { ok: true, invited: !!ev.attendeeEmail };
-}
-
-export async function cancelGoogleEvent(appointmentId: string) {
-  const h = headers();
-  if (!h) return { ok: false };
-  const res = await fetch(`${GATEWAY}/calendars/primary/events/${eventIdFor(appointmentId)}?sendUpdates=all`, {
-    method: "DELETE",
-    headers: h,
+export async function exchangeGoogleCode(code: string, redirectUri: string) {
+  const { clientId, clientSecret } = googlePlatform();
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ code, client_id: clientId, client_secret: clientSecret, redirect_uri: redirectUri, grant_type: "authorization_code" }),
   });
-  if (!res.ok && res.status !== 404 && res.status !== 410) {
-    console.error(`Google delete failed [${res.status}]: ${await res.text()}`);
-    return { ok: false };
+  const json = (await res.json()) as { access_token?: string; refresh_token?: string; expires_in?: number; id_token?: string; error_description?: string };
+  if (!res.ok || !json.access_token) throw new Error(json.error_description ?? `Google token exchange failed (${res.status})`);
+  let email: string | null = null;
+  if (json.id_token) {
+    try {
+      email = JSON.parse(Buffer.from(json.id_token.split(".")[1] ?? "", "base64url").toString()).email ?? null;
+    } catch { /* ignore */ }
   }
-  return { ok: true };
+  return { ...json, email };
 }
 
-/** Mirror an appointment onto the salon calendar and invite the customer by email if we have it. */
-export async function syncAppointmentToGoogle(workspaceId: string, appointmentId: string) {
-  try {
-    const { supabaseAdmin: db } = await import("@/integrations/supabase/client.server");
-    const { data: appt } = await db
-      .from("appointments")
-      .select("*, service:service_id(name), staff:staff_id(name), contact:contact_id(full_name,email)")
-      .eq("id", appointmentId)
-      .eq("workspace_id", workspaceId)
-      .maybeSingle();
-    if (!appt) return { ok: false, error: "Appointment not found" };
-    if (appt.status === "CANCELLED") return cancelGoogleEvent(appointmentId);
-    const { data: settings } = await db.from("business_settings").select("legal_name,address").eq("workspace_id", workspaceId).maybeSingle();
-    const service = (appt.service as unknown as { name: string } | null)?.name ?? "Appointment";
-    const staff = (appt.staff as unknown as { name: string } | null)?.name ?? "";
-    const contact = appt.contact as unknown as { full_name: string | null; email: string | null } | null;
-    const business = settings?.legal_name ?? "Salon";
-    const result = await upsertGoogleEvent({
-      appointmentId,
-      title: `${service}${contact?.full_name ? ` — ${contact.full_name}` : ""} (${business})`,
-      description: `${service}${staff ? ` with ${staff}` : ""}. Status: ${appt.status}. Booked via Pingbase.`,
-      location: settings?.address ?? null,
-      startsAt: appt.starts_at,
-      endsAt: appt.ends_at,
-      attendeeEmail: contact?.email ?? null,
-    });
-    await db.from("integration_logs").insert({
-      workspace_id: workspaceId,
-      channel: "google_calendar",
-      level: result.ok ? "info" : "error",
-      message: result.ok ? `Synced appointment ${appointmentId}` : `Sync failed: ${result.error}`,
-    } as never);
-    return result;
-  } catch (e) {
-    console.error("Google sync error", e);
-    return { ok: false, error: e instanceof Error ? e.message : String(e) };
+export async function saveGoogleConnection(workspaceId: string, userId: string, tok: { access_token?: string; refresh_token?: string; expires_in?: number; email: string | null }) {
+  const { data: existing } = await supabaseAdmin.from("google_calendar_connections").select("refresh_token").eq("workspace_id", workspaceId).maybeSingle();
+  const refresh = tok.refresh_token ?? existing?.refresh_token;
+  if (!refresh) throw new Error("Google did not grant offline access. Please try again.");
+  const { error } = await supabaseAdmin.from("google_calendar_connections").upsert({
+    workspace_id: workspaceId,
+    google_email: tok.email,
+    refresh_token: refresh,
+    access_token: tok.access_token ?? null,
+    access_token_expires_at: new Date(Date.now() + (tok.expires_in ?? 3600) * 1000 - 60000).toISOString(),
+    status: "CONNECTED",
+    last_error: null,
+    connected_by: userId,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) throw error;
+}
+
+async function markError(workspaceId: string, status: string, message: string) {
+  await supabaseAdmin.from("google_calendar_connections").update({ status, last_error: message, updated_at: new Date().toISOString() }).eq("workspace_id", workspaceId);
+  await supabaseAdmin.from("integration_logs").insert({ workspace_id: workspaceId, channel: "google_calendar", level: "error", message } as never);
+}
+
+async function accessTokenFor(workspaceId: string): Promise<string | null> {
+  const { data: c } = await supabaseAdmin.from("google_calendar_connections").select("*").eq("workspace_id", workspaceId).maybeSingle();
+  if (!c || c.status === "NEEDS_REAUTH") return null;
+  if (c.access_token && c.access_token_expires_at && new Date(c.access_token_expires_at) > new Date()) return c.access_token;
+  const { clientId, clientSecret } = googlePlatform();
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ client_id: clientId, client_secret: clientSecret, refresh_token: c.refresh_token, grant_type: "refresh_token" }),
+  });
+  const json = (await res.json()) as { access_token?: string; expires_in?: number; error?: string; error_description?: string };
+  if (!res.ok || !json.access_token) {
+    await markError(workspaceId, json.error === "invalid_grant" ? "NEEDS_REAUTH" : "ERROR", `Google token refresh failed: ${json.error_description ?? json.error ?? res.status}`);
+    return null;
   }
+  await supabaseAdmin
+    .from("google_calendar_connections")
+    .update({ access_token: json.access_token, access_token_expires_at: new Date(Date.now() + (json.expires_in ?? 3600) * 1000 - 60000).toISOString(), status: "CONNECTED", last_error: null })
+    .eq("workspace_id", workspaceId);
+  return json.access_token;
+}
+
+/**
+ * Busy blocks from the business's Google Calendar. Returns [] when not connected.
+ * Throws when connected but Google can't be read, so callers never offer a slot blind.
+ */
+export async function getGoogleBusy(workspaceId: string, fromISO: string, toISO: string): Promise<Array<{ start: string; end: string }>> {
+  const { data: c } = await supabaseAdmin.from("google_calendar_connections").select("status").eq("workspace_id", workspaceId).maybeSingle();
+  if (!c) return [];
+  const token = await accessTokenFor(workspaceId);
+  if (!token) throw new Error("Google Calendar needs reconnecting, so availability can't be confirmed.");
+  const res = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ timeMin: fromISO, timeMax: toISO, items: [{ id: "primary" }] }),
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    await markError(workspaceId, res.status === 401 || res.status === 403 ? "NEEDS_REAUTH" : "ERROR", `Google free/busy failed [${res.status}]: ${body.slice(0, 300)}`);
+    throw new Error("Couldn't read the business's Google Calendar.");
+  }
+  const json = (await res.json()) as { calendars?: Record<string, { busy?: Array<{ start: string; end: string }> }> };
+  return json.calendars?.["primary"]?.busy ?? [];
+}
+
+export async function getGoogleStatus(workspaceId: string) {
+  const { data } = await supabaseAdmin.from("google_calendar_connections").select("google_email,status,last_error").eq("workspace_id", workspaceId).maybeSingle();
+  return data ? { status: data.status, email: data.google_email, lastError: data.last_error } : { status: "NOT_CONNECTED", email: null, lastError: null };
+}
+
+export async function disconnectGoogle(workspaceId: string) {
+  const { data } = await supabaseAdmin.from("google_calendar_connections").select("refresh_token").eq("workspace_id", workspaceId).maybeSingle();
+  if (data?.refresh_token) {
+    await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(data.refresh_token)}`, { method: "POST" }).catch(() => null);
+  }
+  await supabaseAdmin.from("google_calendar_connections").delete().eq("workspace_id", workspaceId);
 }
