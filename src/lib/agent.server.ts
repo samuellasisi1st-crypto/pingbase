@@ -503,6 +503,112 @@ export function buildTools(ctx: Ctx) {
       }),
     }),
 
+    send_slot_options: tool({
+      description:
+        "On WhatsApp, send the customer tappable buttons so they can pick a time with one tap. Only use slots returned by find_available_slots. Send at most 3 for buttons, up to 10 for a list. After calling this, keep your own reply very short (or empty) because the customer already sees the options.",
+      inputSchema: z.object({
+        body: z.string(),
+        footer: z.string().nullable(),
+        slots: z
+          .array(
+            z.object({
+              starts_at: z.string(),
+              staff_id: z.string(),
+              staff_name: z.string(),
+              service_id: z.string(),
+            }),
+          )
+          .min(1),
+      }),
+      execute: wrap(ctx, "send_slot_options", async (args) => {
+        if (ctx.channel !== "whatsapp") return { ok: false, error: "Tappable options are only available on WhatsApp." };
+        const to = await recipientFor(ctx);
+        if (!to) return { ok: false, error: "No WhatsApp address for this customer." };
+        const choices = args.slots.slice(0, 10).map((s, i) => ({
+          id: `slot:${i}:${s.starts_at}:${s.staff_id}:${s.service_id}`,
+          title: `${formatSalonDateTime(s.starts_at).replace(/,/g, "")}`,
+          description: `with ${s.staff_name}`,
+        }));
+        const result = await sendWhatsAppChoices(ctx.workspaceId, to, {
+          body: args.body,
+          footer: args.footer,
+          buttonLabel: "Pick a time",
+          choices,
+        });
+        await db.from("messages").insert({
+          workspace_id: ctx.workspaceId,
+          conversation_id: ctx.conversationId,
+          contact_id: ctx.contactId,
+          channel: ctx.channel,
+          direction: "outbound",
+          sender_type: "AI",
+          sender_name: "AI",
+          content_type: "interactive",
+          body: `${args.body}\n\n${choices.map((c) => `• ${c.title} ${c.description}`).join("\n")}`,
+          external_message_id: result.externalMessageId ?? null,
+          metadata: { delivered: result.delivered, delivery_error: result.error ?? null, choices } as never,
+        });
+        if (!result.delivered) return { ok: false, error: result.error ?? "Could not send options." };
+        await db.from("conversations").update({ state: "AWAITING_SLOT_SELECTION" }).eq("id", ctx.conversationId);
+        return { ok: true, sent: choices.length, note: "The customer can now tap a time." };
+      }),
+    }),
+
+    send_calendar_invite: tool({
+      description:
+        "Send the customer a calendar file for a confirmed appointment so they can add it to their phone calendar with one tap. Only after the booking is confirmed.",
+      inputSchema: z.object({ appointment_id: z.string() }),
+      execute: wrap(ctx, "send_calendar_invite", async ({ appointment_id }) => {
+        if (ctx.channel !== "whatsapp") return { ok: false, error: "Calendar files are only available on WhatsApp." };
+        const to = await recipientFor(ctx);
+        if (!to) return { ok: false, error: "No WhatsApp address for this customer." };
+        const [{ data: appt }, { data: settings }, { data: contact }] = await Promise.all([
+          db
+            .from("appointments")
+            .select("*, service:service_id(name,duration_minutes), staff:staff_id(name)")
+            .eq("id", appointment_id)
+            .maybeSingle(),
+          db.from("business_settings").select("legal_name,address,email").eq("workspace_id", ctx.workspaceId).maybeSingle(),
+          db.from("contacts").select("email").eq("id", ctx.contactId).maybeSingle(),
+        ]);
+        if (!appt) return { ok: false, error: "Appointment not found" };
+        const serviceName = (appt.service as unknown as { name: string })?.name ?? "Appointment";
+        const staffName = (appt.staff as unknown as { name: string })?.name ?? "";
+        const business = settings?.legal_name ?? "your appointment";
+        const ics = buildIcs({
+          uid: `${appt.id}@pingbase`,
+          title: `${serviceName} at ${business}`,
+          description: `${serviceName} with ${staffName}. Booked through ${business}.`,
+          location: settings?.address ?? null,
+          startsAt: appt.starts_at,
+          endsAt: appt.ends_at,
+          organizerName: business,
+          organizerEmail: settings?.email ?? null,
+          attendeeEmail: contact?.email ?? null,
+        });
+        const result = await sendWhatsAppCalendarFile(ctx.workspaceId, to, {
+          ics,
+          filename: `${serviceName.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.ics`,
+          caption: `${serviceName} · ${formatSalonDateTime(appt.starts_at)}–${formatSalonTime(appt.ends_at)}`,
+        });
+        await db.from("messages").insert({
+          workspace_id: ctx.workspaceId,
+          conversation_id: ctx.conversationId,
+          contact_id: ctx.contactId,
+          channel: ctx.channel,
+          direction: "outbound",
+          sender_type: "AI",
+          sender_name: "AI",
+          content_type: "document",
+          body: `Calendar invite for ${serviceName} on ${formatSalonDateTime(appt.starts_at)}`,
+          external_message_id: result.externalMessageId ?? null,
+          metadata: { delivered: result.delivered, delivery_error: result.error ?? null, kind: "calendar_invite" } as never,
+        });
+        if (!result.delivered) return { ok: false, error: result.error ?? "Could not send the calendar file." };
+        return { ok: true, sent: true };
+      }),
+    }),
+
     set_conversation_state: tool({
       description:
         "Record where the conversation currently is. One of DISCOVERY, COLLECTING_REQUIREMENTS, CHECKING_AVAILABILITY, AWAITING_SLOT_SELECTION, AWAITING_DETAILS, AWAITING_PAYMENT, BOOKED, RESCHEDULING, CANCELLING, NEEDS_HUMAN, COMPLETED.",
