@@ -90,7 +90,11 @@ export const Route = createFileRoute("/api/public/webhooks/meta")({
                     displayName: profileName,
                     phone: `+${from}`,
                     body: text,
-                    metadata: { wa_type: m.type ?? null, wa_timestamp: m.timestamp ?? null },
+                    metadata: {
+                      wa_type: m.type ?? null,
+                      wa_timestamp: m.timestamp ?? null,
+                      wa_reply_id: m.interactive?.button_reply?.id ?? m.interactive?.list_reply?.id ?? null,
+                    },
                   });
                 } catch (e) {
                   await logIntegration(workspaceId, "whatsapp", "error", `Inbound processing failed: ${e instanceof Error ? e.message : String(e)}`);
