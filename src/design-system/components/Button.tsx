@@ -6,7 +6,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: "sm" | "md" | "lg";
 }
 const variants = {
-  primary:"rounded-full border-0 bg-[image:var(--gradient-primary)] text-white shadow-(--shadow-button-glow) hover:brightness-105 active:shadow-control-pressed active:brightness-95",
+  primary:"rounded-full border-0 bg-[image:var(--gradient-primary)] text-white shadow-button-glow hover:brightness-105 active:shadow-control-pressed active:brightness-95",
   secondary:"border border-border-strong bg-panel text-foreground shadow-control hover:bg-hover active:shadow-control-pressed",
   tertiary:"border border-transparent bg-transparent text-secondary hover:border-border hover:bg-hover hover:text-foreground active:shadow-control-pressed",
   destructive:"border border-red-strong/25 bg-red-soft text-red-strong shadow-control hover:bg-red-strong hover:text-white active:shadow-control-pressed",

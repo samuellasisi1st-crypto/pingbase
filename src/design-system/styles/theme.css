@@ -42,5 +42,9 @@
 }
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto!important; animation-duration:.01ms!important; transition-duration:.01ms!important; } }
 
+@utility shadow-button-glow {
+  box-shadow: var(--shadow-button-glow);
+}
+
 .veya-nav-text { font-size:var(--type-caption); line-height:var(--leading-caption); }
 .veya-nav-meta { font-size:var(--type-micro); line-height:var(--leading-caption); }
