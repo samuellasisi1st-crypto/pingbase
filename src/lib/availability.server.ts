@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { getExternalBusy } from "./gcal.server";
 import { zonedToUtc, zonedParts, SALON_TZ } from "./time";
 
 export type Slot = {
@@ -85,6 +86,8 @@ export async function findAvailableSlots(opts: Options): Promise<Slot[]> {
   ]);
 
   const busy = (appts ?? []).filter((a) => a.id !== opts.ignoreAppointmentId);
+  // Salon Google Calendar: external events block every stylist.
+  const googleBusy = await getExternalBusy(rangeStart.toISOString(), rangeEnd.toISOString(), new Set());
 
   const slots: Slot[] = [];
   const duration = service.duration_minutes;
@@ -142,6 +145,7 @@ export async function findAvailableSlots(opts: Options): Promise<Slot[]> {
               new Date(o.ends_at) > start,
           );
           if (offClash) continue;
+          if (googleBusy.some((g) => new Date(g.start) < end && new Date(g.end) > start)) continue;
 
           const clash = busy.some(
             (a) =>
@@ -209,6 +213,8 @@ export async function isSlotStillFree(params: {
     .select("id,starts_at,ends_at")
     .eq("staff_id", params.staffId)
     .in("status", ["PENDING", "CONFIRMED"]);
+  const googleBusy = await getExternalBusy(start.toISOString(), end.toISOString(), new Set());
+  if (googleBusy.some((g) => new Date(g.start) < end && new Date(g.end) > start)) return false;
   return !(data ?? []).some(
     (a) =>
       a.id !== params.ignoreAppointmentId &&
