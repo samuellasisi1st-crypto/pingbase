@@ -166,18 +166,27 @@ export async function findAvailableSlots(opts: Options): Promise<Slot[]> {
 
   slots.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
 
-  // Spread results: at most 3 per day so options feel useful.
+  // Spread results so the options feel genuinely different: at most 3 per day
+  // and per staff member, and never two options less than 90 minutes apart.
+  const MIN_GAP_MS = 90 * 60000;
   const perDay: Record<string, number> = {};
+  const lastForStaff: Record<string, number> = {};
   const picked: Slot[] = [];
   for (const s of slots) {
-    const key = s.starts_at.slice(0, 10) + s.staff_id;
-    perDay[key] = (perDay[key] ?? 0) + 1;
-    if (perDay[key] > 3) continue;
+    const day = s.starts_at.slice(0, 10);
+    const key = day + s.staff_id;
+    const startMs = new Date(s.starts_at).getTime();
+    const previous = lastForStaff[key];
+    if (previous !== undefined && startMs - previous < MIN_GAP_MS) continue;
+    if ((perDay[day] ?? 0) >= 3) continue;
+    perDay[day] = (perDay[day] ?? 0) + 1;
+    lastForStaff[key] = startMs;
     picked.push(s);
     if (picked.length >= limit) break;
   }
   return picked;
 }
+
 
 export async function isSlotStillFree(params: {
   workspaceId: string;
