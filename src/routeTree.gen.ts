@@ -10,12 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppointmentsRouteImport } from './routes/appointments'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ChatRouteImport } from './routes/chat'
+import { Route as ContactsRouteImport } from './routes/contacts'
+import { Route as PayPaymentIdRouteImport } from './routes/pay.$paymentId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AppointmentsRoute = AppointmentsRouteImport.update({
+  id: '/appointments',
+  path: '/appointments',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -28,35 +36,66 @@ const ChatRoute = ChatRouteImport.update({
   path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContactsRoute = ContactsRouteImport.update({
+  id: '/contacts',
+  path: '/contacts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PayPaymentIdRoute = PayPaymentIdRouteImport.update({
+  id: '/pay/$paymentId',
+  path: '/pay/$paymentId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/appointments': typeof AppointmentsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
+  '/contacts': typeof ContactsRoute
+  '/pay/$paymentId': typeof PayPaymentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/appointments': typeof AppointmentsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
+  '/contacts': typeof ContactsRoute
+  '/pay/$paymentId': typeof PayPaymentIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/appointments': typeof AppointmentsRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRoute
+  '/contacts': typeof ContactsRoute
+  '/pay/$paymentId': typeof PayPaymentIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/chat'
+  fullPaths:
+    '/' | '/appointments' | '/auth' | '/chat' | '/contacts' | '/pay/$paymentId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/chat'
-  id: '__root__' | '/' | '/auth' | '/chat'
+  to:
+    '/' | '/appointments' | '/auth' | '/chat' | '/contacts' | '/pay/$paymentId'
+  id:
+    | '__root__'
+    | '/'
+    | '/appointments'
+    | '/auth'
+    | '/chat'
+    | '/contacts'
+    | '/pay/$paymentId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AppointmentsRoute: typeof AppointmentsRoute
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRoute
+  ContactsRoute: typeof ContactsRoute
+  PayPaymentIdRoute: typeof PayPaymentIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -66,6 +105,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/appointments': {
+      id: '/appointments'
+      path: '/appointments'
+      fullPath: '/appointments'
+      preLoaderRoute: typeof AppointmentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -82,13 +128,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/contacts': {
+      id: '/contacts'
+      path: '/contacts'
+      fullPath: '/contacts'
+      preLoaderRoute: typeof ContactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pay/$paymentId': {
+      id: '/pay/$paymentId'
+      path: '/pay/$paymentId'
+      fullPath: '/pay/$paymentId'
+      preLoaderRoute: typeof PayPaymentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AppointmentsRoute: AppointmentsRoute,
   AuthRoute: AuthRoute,
   ChatRoute: ChatRoute,
+  ContactsRoute: ContactsRoute,
+  PayPaymentIdRoute: PayPaymentIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
