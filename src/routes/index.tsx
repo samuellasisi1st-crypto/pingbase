@@ -155,6 +155,7 @@ function WhatsAppTestPage() {
             { value: "send", label: "Send message" },
             { value: "inbox", label: "Incoming" },
             { value: "templates", label: "Templates" },
+            { value: "social", label: "Instagram & Messenger" },
             { value: "calendar", label: "Calendar" },
           ]}
           value={tab}
