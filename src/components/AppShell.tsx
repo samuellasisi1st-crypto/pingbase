@@ -141,7 +141,7 @@ export function SideLabel({ children }: { children: ReactNode }) {
 }
 
 export function SideItem({ active, icon: Icon, label, count, onClick }: {
-  active?: boolean; icon: React.ComponentType<{ className?: string }>; label: string; count?: number; onClick?: () => void;
+  active?: boolean; icon: React.ComponentType<{ className?: string }>; label: string; count?: number | undefined; onClick?: () => void;
 }) {
   return (
     <button onClick={onClick} className={`${itemCls} w-full ${active ? activeCls : ""}`}>
