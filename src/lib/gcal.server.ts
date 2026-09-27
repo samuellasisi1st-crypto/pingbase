@@ -2,7 +2,12 @@
 // We only READ busy times (free/busy) so booked slots never clash with the owner's calendar.
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
-export const GOOGLE_SCOPES = ["openid", "email", "https://www.googleapis.com/auth/calendar.freebusy"];
+export const GOOGLE_SCOPES = [
+  "openid",
+  "email",
+  "https://www.googleapis.com/auth/calendar.events.freebusy",
+  "https://www.googleapis.com/auth/calendar.events",
+];
 
 export function googlePlatform() {
   const clientId = process.env["GOOGLE_OAUTH_CLIENT_ID"];
@@ -96,6 +101,85 @@ export async function getGoogleBusy(workspaceId: string, fromISO: string, toISO:
   const json = (await res.json()) as { calendars?: Record<string, { busy?: Array<{ start: string; end: string }> }> };
   return json.calendars?.["primary"]?.busy ?? [];
 }
+
+/** Stable Google event id derived from our appointment id (lowercase base16 is a legal event id). */
+export function eventIdFor(appointmentId: string) {
+  return `pb${appointmentId.replace(/-/g, "")}`;
+}
+
+export type CalendarInvite = {
+  appointmentId: string;
+  summary: string;
+  description?: string;
+  location?: string | null;
+  startISO: string;
+  endISO: string;
+  timeZone: string;
+  attendeeEmail?: string | null;
+  attendeeName?: string | null;
+};
+
+/**
+ * Create/update the appointment on the business's Google Calendar and let Google
+ * email the invite to the customer. Returns null when Google isn't connected.
+ */
+export async function upsertGoogleEvent(workspaceId: string, invite: CalendarInvite) {
+  const { data: c } = await supabaseAdmin.from("google_calendar_connections").select("status").eq("workspace_id", workspaceId).maybeSingle();
+  if (!c) return null;
+  const token = await accessTokenFor(workspaceId);
+  if (!token) throw new Error("Google Calendar needs reconnecting, so the invite couldn't be sent.");
+  const id = eventIdFor(invite.appointmentId);
+  const body = {
+    id,
+    summary: invite.summary,
+    description: invite.description ?? "",
+    ...(invite.location ? { location: invite.location } : {}),
+    start: { dateTime: invite.startISO, timeZone: invite.timeZone },
+    end: { dateTime: invite.endISO, timeZone: invite.timeZone },
+    status: "confirmed",
+    ...(invite.attendeeEmail
+      ? { attendees: [{ email: invite.attendeeEmail, ...(invite.attendeeName ? { displayName: invite.attendeeName } : {}) }] }
+      : {}),
+    reminders: { useDefault: false, overrides: [{ method: "popup", minutes: 120 }] },
+  };
+  const base = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
+  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+  // Try update first, fall back to insert when the event doesn't exist yet.
+  let res = await fetch(`${base}/${id}?sendUpdates=all`, { method: "PUT", headers, body: JSON.stringify(body) });
+  if (res.status === 404) {
+    res = await fetch(`${base}?sendUpdates=all`, { method: "POST", headers, body: JSON.stringify(body) });
+  }
+  if (!res.ok) {
+    const text = await res.text();
+    await markError(workspaceId, res.status === 401 || res.status === 403 ? "NEEDS_REAUTH" : "ERROR", `Google event write failed [${res.status}]: ${text.slice(0, 300)}`);
+    throw new Error("Couldn't add the appointment to the business's Google Calendar.");
+  }
+  const json = (await res.json()) as { id?: string; htmlLink?: string };
+  await supabaseAdmin
+    .from("appointments")
+    .update({ external_calendar_id: "primary", external_event_id: json.id ?? id, sync_status: "SYNCED", last_synced_at: new Date().toISOString() })
+    .eq("id", invite.appointmentId);
+  return { eventId: json.id ?? id, htmlLink: json.htmlLink ?? null, invited: Boolean(invite.attendeeEmail) };
+}
+
+/** Remove a cancelled appointment from Google and notify the attendee. */
+export async function deleteGoogleEvent(workspaceId: string, appointmentId: string) {
+  const { data: c } = await supabaseAdmin.from("google_calendar_connections").select("status").eq("workspace_id", workspaceId).maybeSingle();
+  if (!c) return null;
+  const token = await accessTokenFor(workspaceId);
+  if (!token) return null;
+  const id = eventIdFor(appointmentId);
+  const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${id}?sendUpdates=all`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (res.ok || res.status === 404 || res.status === 410) {
+    await supabaseAdmin.from("appointments").update({ sync_status: "CANCELLED", last_synced_at: new Date().toISOString() }).eq("id", appointmentId);
+    return { removed: true };
+  }
+  return { removed: false };
+}
+
 
 export async function getGoogleStatus(workspaceId: string) {
   const { data } = await supabaseAdmin.from("google_calendar_connections").select("google_email,status,last_error").eq("workspace_id", workspaceId).maybeSingle();

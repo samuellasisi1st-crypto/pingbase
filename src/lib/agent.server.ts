@@ -372,6 +372,26 @@ export function buildTools(ctx: Ctx) {
           payload: { from: appt.starts_at, to: updated.starts_at } as never,
         });
         await scheduleAutomations(ctx, appt.id, updated.starts_at);
+        try {
+          const { upsertGoogleEvent } = await import("@/lib/gcal.server");
+          const [{ data: settings }, { data: workspace }, { data: contact }] = await Promise.all([
+            db.from("business_settings").select("legal_name,address").eq("workspace_id", ctx.workspaceId).maybeSingle(),
+            db.from("workspaces").select("timezone,name").eq("id", ctx.workspaceId).maybeSingle(),
+            db.from("contacts").select("full_name,email").eq("id", ctx.contactId).maybeSingle(),
+          ]);
+          const serviceName = (updated.service as unknown as { name: string })?.name ?? "Appointment";
+          await upsertGoogleEvent(ctx.workspaceId, {
+            appointmentId: updated.id,
+            summary: `${serviceName}${contact?.full_name ? ` — ${contact.full_name}` : ""}`,
+            description: `${serviceName}. Booked with ${settings?.legal_name ?? workspace?.name ?? "the salon"}.`,
+            location: settings?.address ?? null,
+            startISO: updated.starts_at,
+            endISO: updated.ends_at,
+            timeZone: workspace?.timezone ?? "Europe/London",
+            attendeeEmail: contact?.email ?? null,
+            attendeeName: contact?.full_name ?? null,
+          });
+        } catch { /* calendar sync failure must not undo the reschedule */ }
         return { ok: true, appointment: { ...updated, when: formatSalonDateTime(updated.starts_at) } };
       }),
     }),
@@ -404,6 +424,10 @@ export function buildTools(ctx: Ctx) {
           .update({ status: "CANCELLED" })
           .eq("appointment_id", appt.id)
           .eq("status", "SCHEDULED");
+        try {
+          const { deleteGoogleEvent } = await import("@/lib/gcal.server");
+          await deleteGoogleEvent(ctx.workspaceId, appt.id);
+        } catch { /* the cancellation stands even if Google can't be reached */ }
         return { ok: true, cancelled: true, hours_notice: Math.round((new Date(appt.starts_at).getTime() - Date.now()) / 3600000) };
       }),
     }),
@@ -586,13 +610,10 @@ export function buildTools(ctx: Ctx) {
 
     send_calendar_invite: tool({
       description:
-        "Send the customer a confirmation card with a one-tap 'Add to calendar' button for a confirmed appointment. Only after the booking is confirmed.",
+        "Confirm a booking in the calendar: adds it to the business's Google Calendar and emails the customer a real calendar invite when we have their email, and sends a WhatsApp confirmation card with a one-tap 'Add to calendar' button. Only after the booking is confirmed.",
       inputSchema: z.object({ appointment_id: z.string() }),
       execute: wrap(ctx, "send_calendar_invite", async ({ appointment_id }) => {
-        if (ctx.channel !== "whatsapp") return { ok: false, error: "Calendar buttons are only available on WhatsApp." };
-        const to = await recipientFor(ctx);
-        if (!to) return { ok: false, error: "No WhatsApp address for this customer." };
-        const [{ data: appt }, { data: settings }] = await Promise.all([
+        const [{ data: appt }, { data: settings }, { data: workspace }, { data: contact }] = await Promise.all([
           db
             .from("appointments")
             .select("*, service:service_id(name,duration_minutes), staff:staff_id(name)")
@@ -600,11 +621,47 @@ export function buildTools(ctx: Ctx) {
             .eq("workspace_id", ctx.workspaceId)
             .maybeSingle(),
           db.from("business_settings").select("legal_name,address").eq("workspace_id", ctx.workspaceId).maybeSingle(),
+          db.from("workspaces").select("timezone,name").eq("id", ctx.workspaceId).maybeSingle(),
+          db.from("contacts").select("full_name,email").eq("id", ctx.contactId).maybeSingle(),
         ]);
         if (!appt) return { ok: false, error: "Appointment not found" };
         const serviceName = (appt.service as unknown as { name: string })?.name ?? "Appointment";
         const staffName = (appt.staff as unknown as { name: string })?.name ?? "";
-        const business = settings?.legal_name ?? "the salon";
+        const business = settings?.legal_name ?? workspace?.name ?? "the salon";
+        const when = `${formatSalonDateTime(appt.starts_at)}–${formatSalonTime(appt.ends_at)}`;
+
+        // 1. Business's own Google Calendar + emailed invite to the customer.
+        let emailInvite: { sent: boolean; to: string | null; error: string | null } = { sent: false, to: null, error: null };
+        try {
+          const { upsertGoogleEvent } = await import("@/lib/gcal.server");
+          const synced = await upsertGoogleEvent(ctx.workspaceId, {
+            appointmentId: appt.id,
+            summary: `${serviceName}${contact?.full_name ? ` — ${contact.full_name}` : ""}`,
+            description: `${serviceName}${staffName ? ` with ${staffName}` : ""}. Booked with ${business}.`,
+            location: settings?.address ?? null,
+            startISO: appt.starts_at,
+            endISO: appt.ends_at,
+            timeZone: workspace?.timezone ?? "Europe/London",
+            attendeeEmail: contact?.email ?? null,
+            attendeeName: contact?.full_name ?? null,
+          });
+          if (synced?.invited) emailInvite = { sent: true, to: contact?.email ?? null, error: null };
+        } catch (e) {
+          emailInvite = { sent: false, to: contact?.email ?? null, error: e instanceof Error ? e.message : String(e) };
+        }
+
+        // 2. WhatsApp confirmation card with a one-tap add-to-calendar button.
+        if (ctx.channel !== "whatsapp") {
+          return {
+            ok: true,
+            email_invite: emailInvite,
+            note: emailInvite.sent
+              ? "Calendar invite emailed to the customer."
+              : "Booking saved. No calendar invite email was sent (no email on file or Google not connected).",
+          };
+        }
+        const to = await recipientFor(ctx);
+        if (!to) return { ok: false, error: "No WhatsApp address for this customer.", email_invite: emailInvite };
         const fmt = (iso: string) => new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
         const params = new URLSearchParams({
           action: "TEMPLATE",
@@ -614,7 +671,6 @@ export function buildTools(ctx: Ctx) {
           ...(settings?.address ? { location: settings.address } : {}),
         });
         const url = `https://calendar.google.com/calendar/render?${params.toString()}`;
-        const when = `${formatSalonDateTime(appt.starts_at)}–${formatSalonTime(appt.ends_at)}`;
         const result = await sendWhatsAppLinkButton(ctx.workspaceId, to, {
           header: "You're booked in",
           body: `${serviceName}${staffName ? ` with ${staffName}` : ""}\n${when}${settings?.address ? `\n${settings.address}` : ""}`,
@@ -635,8 +691,13 @@ export function buildTools(ctx: Ctx) {
           external_message_id: result.externalMessageId ?? null,
           metadata: { delivered: result.delivered, delivery_error: result.error ?? null, kind: "calendar_link", url } as never,
         });
-        if (!result.delivered) return { ok: false, error: result.error ?? "Could not send the calendar button." };
-        return { ok: true, sent: true, note: "Confirmation card with Add to calendar button sent — do not repeat the details." };
+        if (!result.delivered) return { ok: false, error: result.error ?? "Could not send the calendar button.", email_invite: emailInvite };
+        return {
+          ok: true,
+          sent: true,
+          email_invite: emailInvite,
+          note: `Confirmation card with Add to calendar button sent — do not repeat the details.${emailInvite.sent ? " A calendar invite was also emailed to them." : ""}`,
+        };
       }),
     }),
 
@@ -729,9 +790,10 @@ export async function runAgent(ctx: Ctx): Promise<string> {
       ? [
           "- On WhatsApp, whenever you offer times, call send_slot_options so the customer can tap a time instead of typing. Do not also list the same times in your text reply; a one-line lead-in is enough.",
           "- A message that exactly matches one of the options you sent means the customer tapped that option. Treat it as their choice.",
-          "- Right after an appointment is confirmed (deposit paid, or none required), call send_calendar_invite to send the booking card with its 'Add to calendar' button.",
         ]
       : []),
+    "- Right after an appointment is confirmed (deposit paid, or none required), call send_calendar_invite. It puts the appointment in the business's calendar, emails the customer a calendar invite if we have their email, and on WhatsApp sends the booking card with its 'Add to calendar' button.",
+    "- Before confirming, ask once for the customer's email address so they can be sent a proper calendar invite, and save it with create_or_update_contact. If they decline, carry on without it.",
     "- Keep the CRM profile current: call create_or_update_contact whenever the customer mentions their name, email, a preference, a sensitivity or allergy, who they usually see, or anything a stylist would want to know next time. Add short tags and keep summary to one sentence.",
   ].join("\n");
 
