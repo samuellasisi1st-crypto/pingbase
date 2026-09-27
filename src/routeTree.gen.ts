@@ -16,7 +16,6 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PayPaymentIdRouteImport } from './routes/pay.$paymentId'
-import { Route as ApiPublicWebhooksMetaWorkspaceIdRouteImport } from './routes/api/public/webhooks/meta.$workspaceId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,12 +52,6 @@ const PayPaymentIdRoute = PayPaymentIdRouteImport.update({
   path: '/pay/$paymentId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicWebhooksMetaWorkspaceIdRoute =
-  ApiPublicWebhooksMetaWorkspaceIdRouteImport.update({
-    id: '/api/public/webhooks/meta/$workspaceId',
-    path: '/api/public/webhooks/meta/$workspaceId',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,7 +61,6 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof ContactsRoute
   '/settings': typeof SettingsRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
-  '/api/public/webhooks/meta/$workspaceId': typeof ApiPublicWebhooksMetaWorkspaceIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,7 +70,6 @@ export interface FileRoutesByTo {
   '/contacts': typeof ContactsRoute
   '/settings': typeof SettingsRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
-  '/api/public/webhooks/meta/$workspaceId': typeof ApiPublicWebhooksMetaWorkspaceIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,7 +80,6 @@ export interface FileRoutesById {
   '/contacts': typeof ContactsRoute
   '/settings': typeof SettingsRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
-  '/api/public/webhooks/meta/$workspaceId': typeof ApiPublicWebhooksMetaWorkspaceIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,7 +91,6 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/settings'
     | '/pay/$paymentId'
-    | '/api/public/webhooks/meta/$workspaceId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,7 +100,6 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/settings'
     | '/pay/$paymentId'
-    | '/api/public/webhooks/meta/$workspaceId'
   id:
     | '__root__'
     | '/'
@@ -121,7 +109,6 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/settings'
     | '/pay/$paymentId'
-    | '/api/public/webhooks/meta/$workspaceId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,7 +119,6 @@ export interface RootRouteChildren {
   ContactsRoute: typeof ContactsRoute
   SettingsRoute: typeof SettingsRoute
   PayPaymentIdRoute: typeof PayPaymentIdRoute
-  ApiPublicWebhooksMetaWorkspaceIdRoute: typeof ApiPublicWebhooksMetaWorkspaceIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -186,13 +172,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PayPaymentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/webhooks/meta/$workspaceId': {
-      id: '/api/public/webhooks/meta/$workspaceId'
-      path: '/api/public/webhooks/meta/$workspaceId'
-      fullPath: '/api/public/webhooks/meta/$workspaceId'
-      preLoaderRoute: typeof ApiPublicWebhooksMetaWorkspaceIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -204,7 +183,6 @@ const rootRouteChildren: RootRouteChildren = {
   ContactsRoute: ContactsRoute,
   SettingsRoute: SettingsRoute,
   PayPaymentIdRoute: PayPaymentIdRoute,
-  ApiPublicWebhooksMetaWorkspaceIdRoute: ApiPublicWebhooksMetaWorkspaceIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
