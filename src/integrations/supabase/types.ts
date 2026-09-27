@@ -697,6 +697,45 @@ export type Database = {
           },
         ]
       }
+      google_calendar_connections: {
+        Row: {
+          access_token: string | null
+          access_token_expires_at: string | null
+          connected_by: string | null
+          created_at: string
+          google_email: string | null
+          last_error: string | null
+          refresh_token: string
+          status: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          access_token?: string | null
+          access_token_expires_at?: string | null
+          connected_by?: string | null
+          created_at?: string
+          google_email?: string | null
+          last_error?: string | null
+          refresh_token: string
+          status?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          access_token?: string | null
+          access_token_expires_at?: string | null
+          connected_by?: string | null
+          created_at?: string
+          google_email?: string | null
+          last_error?: string | null
+          refresh_token?: string
+          status?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       handoffs: {
         Row: {
           conversation_id: string
