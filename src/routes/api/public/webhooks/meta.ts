@@ -13,7 +13,7 @@ type WaMessage = {
   type?: string;
   text?: { body?: string };
   button?: { text?: string };
-  interactive?: { button_reply?: { title?: string }; list_reply?: { title?: string } };
+  interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string } };
 };
 type WaChange = {
   field?: string;
@@ -90,7 +90,11 @@ export const Route = createFileRoute("/api/public/webhooks/meta")({
                     displayName: profileName,
                     phone: `+${from}`,
                     body: text,
-                    metadata: { wa_type: m.type ?? null, wa_timestamp: m.timestamp ?? null },
+                    metadata: {
+                      wa_type: m.type ?? null,
+                      wa_timestamp: m.timestamp ?? null,
+                      wa_reply_id: m.interactive?.button_reply?.id ?? m.interactive?.list_reply?.id ?? null,
+                    },
                   });
                 } catch (e) {
                   await logIntegration(workspaceId, "whatsapp", "error", `Inbound processing failed: ${e instanceof Error ? e.message : String(e)}`);

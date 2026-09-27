@@ -4,7 +4,9 @@ import { z } from "zod";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { findAvailableSlots, isSlotStillFree } from "./availability.server";
-import { formatSalonDateTime, money, SALON_TZ } from "./time";
+import { sendWhatsAppCalendarFile, sendWhatsAppChoices } from "./channels.server";
+import { buildIcs } from "./ics";
+import { formatSalonDateTime, formatSalonTime, money, SALON_TZ } from "./time";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
 const MODEL = "openai/gpt-6-astra";
@@ -82,6 +84,18 @@ async function scheduleAutomations(ctx: Ctx, appointmentId: string, startsAt: st
     dedupe_key: `${appointmentId}:${r.kind}`,
   }));
   await supabaseAdmin.from("automation_events").upsert(rows, { onConflict: "workspace_id,dedupe_key" });
+}
+
+/** The customer's address on the channel this conversation runs on. */
+async function recipientFor(ctx: Ctx): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("contact_channels")
+    .select("external_id")
+    .eq("workspace_id", ctx.workspaceId)
+    .eq("contact_id", ctx.contactId)
+    .eq("channel", ctx.channel)
+    .maybeSingle();
+  return data?.external_id ?? null;
 }
 
 export function buildTools(ctx: Ctx) {
@@ -176,19 +190,38 @@ export function buildTools(ctx: Ctx) {
     }),
 
     create_or_update_contact: tool({
-      description: "Save details the customer gives you, such as their name, phone number or email.",
+      description:
+        "Save anything you learn about the customer into their CRM profile: name, email, phone, preferences, hair type, allergies, sensitivities, who they usually see, how they were referred. Call this as soon as they mention something worth remembering. Notes are appended, never overwritten.",
       inputSchema: z.object({
         full_name: z.string().nullable(),
         email: z.string().nullable(),
         phone: z.string().nullable(),
         notes: z.string().nullable(),
+        tags: z.array(z.string()).nullable(),
+        summary: z.string().nullable(),
       }),
       execute: wrap(ctx, "create_or_update_contact", async (args) => {
-        const patch: Record<string, string> = {};
+        const { data: current } = await db
+          .from("contacts")
+          .select("notes,tags,ai_summary")
+          .eq("id", ctx.contactId)
+          .maybeSingle();
+
+        const patch: Record<string, unknown> = {};
         if (args.full_name) patch['full_name'] = args.full_name;
         if (args.email) patch['email'] = args.email;
         if (args.phone) patch['phone'] = args.phone;
-        if (args.notes) patch['notes'] = args.notes;
+        if (args.summary) patch['ai_summary'] = args.summary;
+        if (args.notes) {
+          const existing = (current?.notes ?? "").trim();
+          patch['notes'] = existing.includes(args.notes.trim())
+            ? existing
+            : [existing, `${new Date().toISOString().slice(0, 10)}: ${args.notes.trim()}`].filter(Boolean).join("\n");
+        }
+        if (args.tags?.length) {
+          const merged = new Set([...(current?.tags ?? []), ...args.tags.map((t) => t.trim().toLowerCase()).filter(Boolean)]);
+          patch['tags'] = [...merged];
+        }
         if (!Object.keys(patch).length) return { ok: true, updated: false };
         const { data, error } = await db
           .from("contacts")
@@ -501,6 +534,112 @@ export function buildTools(ctx: Ctx) {
       }),
     }),
 
+    send_slot_options: tool({
+      description:
+        "On WhatsApp, send the customer tappable buttons so they can pick a time with one tap. Only use slots returned by find_available_slots. Send at most 3 for buttons, up to 10 for a list. After calling this, keep your own reply very short (or empty) because the customer already sees the options.",
+      inputSchema: z.object({
+        body: z.string(),
+        footer: z.string().nullable(),
+        slots: z
+          .array(
+            z.object({
+              starts_at: z.string(),
+              staff_id: z.string(),
+              staff_name: z.string(),
+              service_id: z.string(),
+            }),
+          )
+          .min(1),
+      }),
+      execute: wrap(ctx, "send_slot_options", async (args) => {
+        if (ctx.channel !== "whatsapp") return { ok: false, error: "Tappable options are only available on WhatsApp." };
+        const to = await recipientFor(ctx);
+        if (!to) return { ok: false, error: "No WhatsApp address for this customer." };
+        const choices = args.slots.slice(0, 10).map((s, i) => ({
+          id: `slot:${i}:${s.starts_at}:${s.staff_id}:${s.service_id}`,
+          title: `${formatSalonDateTime(s.starts_at).replace(/,/g, "")}`,
+          description: `with ${s.staff_name}`,
+        }));
+        const result = await sendWhatsAppChoices(ctx.workspaceId, to, {
+          body: args.body,
+          footer: args.footer,
+          buttonLabel: "Pick a time",
+          choices,
+        });
+        await db.from("messages").insert({
+          workspace_id: ctx.workspaceId,
+          conversation_id: ctx.conversationId,
+          contact_id: ctx.contactId,
+          channel: ctx.channel,
+          direction: "outbound",
+          sender_type: "AI",
+          sender_name: "AI",
+          content_type: "interactive",
+          body: `${args.body}\n\n${choices.map((c) => `• ${c.title} ${c.description}`).join("\n")}`,
+          external_message_id: result.externalMessageId ?? null,
+          metadata: { delivered: result.delivered, delivery_error: result.error ?? null, choices } as never,
+        });
+        if (!result.delivered) return { ok: false, error: result.error ?? "Could not send options." };
+        await db.from("conversations").update({ state: "AWAITING_SLOT_SELECTION" }).eq("id", ctx.conversationId);
+        return { ok: true, sent: choices.length, note: "The customer can now tap a time." };
+      }),
+    }),
+
+    send_calendar_invite: tool({
+      description:
+        "Send the customer a calendar file for a confirmed appointment so they can add it to their phone calendar with one tap. Only after the booking is confirmed.",
+      inputSchema: z.object({ appointment_id: z.string() }),
+      execute: wrap(ctx, "send_calendar_invite", async ({ appointment_id }) => {
+        if (ctx.channel !== "whatsapp") return { ok: false, error: "Calendar files are only available on WhatsApp." };
+        const to = await recipientFor(ctx);
+        if (!to) return { ok: false, error: "No WhatsApp address for this customer." };
+        const [{ data: appt }, { data: settings }, { data: contact }] = await Promise.all([
+          db
+            .from("appointments")
+            .select("*, service:service_id(name,duration_minutes), staff:staff_id(name)")
+            .eq("id", appointment_id)
+            .maybeSingle(),
+          db.from("business_settings").select("legal_name,address,email").eq("workspace_id", ctx.workspaceId).maybeSingle(),
+          db.from("contacts").select("email").eq("id", ctx.contactId).maybeSingle(),
+        ]);
+        if (!appt) return { ok: false, error: "Appointment not found" };
+        const serviceName = (appt.service as unknown as { name: string })?.name ?? "Appointment";
+        const staffName = (appt.staff as unknown as { name: string })?.name ?? "";
+        const business = settings?.legal_name ?? "your appointment";
+        const ics = buildIcs({
+          uid: `${appt.id}@pingbase`,
+          title: `${serviceName} at ${business}`,
+          description: `${serviceName} with ${staffName}. Booked through ${business}.`,
+          location: settings?.address ?? null,
+          startsAt: appt.starts_at,
+          endsAt: appt.ends_at,
+          organizerName: business,
+          organizerEmail: settings?.email ?? null,
+          attendeeEmail: contact?.email ?? null,
+        });
+        const result = await sendWhatsAppCalendarFile(ctx.workspaceId, to, {
+          ics,
+          filename: `${serviceName.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.ics`,
+          caption: `${serviceName} · ${formatSalonDateTime(appt.starts_at)}–${formatSalonTime(appt.ends_at)}`,
+        });
+        await db.from("messages").insert({
+          workspace_id: ctx.workspaceId,
+          conversation_id: ctx.conversationId,
+          contact_id: ctx.contactId,
+          channel: ctx.channel,
+          direction: "outbound",
+          sender_type: "AI",
+          sender_name: "AI",
+          content_type: "document",
+          body: `Calendar invite for ${serviceName} on ${formatSalonDateTime(appt.starts_at)}`,
+          external_message_id: result.externalMessageId ?? null,
+          metadata: { delivered: result.delivered, delivery_error: result.error ?? null, kind: "calendar_invite" } as never,
+        });
+        if (!result.delivered) return { ok: false, error: result.error ?? "Could not send the calendar file." };
+        return { ok: true, sent: true };
+      }),
+    }),
+
     set_conversation_state: tool({
       description:
         "Record where the conversation currently is. One of DISCOVERY, COLLECTING_REQUIREMENTS, CHECKING_AVAILABILITY, AWAITING_SLOT_SELECTION, AWAITING_DETAILS, AWAITING_PAYMENT, BOOKED, RESCHEDULING, CANCELLING, NEEDS_HUMAN, COMPLETED.",
@@ -586,6 +725,14 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     "- Use escalate_to_human for refunds, complaints, policy exceptions, requests for a person, or repeated tool failures. After escalating, tell the customer a team member will pick it up, and stop.",
     "- Keep set_conversation_state up to date.",
     "- Reply as plain conversational text. No markdown headings or bullet lists unless listing slot options.",
+    ...(ctx.channel === "whatsapp"
+      ? [
+          "- On WhatsApp, whenever you offer times, call send_slot_options so the customer can tap a time instead of typing. Do not also list the same times in your text reply; a one-line lead-in is enough.",
+          "- A message that exactly matches one of the options you sent means the customer tapped that option. Treat it as their choice.",
+          "- Right after an appointment is confirmed (deposit paid, or none required), call send_calendar_invite so they can add it to their phone calendar.",
+        ]
+      : []),
+    "- Keep the CRM profile current: call create_or_update_contact whenever the customer mentions their name, email, a preference, a sensitivity or allergy, who they usually see, or anything a stylist would want to know next time. Add short tags and keep summary to one sentence.",
   ].join("\n");
 
   const transcript = (history ?? [])
