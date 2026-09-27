@@ -10,11 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AiAgentsRouteImport } from './routes/ai-agents'
+import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AppointmentsRouteImport } from './routes/appointments'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AutomationsRouteImport } from './routes/automations'
+import { Route as CampaignsRouteImport } from './routes/campaigns'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as ContactsRouteImport } from './routes/contacts'
+import { Route as HelpRouteImport } from './routes/help'
+import { Route as ReviewsRouteImport } from './routes/reviews'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TeamChatRouteImport } from './routes/team-chat'
+import { Route as WhatsNewRouteImport } from './routes/whats-new'
 import { Route as PayPaymentIdRouteImport } from './routes/pay.$paymentId'
 import { Route as ApiPublicWebhooksMetaRouteImport } from './routes/api/public/webhooks/meta'
 import { Route as ApiPublicOauthMetaCallbackRouteImport } from './routes/api/public/oauth/meta/callback'
@@ -22,6 +31,16 @@ import { Route as ApiPublicOauthMetaCallbackRouteImport } from './routes/api/pub
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AiAgentsRoute = AiAgentsRouteImport.update({
+  id: '/ai-agents',
+  path: '/ai-agents',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AnalyticsRoute = AnalyticsRouteImport.update({
+  id: '/analytics',
+  path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppointmentsRoute = AppointmentsRouteImport.update({
@@ -34,6 +53,16 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AutomationsRoute = AutomationsRouteImport.update({
+  id: '/automations',
+  path: '/automations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampaignsRoute = CampaignsRouteImport.update({
+  id: '/campaigns',
+  path: '/campaigns',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChatRoute = ChatRouteImport.update({
   id: '/chat',
   path: '/chat',
@@ -44,9 +73,34 @@ const ContactsRoute = ContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewsRoute = ReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeamChatRoute = TeamChatRouteImport.update({
+  id: '/team-chat',
+  path: '/team-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WhatsNewRoute = WhatsNewRouteImport.update({
+  id: '/whats-new',
+  path: '/whats-new',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PayPaymentIdRoute = PayPaymentIdRouteImport.update({
@@ -68,22 +122,40 @@ const ApiPublicOauthMetaCallbackRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-agents': typeof AiAgentsRoute
+  '/analytics': typeof AnalyticsRoute
   '/appointments': typeof AppointmentsRoute
   '/auth': typeof AuthRoute
+  '/automations': typeof AutomationsRoute
+  '/campaigns': typeof CampaignsRoute
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
+  '/help': typeof HelpRoute
+  '/reviews': typeof ReviewsRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/team-chat': typeof TeamChatRoute
+  '/whats-new': typeof WhatsNewRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/oauth/meta/callback': typeof ApiPublicOauthMetaCallbackRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-agents': typeof AiAgentsRoute
+  '/analytics': typeof AnalyticsRoute
   '/appointments': typeof AppointmentsRoute
   '/auth': typeof AuthRoute
+  '/automations': typeof AutomationsRoute
+  '/campaigns': typeof CampaignsRoute
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
+  '/help': typeof HelpRoute
+  '/reviews': typeof ReviewsRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/team-chat': typeof TeamChatRoute
+  '/whats-new': typeof WhatsNewRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/oauth/meta/callback': typeof ApiPublicOauthMetaCallbackRoute
@@ -91,11 +163,20 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ai-agents': typeof AiAgentsRoute
+  '/analytics': typeof AnalyticsRoute
   '/appointments': typeof AppointmentsRoute
   '/auth': typeof AuthRoute
+  '/automations': typeof AutomationsRoute
+  '/campaigns': typeof CampaignsRoute
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
+  '/help': typeof HelpRoute
+  '/reviews': typeof ReviewsRoute
+  '/search': typeof SearchRoute
   '/settings': typeof SettingsRoute
+  '/team-chat': typeof TeamChatRoute
+  '/whats-new': typeof WhatsNewRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/oauth/meta/callback': typeof ApiPublicOauthMetaCallbackRoute
@@ -104,33 +185,60 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ai-agents'
+    | '/analytics'
     | '/appointments'
     | '/auth'
+    | '/automations'
+    | '/campaigns'
     | '/chat'
     | '/contacts'
+    | '/help'
+    | '/reviews'
+    | '/search'
     | '/settings'
+    | '/team-chat'
+    | '/whats-new'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
     | '/api/public/oauth/meta/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/ai-agents'
+    | '/analytics'
     | '/appointments'
     | '/auth'
+    | '/automations'
+    | '/campaigns'
     | '/chat'
     | '/contacts'
+    | '/help'
+    | '/reviews'
+    | '/search'
     | '/settings'
+    | '/team-chat'
+    | '/whats-new'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
     | '/api/public/oauth/meta/callback'
   id:
     | '__root__'
     | '/'
+    | '/ai-agents'
+    | '/analytics'
     | '/appointments'
     | '/auth'
+    | '/automations'
+    | '/campaigns'
     | '/chat'
     | '/contacts'
+    | '/help'
+    | '/reviews'
+    | '/search'
     | '/settings'
+    | '/team-chat'
+    | '/whats-new'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
     | '/api/public/oauth/meta/callback'
@@ -138,11 +246,20 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AiAgentsRoute: typeof AiAgentsRoute
+  AnalyticsRoute: typeof AnalyticsRoute
   AppointmentsRoute: typeof AppointmentsRoute
   AuthRoute: typeof AuthRoute
+  AutomationsRoute: typeof AutomationsRoute
+  CampaignsRoute: typeof CampaignsRoute
   ChatRoute: typeof ChatRoute
   ContactsRoute: typeof ContactsRoute
+  HelpRoute: typeof HelpRoute
+  ReviewsRoute: typeof ReviewsRoute
+  SearchRoute: typeof SearchRoute
   SettingsRoute: typeof SettingsRoute
+  TeamChatRoute: typeof TeamChatRoute
+  WhatsNewRoute: typeof WhatsNewRoute
   PayPaymentIdRoute: typeof PayPaymentIdRoute
   ApiPublicWebhooksMetaRoute: typeof ApiPublicWebhooksMetaRoute
   ApiPublicOauthMetaCallbackRoute: typeof ApiPublicOauthMetaCallbackRoute
@@ -155,6 +272,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/ai-agents': {
+      id: '/ai-agents'
+      path: '/ai-agents'
+      fullPath: '/ai-agents'
+      preLoaderRoute: typeof AiAgentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/analytics': {
+      id: '/analytics'
+      path: '/analytics'
+      fullPath: '/analytics'
+      preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/appointments': {
@@ -171,6 +302,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/automations': {
+      id: '/automations'
+      path: '/automations'
+      fullPath: '/automations'
+      preLoaderRoute: typeof AutomationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campaigns': {
+      id: '/campaigns'
+      path: '/campaigns'
+      fullPath: '/campaigns'
+      preLoaderRoute: typeof CampaignsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chat': {
       id: '/chat'
       path: '/chat'
@@ -185,11 +330,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ContactsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reviews': {
+      id: '/reviews'
+      path: '/reviews'
+      fullPath: '/reviews'
+      preLoaderRoute: typeof ReviewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/team-chat': {
+      id: '/team-chat'
+      path: '/team-chat'
+      fullPath: '/team-chat'
+      preLoaderRoute: typeof TeamChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/whats-new': {
+      id: '/whats-new'
+      path: '/whats-new'
+      fullPath: '/whats-new'
+      preLoaderRoute: typeof WhatsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pay/$paymentId': {
@@ -218,11 +398,20 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AiAgentsRoute: AiAgentsRoute,
+  AnalyticsRoute: AnalyticsRoute,
   AppointmentsRoute: AppointmentsRoute,
   AuthRoute: AuthRoute,
+  AutomationsRoute: AutomationsRoute,
+  CampaignsRoute: CampaignsRoute,
   ChatRoute: ChatRoute,
   ContactsRoute: ContactsRoute,
+  HelpRoute: HelpRoute,
+  ReviewsRoute: ReviewsRoute,
+  SearchRoute: SearchRoute,
   SettingsRoute: SettingsRoute,
+  TeamChatRoute: TeamChatRoute,
+  WhatsNewRoute: WhatsNewRoute,
   PayPaymentIdRoute: PayPaymentIdRoute,
   ApiPublicWebhooksMetaRoute: ApiPublicWebhooksMetaRoute,
   ApiPublicOauthMetaCallbackRoute: ApiPublicOauthMetaCallbackRoute,
