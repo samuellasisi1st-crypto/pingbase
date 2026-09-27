@@ -55,8 +55,49 @@ export const Route = createFileRoute("/api/public/webhooks/meta")({
           return new Response("Bad request", { status: 400 });
         }
         const channel = payload.object === "instagram" ? "instagram" : payload.object === "page" ? "messenger" : null;
-        if (!channel) return new Response("ok");
+        const isWhatsApp = payload.object === "whatsapp_business_account";
+        if (!channel && !isWhatsApp) return new Response("ok");
         const { processInboundMessage } = await import("@/lib/pipeline.server");
+
+        if (isWhatsApp) {
+          for (const entry of payload.entry ?? []) {
+            for (const change of entry.changes ?? []) {
+              const value = change.value;
+              const phoneNumberId = value?.metadata?.phone_number_id;
+              if (!phoneNumberId || !value?.messages?.length) continue;
+              const workspaceId = await findWorkspaceForWhatsAppPhoneId(phoneNumberId);
+              if (!workspaceId) continue;
+              for (const m of value.messages) {
+                const from = m.from;
+                if (!from) continue;
+                const text =
+                  m.text?.body ??
+                  m.button?.text ??
+                  m.interactive?.button_reply?.title ??
+                  m.interactive?.list_reply?.title ??
+                  (m.type && m.type !== "text" ? `[Sent ${m.type}]` : null);
+                if (!text) continue;
+                const profileName = value.contacts?.find((c) => c.wa_id === from)?.profile?.name ?? null;
+                try {
+                  await processInboundMessage({
+                    workspaceId,
+                    channel: "whatsapp",
+                    externalId: from,
+                    externalMessageId: m.id ?? `${from}:${m.timestamp ?? Date.now()}`,
+                    displayName: profileName,
+                    phone: `+${from}`,
+                    body: text,
+                    metadata: { wa_type: m.type ?? null, wa_timestamp: m.timestamp ?? null },
+                  });
+                } catch (e) {
+                  await logIntegration(workspaceId, "whatsapp", "error", `Inbound processing failed: ${e instanceof Error ? e.message : String(e)}`);
+                }
+              }
+            }
+          }
+          return new Response("ok");
+        }
+        if (!channel) return new Response("ok");
 
         for (const entry of payload.entry ?? []) {
           if (!entry.id) continue;
