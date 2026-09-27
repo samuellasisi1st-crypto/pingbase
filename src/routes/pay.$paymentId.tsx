@@ -47,7 +47,7 @@ function PayPage() {
         <p className="mt-1 text-sm text-muted-foreground">Booking deposit</p>
 
         <p className="mt-6 font-display text-4xl">{money(p.amount_pence)}</p>
-        <p className="mt-2 text-sm text-muted-foreground">{p.description}</p>
+        <p className="mt-2 text-sm text-muted-foreground">Booking {p.kind.toLowerCase()}</p>
 
         {p.status === "PAID" ? (
           <p className="mt-6 rounded-lg bg-success/15 p-3 text-sm">Paid — your appointment is confirmed.</p>

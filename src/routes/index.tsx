@@ -135,7 +135,7 @@ function InboxPage() {
   }, [conversations.data, filter, channel]);
 
   useEffect(() => {
-    if (!activeId && list.length) setActiveId(list[0].id);
+    if (!activeId && list[0]) setActiveId(list[0].id);
   }, [list, activeId]);
 
   return (

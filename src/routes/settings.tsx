@@ -159,11 +159,9 @@ function SettingsPage() {
                 </div>
                 <div>
                   <p className="font-medium">Escalates when</p>
-                  <ul className="list-inside list-disc text-muted-foreground">
-                    {((d.agent as { escalation_rules: string[] }).escalation_rules ?? []).map((r, i) => (
-                      <li key={i}>{r}</li>
-                    ))}
-                  </ul>
+                  <p className="whitespace-pre-wrap text-muted-foreground">
+                    {(d.agent as { escalation_rules: string }).escalation_rules}
+                  </p>
                 </div>
               </div>
             )}

@@ -185,14 +185,14 @@ export function buildTools(ctx: Ctx) {
       }),
       execute: wrap(ctx, "create_or_update_contact", async (args) => {
         const patch: Record<string, string> = {};
-        if (args.full_name) patch.full_name = args.full_name;
-        if (args.email) patch.email = args.email;
-        if (args.phone) patch.phone = args.phone;
-        if (args.notes) patch.notes = args.notes;
+        if (args.full_name) patch['full_name'] = args.full_name;
+        if (args.email) patch['email'] = args.email;
+        if (args.phone) patch['phone'] = args.phone;
+        if (args.notes) patch['notes'] = args.notes;
         if (!Object.keys(patch).length) return { ok: true, updated: false };
         const { data, error } = await db
           .from("contacts")
-          .update(patch)
+          .update(patch as never)
           .eq("id", ctx.contactId)
           .select()
           .maybeSingle();
@@ -449,7 +449,7 @@ export function buildTools(ctx: Ctx) {
         const all = [...(knowledge ?? []), ...(policies ?? [])];
         const scored = all
           .map((item) => {
-            const hay = `${item.title} ${item.body} ${"tags" in item ? (item.tags ?? []).join(" ") : ""}`.toLowerCase();
+            const hay = `${item.title} ${item.body} ${"tags" in item ? (((item as { tags?: string[] | null }).tags) ?? []).join(" ") : ""}`.toLowerCase();
             const score = words.reduce((n, w) => n + (hay.includes(w) ? 1 : 0), 0);
             return { item, score };
           })

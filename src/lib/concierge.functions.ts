@@ -123,7 +123,7 @@ export const payDepositTestMode = createServerFn({ method: "POST" })
         reason: "Deposit paid",
         actor: "SYSTEM",
       });
-      const start = new Date(appt.starts_at).getTime();
+      const start = new Date(appt?.starts_at ?? new Date().toISOString()).getTime();
       await supabaseAdmin.from("automation_events").upsert(
         [
           { kind: "CONFIRMATION", scheduled_for: new Date().toISOString() },
@@ -268,7 +268,7 @@ export const getPaymentPublic = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: payment } = await supabaseAdmin
       .from("payments")
-      .select("id,amount_pence,currency,status,provider,description")
+      .select("id,amount_pence,currency,status,provider,kind")
       .eq("id", data.paymentId)
       .maybeSingle();
     return payment ?? null;

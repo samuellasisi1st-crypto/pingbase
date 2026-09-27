@@ -100,8 +100,8 @@ export async function findAvailableSlots(opts: Options): Promise<Slot[]> {
 
     const open = openingHours[String(d.weekday)];
     if (!open) continue;
-    const [openH, openM] = open[0].split(":").map(Number);
-    const [closeH, closeM] = open[1].split(":").map(Number);
+    const [openH = 0, openM = 0] = String(open[0]).split(":").map(Number);
+    const [closeH = 0, closeM = 0] = String(open[1]).split(":").map(Number);
     const openAt = zonedToUtc(d.year, d.month, d.day, openH, openM);
     const closeAt = zonedToUtc(d.year, d.month, d.day, closeH, closeM);
 
@@ -110,8 +110,8 @@ export async function findAvailableSlots(opts: Options): Promise<Slot[]> {
         (h) => h.staff_id === staff.id && h.weekday === d.weekday,
       );
       for (const shift of shifts) {
-        const [sh, sm] = shift.start_time.split(":").map(Number);
-        const [eh, em] = shift.end_time.split(":").map(Number);
+        const [sh = 0, sm = 0] = shift.start_time.split(":").map(Number);
+        const [eh = 0, em = 0] = shift.end_time.split(":").map(Number);
         const shiftStart = zonedToUtc(d.year, d.month, d.day, sh, sm);
         const shiftEnd = zonedToUtc(d.year, d.month, d.day, eh, em);
 
