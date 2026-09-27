@@ -159,8 +159,8 @@ export const completeEmbeddedSignup = createServerFn({ method: "POST" })
     z
       .object({
         code: z.string().min(10).max(2000),
-        wabaId: z.string().regex(/^\d{5,25}$/),
-        phoneNumberId: z.string().regex(/^\d{5,25}$/),
+        wabaId: z.string().regex(/^\d{5,25}$/).optional(),
+        phoneNumberId: z.string().regex(/^\d{5,25}$/).optional(),
       })
       .parse(d),
   )
@@ -184,8 +184,47 @@ export const completeEmbeddedSignup = createServerFn({ method: "POST" })
     const token = tokenJson.access_token;
     const auth = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
 
+    // Meta doesn't always post the picked account/number back to the page. When it's missing,
+    // find what the business granted us from the token itself.
+    let wabaId = data.wabaId;
+    let phoneNumberId = data.phoneNumberId;
+    if (!wabaId || !phoneNumberId) {
+      const dbg = await fetch(
+        `${GRAPH}/debug_token?input_token=${encodeURIComponent(token)}&access_token=${encodeURIComponent(`${appId}|${appSecret}`)}`,
+      );
+      const dbgJson = (await dbg.json().catch(() => ({}))) as {
+        data?: { granular_scopes?: Array<{ scope: string; target_ids?: string[] }> };
+      };
+      const scopes = dbgJson.data?.granular_scopes ?? [];
+      const wabaIds = Array.from(
+        new Set(
+          scopes
+            .filter((s) => s.scope === "whatsapp_business_management" || s.scope === "whatsapp_business_messaging")
+            .flatMap((s) => s.target_ids ?? []),
+        ),
+      );
+      const candidates = wabaId ? [wabaId] : wabaIds;
+      const numbers: Array<{ wabaId: string; id: string; display: string | null }> = [];
+      for (const w of candidates) {
+        const r = await fetch(`${GRAPH}/${w}/phone_numbers?fields=id,display_phone_number`, { headers: auth });
+        const j = (await r.json().catch(() => ({}))) as { data?: Array<{ id: string; display_phone_number?: string }> };
+        for (const n of j.data ?? []) numbers.push({ wabaId: w, id: n.id, display: n.display_phone_number ?? null });
+      }
+      const match = phoneNumberId ? numbers.find((n) => n.id === phoneNumberId) : numbers.length === 1 ? numbers[0] : undefined;
+      if (!match) {
+        const detail =
+          numbers.length === 0
+            ? "No WhatsApp number was shared with Pingbase. Try again and pick your WhatsApp Business account and number when Meta asks."
+            : `Several WhatsApp numbers were shared (${numbers.map((n) => n.display ?? n.id).join(", ")}). Try again and pick just one.`;
+        await logIntegration(WORKSPACE, "whatsapp", "error", `Embedded signup: ${detail} (accounts: ${wabaIds.join(",") || "none"})`);
+        return { ok: false as const, error: detail };
+      }
+      wabaId = match.wabaId;
+      phoneNumberId = match.id;
+    }
+
     // Route this business's WhatsApp webhooks to Pingbase's platform webhook.
-    const sub = await fetch(`${GRAPH}/${data.wabaId}/subscribed_apps`, { method: "POST", headers: auth });
+    const sub = await fetch(`${GRAPH}/${wabaId}/subscribed_apps`, { method: "POST", headers: auth });
     if (!sub.ok) {
       const body = await sub.text();
       await logIntegration(WORKSPACE, "whatsapp", "error", `Subscribing to WhatsApp account failed: ${body}`);
@@ -194,12 +233,12 @@ export const completeEmbeddedSignup = createServerFn({ method: "POST" })
 
     // Register the number for Cloud API. Already-registered numbers return an error we can ignore.
     const pin = String(Math.floor(100000 + Math.random() * 900000));
-    const reg = await fetch(`${GRAPH}/${data.phoneNumberId}/register`, {
+    const reg = await fetch(`${GRAPH}/${phoneNumberId}/register`, {
       method: "POST",
       headers: auth,
       body: JSON.stringify({ messaging_product: "whatsapp", pin }),
     });
     if (!reg.ok) await logIntegration(WORKSPACE, "whatsapp", "warn", `Number registration: ${await reg.text()}`);
 
-    return connectWhatsApp(WORKSPACE, { access_token: token, phone_number_id: data.phoneNumberId, waba_id: data.wabaId });
+    return connectWhatsApp(WORKSPACE, { access_token: token, phone_number_id: phoneNumberId, waba_id: wabaId });
   });
