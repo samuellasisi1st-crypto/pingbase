@@ -1,400 +1,464 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { CheckCircle2, MessageSquareText, RefreshCw, Send, XCircle } from "lucide-react";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { GoogleCalendarConnectForm } from "@/components/GoogleCalendarConnectForm";
-import { MetaConnectForm } from "@/components/MetaConnectForm";
-
-import { Badge, Button, Input, Tabs, Textarea } from "@/design-system";
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import {
-  createWhatsAppTemplate,
-  listWhatsAppInbox,
-  listWhatsAppTemplates,
-  subscribeWhatsAppWebhook,
-  sendWhatsAppTest,
-} from "@/lib/channels.functions";
+  AlertTriangle, Bot, Search, Plus, Filter, SlidersHorizontal, Inbox as InboxIcon, UserCheck, UserX,
+  MailOpen, CalendarClock, CreditCard, CheckCircle2, Paperclip, Smile, CalendarDays, Sparkles as Wand, Send, Clock, Check, Users, PanelLeft,
+} from "lucide-react";
+
+import { AppShell, SideItem, SideLabel } from "@/components/AppShell";
+import { supabase } from "@/integrations/supabase/client";
+import { Avatar } from "@/design-system/components/Avatar";
+import { Badge } from "@/design-system/components/Badge";
+import { Button } from "@/design-system/components/Button";
+import { AIHandlingPill } from "@/design-system/components/AIHandlingPill";
+import { Tabs } from "@/design-system/components/Tabs";
+import { formatSalonDateTime, money } from "@/lib/time";
+import { sendHumanReply, setHandlingMode } from "@/lib/concierge.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "WhatsApp testing — Pingbase" },
-      { name: "description", content: "Send WhatsApp messages and manage approved templates with Pingbase." },
-      { property: "og:title", content: "WhatsApp testing — Pingbase" },
-      { property: "og:description", content: "Send WhatsApp messages and manage approved templates with Pingbase." },
+      { title: "Inbox — Pingbase" },
+      { name: "description", content: "Every customer conversation across every channel, handled by AI with human takeover." },
+      { property: "og:title", content: "Inbox — Pingbase" },
+      { property: "og:description", content: "Every customer conversation across every channel, handled by AI with human takeover." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: WhatsAppTestPage,
+  component: InboxPage,
 });
 
-type Notice = { ok: boolean; message: string } | null;
-const TEMPLATE_NAME = "appointment_reminder";
+type View = "all" | "attention" | "ai" | "human" | "unassigned" | "unread" | "booking" | "payment" | "confirmed";
+const VIEWS: { v: View; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { v: "all", label: "All conversations", icon: InboxIcon },
+  { v: "attention", label: "Needs attention", icon: AlertTriangle },
+  { v: "ai", label: "AI handling", icon: Bot },
+  { v: "human", label: "Assigned to team", icon: UserCheck },
+  { v: "unassigned", label: "Not assigned", icon: UserX },
+  { v: "unread", label: "Unread", icon: MailOpen },
+  { v: "booking", label: "Booking enquiries", icon: CalendarClock },
+  { v: "payment", label: "Awaiting payment", icon: CreditCard },
+  { v: "confirmed", label: "Confirmed", icon: CheckCircle2 },
+];
+const CHANNELS = ["instagram", "messenger", "whatsapp", "telegram", "gmail", "outlook", "test"];
+const CH_LABEL: Record<string, string> = {
+  instagram: "Instagram", messenger: "Messenger", whatsapp: "WhatsApp", telegram: "Telegram",
+  gmail: "Email", outlook: "Email", test: "Test chat",
+};
+const CH_DOT: Record<string, string> = {
+  instagram: "bg-purple-500", messenger: "bg-cyan-500", whatsapp: "bg-green-500",
+  telegram: "bg-cyan-400", gmail: "bg-red-500", outlook: "bg-cyan-600", test: "bg-yellow-400",
+};
+const DONE = ["BOOKED", "COMPLETED"];
 
-const CHANNEL_FILTERS = [
-  { value: "all", label: "All channels" },
-  { value: "whatsapp", label: "WhatsApp" },
-  { value: "instagram", label: "Instagram" },
-  { value: "messenger", label: "Messenger" },
-] as const;
-
-const CHANNEL_LABELS: Record<string, { label: string; variant: "green" | "purple" | "cyan" | "neutral" }> = {
-  whatsapp: { label: "WhatsApp", variant: "green" },
-  instagram: { label: "Instagram", variant: "purple" },
-  messenger: { label: "Messenger", variant: "cyan" },
+type Conversation = {
+  id: string; channel: string; state: string; handling_mode: string; intent: string | null;
+  unread: boolean; needs_attention: boolean; assigned_to: string | null; last_message_at: string;
+  contact: { id: string; full_name: string | null; email: string | null; phone: string | null } | null;
 };
 
-function ChannelBadge({ channel }: { channel: string }) {
-  const meta = CHANNEL_LABELS[channel] ?? { label: channel, variant: "neutral" as const };
-  return <Badge variant={meta.variant}>{meta.label}</Badge>;
+const human = (s: string) => s.replaceAll("_", " ").toLowerCase().replace(/^./, (x) => x.toUpperCase());
+function stateBadge(c: Pick<Conversation, "state" | "needs_attention">) {
+  if (c.needs_attention) return <Badge variant="yellow">Needs human</Badge>;
+  if (DONE.includes(c.state)) return <Badge variant="green">Confirmed</Badge>;
+  if (c.state === "AWAITING_PAYMENT") return <Badge variant="purple">Awaiting payment</Badge>;
+  return <Badge variant="cyan">{human(c.state)}</Badge>;
+}
+function shortTime(iso: string) {
+  const d = new Date(iso);
+  const diff = Date.now() - d.getTime();
+  if (diff < 60_000) return "Now";
+  if (diff < 86_400_000 && new Date().getDate() === d.getDate())
+    return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" });
+  if (diff < 2 * 86_400_000) return "Yesterday";
+  return d.toLocaleDateString("en-GB", { weekday: "short", timeZone: "Europe/London" });
 }
 
-function WhatsAppTestPage() {
-  const send = useServerFn(sendWhatsAppTest);
-  const listTemplates = useServerFn(listWhatsAppTemplates);
-  const createTemplate = useServerFn(createWhatsAppTemplate);
+function InboxPage() {
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState("send");
-  const [to, setTo] = useState("");
-  const [text, setText] = useState("");
-  const [sending, setSending] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const [notice, setNotice] = useState<Notice>(null);
+  const [view, setView] = useState<View>("all");
+  const [channel, setChannel] = useState<string | null>(null);
+  const [tab, setTab] = useState("open");
+  const [q, setQ] = useState("");
+  const [activeId, setActiveId] = useState<string | null>(null);
 
-  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const conversations = useQuery({
+    queryKey: ["conversations"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("conversations")
+        .select("id,channel,state,handling_mode,intent,unread,needs_attention,assigned_to,last_message_at,contact:contact_id(id,full_name,email,phone)")
+        .order("last_message_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as Conversation[];
+    },
+  });
+
+  const previews = useQuery({
+    queryKey: ["message-previews"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("messages").select("conversation_id, body, created_at, direction")
+        .neq("direction", "internal").order("created_at", { ascending: false }).limit(400);
+      if (error) throw error;
+      const map: Record<string, string> = {};
+      for (const m of data ?? []) if (!map[m.conversation_id]) map[m.conversation_id] = m.body;
+      return map;
+    },
+  });
+
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSignedIn(!!data.session));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => setSignedIn(!!session));
-    return () => sub.subscription.unsubscribe();
-  }, []);
+    const sub = supabase
+      .channel("inbox-stream")
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, () => {
+        queryClient.invalidateQueries({ queryKey: ["messages"] });
+        queryClient.invalidateQueries({ queryKey: ["message-previews"] });
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "conversations" }, () =>
+        queryClient.invalidateQueries({ queryKey: ["conversations"] }))
+      .on("postgres_changes", { event: "*", schema: "public", table: "appointments" }, () =>
+        queryClient.invalidateQueries({ queryKey: ["conversation-detail"] }))
+      .subscribe();
+    return () => { supabase.removeChannel(sub); };
+  }, [queryClient]);
 
-  const templates = useQuery({
-    queryKey: ["whatsapp-templates"],
-    queryFn: () => listTemplates(),
-    enabled: tab === "templates" && signedIn === true,
-  });
-
-  const listInbox = useServerFn(listWhatsAppInbox);
-  const subscribe = useServerFn(subscribeWhatsAppWebhook);
-  const [subscribing, setSubscribing] = useState(false);
-  const inbox = useQuery({
-    queryKey: ["whatsapp-inbox"],
-    queryFn: () => listInbox(),
-    enabled: tab === "inbox" && signedIn === true,
-    refetchInterval: 4000,
-  });
-  const [channelFilter, setChannelFilter] = useState<(typeof CHANNEL_FILTERS)[number]["value"]>("all");
-  const visibleMessages = (inbox.data ?? []).filter((m) => channelFilter === "all" || m.channel === channelFilter);
-  const enableIncoming = async () => {
-    setSubscribing(true);
-    setNotice(null);
-    try {
-      const r = await subscribe();
-      setNotice(r.ok ? { ok: true, message: "Incoming messages switched on. Send a WhatsApp to your business number to test." } : { ok: false, message: r.error });
-    } catch (e) {
-      setNotice({ ok: false, message: e instanceof Error ? e.message : "Something went wrong" });
-    } finally {
-      setSubscribing(false);
+  const matches = (c: Conversation, v: View) => {
+    switch (v) {
+      case "attention": return c.needs_attention;
+      case "ai": return c.handling_mode === "AI";
+      case "human": return c.handling_mode === "HUMAN";
+      case "unassigned": return !c.assigned_to;
+      case "unread": return c.unread;
+      case "booking": return ["DISCOVERY", "COLLECTING_REQUIREMENTS", "CHECKING_AVAILABILITY", "AWAITING_SLOT_SELECTION", "AWAITING_DETAILS"].includes(c.state);
+      case "payment": return c.state === "AWAITING_PAYMENT";
+      case "confirmed": return DONE.includes(c.state);
+      default: return true;
     }
   };
 
-  const validNumber = /^\+?\d{7,15}$/.test(to.trim());
-  const preset = templates.data?.templates.find((template) => template.name === TEMPLATE_NAME);
+  const all = conversations.data ?? [];
+  const list = useMemo(() => all.filter((c) => {
+    if (channel && c.channel !== channel) return false;
+    if (!matches(c, view)) return false;
+    if (tab === "open" && DONE.includes(c.state)) return false;
+    if (tab === "snoozed" && c.handling_mode !== "PAUSED") return false;
+    if (tab === "done" && !DONE.includes(c.state)) return false;
+    if (q && !`${c.contact?.full_name ?? ""} ${previews.data?.[c.id] ?? ""}`.toLowerCase().includes(q.toLowerCase())) return false;
+    return true;
+  }), [all, channel, view, tab, q, previews.data]);
 
-  if (signedIn === false) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="w-full max-w-sm rounded-2xl border border-border bg-panel p-6 text-center shadow-sm">
-          <h1 className="text-lg font-semibold text-foreground">Sign in to continue</h1>
-          <p className="mt-1 text-sm text-secondary">You need to be signed in to send WhatsApp messages.</p>
-          <Link
-            to="/auth"
-            className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-full bg-[image:var(--gradient-primary)] text-sm font-semibold text-primary-foreground shadow-button-glow"
-          >
-            Sign in
-          </Link>
-        </div>
+  useEffect(() => {
+    if (!activeId && list[0]) setActiveId(list[0].id);
+  }, [list, activeId]);
+
+  const secondary = (
+    <>
+      <div className="mb-3 flex items-center justify-between px-2">
+        <p className="text-[13px] text-secondary">Inbox</p>
+        <PanelLeft className="size-4 text-tertiary" />
       </div>
-    );
-  }
-
-  async function submitMessage() {
-    setSending(true);
-    setNotice(null);
-    try {
-      const result = await send({ data: { to: to.trim(), mode: "text", text: text.trim() || undefined } });
-      setNotice(
-        result.ok
-          ? { ok: true, message: `Meta accepted the message. ID: ${result.messageId ?? "not returned"}` }
-          : { ok: false, message: result.error },
-      );
-    } catch (error) {
-      setNotice({ ok: false, message: error instanceof Error ? error.message : "The message could not be sent." });
-    } finally {
-      setSending(false);
-    }
-  }
-
-  async function activateTemplate() {
-    setCreating(true);
-    setNotice(null);
-    try {
-      const result = await createTemplate({
-        data: {
-          name: TEMPLATE_NAME,
-          category: "UTILITY",
-          language: "en_GB",
-          body: "Your appointment at Studio Nine Hair is coming up. Reply to this message if you need help with your booking.",
-        },
-      });
-      if (result.ok) {
-        setNotice({ ok: true, message: `Template submitted to Meta. Status: ${result.status}` });
-        await queryClient.invalidateQueries({ queryKey: ["whatsapp-templates"] });
-      } else {
-        setNotice({ ok: false, message: result.error });
-      }
-    } catch (error) {
-      setNotice({ ok: false, message: error instanceof Error ? error.message : "The template could not be created." });
-    } finally {
-      setCreating(false);
-    }
-  }
+      {VIEWS.map((x) => (
+        <SideItem key={x.v} icon={x.icon} label={x.label} active={view === x.v && !channel}
+          count={all.filter((c) => matches(c, x.v)).length || undefined}
+          onClick={() => { setView(x.v); setChannel(null); }} />
+      ))}
+      <SideLabel>Channels</SideLabel>
+      {CHANNELS.map((ch) => {
+        const n = all.filter((c) => c.channel === ch).length;
+        return (
+          <button key={ch} onClick={() => { setChannel(ch); setView("all"); }}
+            className={`flex h-9 w-full items-center gap-2.5 rounded-md border px-2.5 text-[13px] ${channel === ch ? "border-border bg-panel font-semibold text-foreground shadow-xs" : "border-transparent text-secondary hover:bg-hover"}`}>
+            <span className={`size-2.5 rounded-full ${CH_DOT[ch]}`} />
+            <span className="flex-1 text-left">{ch === "gmail" ? "Gmail" : ch === "outlook" ? "Outlook" : CH_LABEL[ch]}</span>
+            {n > 0 && <span className="text-[11px] text-tertiary">{n}</span>}
+          </button>
+        );
+      })}
+      <div className="mt-auto pt-6">
+        <a href="/tester" className="block rounded-xl border border-border bg-hover p-3 hover:bg-selected">
+          <p className="text-[13px] font-semibold text-foreground">Channel setup &amp; tester</p>
+          <p className="mt-0.5 text-[12px] text-secondary">Connect WhatsApp, Instagram, Messenger and Google Calendar.</p>
+        </a>
+      </div>
+    </>
+  );
 
   return (
-    <main className="min-h-screen bg-background px-4 py-10 sm:py-16">
-      <div className="mx-auto w-full max-w-2xl">
-        <header className="mb-7">
-          <p className="text-label font-semibold text-primary">Pingbase</p>
-          <h1 className="mt-1 text-2xl font-semibold text-foreground">WhatsApp testing</h1>
-        </header>
-
-        <Tabs
-          items={[
-            { value: "send", label: "Send message" },
-            { value: "inbox", label: "Incoming" },
-            { value: "templates", label: "Templates" },
-            { value: "social", label: "Instagram & Messenger" },
-            { value: "calendar", label: "Calendar" },
-          ]}
-          value={tab}
-          onChange={(value) => {
-            setTab(value);
-            setNotice(null);
-          }}
-          className="mb-6"
-        />
-
-        {tab === "send" ? (
-          <section aria-labelledby="send-title" className="max-w-md">
-            <h2 id="send-title" className="text-lg font-semibold text-foreground">Send a WhatsApp message</h2>
-            <p className="mt-1 text-sm text-secondary">Messages are sent from your connected business number.</p>
-            <form
-              className="mt-5 space-y-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                if (validNumber && !sending) void submitMessage();
-              }}
-            >
-              <Field label="Send to" htmlFor="recipient">
-                <Input
-                  id="recipient"
-                  value={to}
-                  onChange={(event) => setTo(event.target.value)}
-                  placeholder="+447407054474"
-                  inputMode="tel"
-                  size="lg"
-                />
-                <p className="mt-1.5 text-caption text-tertiary">Use the full number with country code.</p>
-              </Field>
-              <Field label="Message" htmlFor="message">
-                <Textarea
-                  id="message"
-                  value={text}
-                  onChange={(event) => setText(event.target.value)}
-                  placeholder="Type your message"
-                  rows={4}
-                />
-              </Field>
-              <Button type="submit" size="lg" disabled={!validNumber || sending} className="w-full sm:w-auto">
-                <Send className="size-4" />
-                {sending ? "Sending…" : "Send message"}
-              </Button>
-              <p className="text-caption text-tertiary">Free-text replies work within 24 hours of the customer’s last message.</p>
-            </form>
-          </section>
-        ) : tab === "inbox" ? (
-          <section aria-labelledby="inbox-title">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 id="inbox-title" className="text-lg font-semibold text-foreground">Incoming messages</h2>
-                <p className="mt-1 text-sm text-secondary">Everything customers send on WhatsApp, Instagram and Messenger, and Nia’s replies. Updates automatically.</p>
-              </div>
-              <Button variant="tertiary" size="sm" onClick={() => void enableIncoming()} disabled={subscribing}>
-                {subscribing ? "Switching on…" : "Switch on incoming"}
-              </Button>
+    <AppShell secondary={secondary}>
+      <div className="grid h-screen grid-cols-1 lg:grid-cols-[22rem_1fr]">
+        <div className="flex min-h-0 flex-col border-r border-border-subtle">
+          <div className="flex items-center justify-between px-4 pb-3 pt-4">
+            <p className="text-[15px] font-semibold text-foreground">
+              {channel ? CH_LABEL[channel] : VIEWS.find((x) => x.v === view)?.label}{" "}
+              <span className="text-[13px] font-normal text-tertiary">{list.length}</span>
+            </p>
+            <a href="/chat" target="_blank" rel="noreferrer" aria-label="New test conversation"
+              className="grid size-8 place-items-center rounded-full bg-primary text-panel shadow-control hover:bg-primary-hover">
+              <Plus className="size-4" />
+            </a>
+          </div>
+          <div className="px-4">
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 size-4 text-tertiary" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search conversations…"
+                className="h-9 w-full rounded-md border border-border bg-panel pl-8 pr-2 text-[13px] placeholder:text-tertiary focus:border-primary focus:outline-none" />
             </div>
-
-            <div className="mt-4 flex flex-wrap gap-2">
-              {CHANNEL_FILTERS.map((f) => {
-                const count = f.value === "all" ? (inbox.data?.length ?? 0) : (inbox.data ?? []).filter((m) => m.channel === f.value).length;
-                const active = channelFilter === f.value;
-                return (
-                  <button
-                    key={f.value}
-                    type="button"
-                    onClick={() => setChannelFilter(f.value)}
-                    className={`rounded-full border px-3 py-1 text-caption font-medium transition-colors ${
-                      active ? "border-cyan-mid bg-cyan-soft text-primary-dark" : "border-border text-secondary hover:text-foreground"
-                    }`}
-                  >
-                    {f.label}
-                    {inbox.data ? ` · ${count}` : ""}
-                  </button>
-                );
-              })}
+            <div className="mt-2 flex items-center justify-between">
+              <Tabs value={tab} onChange={setTab} items={[{ value: "open", label: "Open" }, { value: "snoozed", label: "Paused" }, { value: "done", label: "Done" }]} />
+              <Filter className="size-4 text-tertiary" />
             </div>
+          </div>
+          <div className="flex items-center justify-between border-b border-border-subtle px-4 py-2 text-[12px] text-tertiary">
+            Newest first <SlidersHorizontal className="size-3.5" />
+          </div>
 
-            {inbox.isLoading && <p className="mt-4 text-sm text-secondary">Loading messages…</p>}
-            {inbox.error && <Notice ok={false} message={(inbox.error as Error).message} />}
-            {inbox.data && visibleMessages.length === 0 && (
-              <p className="mt-6 rounded-md border border-border bg-panel p-5 text-sm text-secondary">
-                No messages here yet. Send a message to your business on WhatsApp, Instagram or Messenger and it will appear.
-              </p>
-            )}
-            {visibleMessages.length > 0 && (
-              <div className="mt-6 divide-y divide-border rounded-md border border-border bg-panel">
-                {visibleMessages.map((m) => (
-                  <div key={m.id} className="flex items-start justify-between gap-4 p-4">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <ChannelBadge channel={m.channel} />
-                        <Badge variant={m.direction === "inbound" ? "green" : "neutral"}>
-                          {m.direction === "inbound" ? "Received" : m.sender === "AI" ? "Nia replied" : "Sent"}
-                        </Badge>
-                        <span className="text-sm font-medium text-foreground">{m.name ?? m.handle ?? m.phone ?? "Unknown"}</span>
-                        {m.phone && m.name !== m.phone && <span className="text-caption text-tertiary">{m.phone}</span>}
-                      </div>
-                      <p className="mt-1.5 whitespace-pre-wrap text-sm text-foreground">{m.body}</p>
-                    </div>
-                    <div className="flex shrink-0 flex-col items-end gap-2">
-                      <span className="text-caption text-tertiary">{new Date(m.createdAt).toLocaleString()}</span>
-                      {m.channel === "whatsapp" && m.phone && (
-                        <Button variant="tertiary" size="sm" onClick={() => { setTo(m.phone!); setTab("send"); }}>
-                          Reply
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {conversations.isLoading && <p className="p-4 text-[13px] text-tertiary">Loading…</p>}
+            {!conversations.isLoading && list.length === 0 && (
+              <div className="flex flex-col items-center px-6 py-16 text-center">
+                <MailOpen className="size-10 text-tertiary" />
+                <p className="mt-3 text-[14px] font-semibold text-foreground">You're all caught up</p>
+                <p className="mt-1 text-[13px] text-secondary">Nothing here right now. Nia is watching every channel.</p>
               </div>
             )}
-          </section>
-        ) : tab === "social" ? (
-          <section className="max-w-xl" aria-labelledby="social-title">
-            <h2 id="social-title" className="sr-only">Instagram and Messenger</h2>
+            {list.map((c) => {
+              const name = c.contact?.full_name ?? "New customer";
+              const selected = activeId === c.id;
+              return (
+                <button key={c.id} onClick={() => setActiveId(c.id)}
+                  className={`flex w-full gap-3 border-b border-border-subtle px-4 py-3 text-left transition-colors ${selected ? "bg-selected" : "hover:bg-hover"}`}>
+                  <span className="relative shrink-0">
+                    <Avatar name={name} size="lg" />
+                    <span className={`absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-panel ${CH_DOT[c.channel] ?? "bg-gray-400"}`} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="truncate text-[14px] font-semibold text-foreground">{name}</span>
+                      <span className="shrink-0 text-[11px] text-tertiary">{shortTime(c.last_message_at)}</span>
+                    </span>
+                    <span className="mt-0.5 block truncate text-[12px] font-medium text-secondary">
+                      {c.intent ? human(c.intent) : CH_LABEL[c.channel]} · {CH_LABEL[c.channel]}
+                    </span>
+                    <span className="mt-1 flex items-center justify-between gap-2">
+                      <span className="truncate text-[12px] text-tertiary">{previews.data?.[c.id] ?? "…"}</span>
+                      {c.unread && <span className="grid size-4 shrink-0 place-items-center rounded-full bg-primary text-[10px] font-semibold text-panel">1</span>}
+                    </span>
+                    <span className="mt-1.5 block">{stateBadge(c)}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <p className="border-t border-border-subtle py-2 text-center text-[12px] text-tertiary">Showing {list.length} conversations</p>
+        </div>
 
-            {signedIn ? <MetaConnectForm connected={false} /> : <p className="text-sm text-secondary">Sign in to connect Instagram.</p>}
-          </section>
-        ) : tab === "calendar" ? (
-          <section className="max-w-xl">
-            {signedIn ? <GoogleCalendarConnectForm /> : <p className="text-sm text-secondary">Sign in to connect Google Calendar.</p>}
-          </section>
-        ) : (
-          <section aria-labelledby="templates-title">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 id="templates-title" className="text-lg font-semibold text-foreground">WhatsApp templates</h2>
-                <p className="mt-1 text-sm text-secondary">Pre-approved messages for reminders sent after 24 hours.</p>
-              </div>
-              <Button variant="tertiary" size="sm" onClick={() => templates.refetch()} disabled={templates.isFetching}>
-                <RefreshCw className={`size-3.5 ${templates.isFetching ? "animate-spin" : ""}`} />
-                Refresh
-              </Button>
+        {activeId ? <ConversationPane conversationId={activeId} /> : (
+          <div className="flex items-center justify-center text-tertiary">Select a conversation</div>
+        )}
+      </div>
+    </AppShell>
+  );
+}
+
+type Appt = { id: string; starts_at: string; status: string; deposit_status: string; price_pence: number; service: { name: string } | null; staff: { name: string } | null };
+
+function ConversationPane({ conversationId }: { conversationId: string }) {
+  const queryClient = useQueryClient();
+  const [draft, setDraft] = useState("");
+
+  const detail = useQuery({
+    queryKey: ["conversation-detail", conversationId],
+    queryFn: async () => {
+      const [conversation, messages, handoffs, actions] = await Promise.all([
+        supabase.from("conversations").select("*, contact:contact_id(*)").eq("id", conversationId).single(),
+        supabase.from("messages").select("*").eq("conversation_id", conversationId).order("created_at"),
+        supabase.from("handoffs").select("*").eq("conversation_id", conversationId).order("created_at", { ascending: false }),
+        supabase.from("ai_action_logs").select("tool_name,success,created_at").eq("conversation_id", conversationId)
+          .order("created_at", { ascending: false }).limit(12),
+      ]);
+      const contactId = (conversation.data?.contact as { id: string } | null)?.id;
+      const appointments = contactId
+        ? await supabase.from("appointments").select("*, service:service_id(name), staff:staff_id(name)").eq("contact_id", contactId).order("starts_at")
+        : { data: [] };
+      return {
+        conversation: conversation.data,
+        messages: messages.data ?? [],
+        handoffs: handoffs.data ?? [],
+        actions: actions.data ?? [],
+        appointments: (appointments.data ?? []) as unknown as Appt[],
+      };
+    },
+  });
+
+  useEffect(() => {
+    const sub = supabase
+      .channel(`conv-${conversationId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages", filter: `conversation_id=eq.${conversationId}` }, () =>
+        queryClient.invalidateQueries({ queryKey: ["conversation-detail", conversationId] }))
+      .subscribe();
+    return () => { supabase.removeChannel(sub); };
+  }, [conversationId, queryClient]);
+
+  const refresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["conversation-detail", conversationId] });
+    queryClient.invalidateQueries({ queryKey: ["conversations"] });
+  };
+
+  const reply = useMutation({
+    mutationFn: (body: string) => sendHumanReply({ data: { conversationId, body } }),
+    onSuccess: (result) => {
+      setDraft("");
+      if (!result.delivered) toast.warning("Saved, but this channel is not connected yet so it was not delivered.");
+      refresh();
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "Could not send"),
+  });
+
+  const mode = useMutation({
+    mutationFn: (m: "AI" | "HUMAN" | "PAUSED") => setHandlingMode({ data: { conversationId, mode: m } }),
+    onSuccess: refresh,
+  });
+
+  if (detail.isLoading || !detail.data?.conversation) {
+    return <div className="flex items-center justify-center text-tertiary">Loading conversation…</div>;
+  }
+
+  const c = detail.data.conversation as never as {
+    handling_mode: string; state: string; channel: string; intent: string | null; needs_attention: boolean;
+    contact: { full_name: string | null; email: string | null; phone: string | null; notes: string | null; ai_summary: string | null; tags: string[] | null } | null;
+  };
+  const name = c.contact?.full_name ?? "New customer";
+  const openHandoff = detail.data.handoffs.find((h) => h.status === "OPEN");
+  const next = detail.data.appointments.find((a) => new Date(a.starts_at) > new Date() && a.status !== "CANCELLED");
+  const pill = c.needs_attention ? "attention" : c.handling_mode === "AI" ? "handling" : c.handling_mode === "HUMAN" ? "human" : "paused";
+
+  let lastDay = "";
+
+  return (
+    <div className="grid min-h-0 grid-cols-1 xl:grid-cols-[1fr_20rem]">
+      <div className="flex min-h-0 flex-col">
+        <div className="flex h-[68px] items-center justify-between gap-2 border-b border-border-subtle px-5">
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar name={name} size="md" />
+            <div className="min-w-0">
+              <p className="truncate text-[15px] font-semibold text-foreground">{name}</p>
+              <p className="truncate text-[12px] text-secondary">{CH_LABEL[c.channel]} · {c.intent ? human(c.intent) : human(c.state)}</p>
             </div>
-
-            <div className="mt-6 overflow-hidden rounded-md border border-border bg-panel">
-              <div className="flex flex-col gap-4 p-5 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex min-w-0 gap-3">
-                  <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-green-soft text-green-strong">
-                    <MessageSquareText className="size-4" />
-                  </div>
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-sm font-semibold text-foreground">Appointment reminder</h3>
-                      {preset && <StatusBadge status={preset.status} />}
-                    </div>
-                    <p className="mt-1 max-w-lg text-sm text-secondary">
-                      Your appointment at Studio Nine Hair is coming up. Reply to this message if you need help with your booking.
-                    </p>
-                    <p className="mt-2 text-caption text-tertiary">Utility · English (UK)</p>
-                  </div>
-                </div>
-                <Button
-                  variant={preset ? "secondary" : "primary"}
-                  size="sm"
-                  disabled={creating || Boolean(preset)}
-                  onClick={() => void activateTemplate()}
-                >
-                  {creating ? "Submitting…" : preset ? "Activated" : "Activate template"}
-                </Button>
-              </div>
-            </div>
-
-            {templates.isLoading && <p className="mt-4 text-sm text-secondary">Loading templates…</p>}
-            {templates.data && !templates.data.ok && <Notice ok={false} message={templates.data.error} />}
-            {templates.error && <Notice ok={false} message={(templates.error as Error).message} />}
-
-            {(templates.data?.templates.length ?? 0) > 0 && (
-              <div className="mt-7">
-                <h3 className="text-sm font-semibold text-foreground">Templates on this account</h3>
-                <div className="mt-2 divide-y divide-border border-y border-border">
-                  {templates.data?.templates.map((template) => (
-                    <div key={template.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 py-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-foreground">{template.name}</p>
-                        <p className="text-caption text-tertiary">{template.category.toLowerCase()} · {template.language}</p>
-                      </div>
-                      <StatusBadge status={template.status} />
-                    </div>
-                  ))}
-                </div>
-              </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
+            <AIHandlingPill state={pill} />
+            <button title="Pause AI" onClick={() => mode.mutate("PAUSED")} className="rounded-md p-2 text-secondary hover:bg-hover"><Clock className="size-4" /></button>
+            {c.handling_mode !== "HUMAN" && (
+              <Button size="sm" variant="secondary" onClick={() => mode.mutate("HUMAN")}><Users className="mr-1.5 size-3.5" />Take over</Button>
             )}
-          </section>
+            {c.handling_mode !== "AI" && (
+              <Button size="sm" onClick={() => mode.mutate("AI")}><Bot className="mr-1.5 size-3.5" />Return to AI</Button>
+            )}
+          </div>
+        </div>
+
+        {openHandoff && (
+          <div className="border-b border-border-subtle bg-yellow-soft px-5 py-3 text-[13px]">
+            <p className="flex items-center gap-2 font-semibold text-foreground"><AlertTriangle className="size-4" /> Handed over: {openHandoff.reason}</p>
+            <p className="mt-1 text-secondary">{openHandoff.summary}</p>
+            {openHandoff.recommended_action && <p className="mt-1 text-secondary">Suggested: {openHandoff.recommended_action}</p>}
+          </div>
         )}
 
-        {notice && <Notice ok={notice.ok} message={notice.message} />}
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-6 py-5">
+          {detail.data.messages.map((m) => {
+            const day = new Date(m.created_at).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/London" });
+            const showDay = day !== lastDay;
+            lastDay = day;
+            const time = new Date(m.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/London" });
+            return (
+              <div key={m.id}>
+                {showDay && <p className="py-2 text-center text-[12px] text-tertiary">{day}</p>}
+                {m.direction === "internal" ? (
+                  <p className="flex items-center gap-2 text-[12px] text-secondary"><Bot className="size-3.5 text-primary" /> {m.body}</p>
+                ) : (
+                  <div className={m.direction === "outbound" ? "flex justify-end" : "flex justify-start"}>
+                    <div className={`max-w-[70%] rounded-xl px-4 py-2.5 text-[14px] ${m.direction === "outbound" ? "bg-cyan-soft text-foreground" : "bg-hover text-foreground"}`}>
+                      <p className="whitespace-pre-wrap">{m.body}</p>
+                      <p className="mt-1 text-right text-[11px] text-tertiary">
+                        {time}{m.direction === "outbound" && ` · ${m.sender_type === "AI" ? "Nia" : m.sender_name ?? "Team"}`}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <form className="p-4" onSubmit={(e) => { e.preventDefault(); if (draft.trim()) reply.mutate(draft.trim()); }}>
+          <div className="rounded-xl border border-border bg-panel shadow-xs focus-within:border-primary">
+            <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={2}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (draft.trim()) reply.mutate(draft.trim()); } }}
+              placeholder={c.handling_mode === "AI" ? `Reply to ${name}… (this takes the conversation off Nia)` : `Reply to ${name}…`}
+              className="block w-full resize-none rounded-t-xl bg-transparent px-4 py-3 text-[14px] placeholder:text-tertiary focus:outline-none" />
+            <div className="flex items-center justify-between border-t border-border-subtle px-3 py-2">
+              <div className="flex gap-1 text-secondary">
+                {[Paperclip, Smile, CalendarDays, Wand].map((I, i) => <span key={i} className="rounded p-1.5 hover:bg-hover"><I className="size-4" /></span>)}
+              </div>
+              <Button type="submit" size="sm" disabled={reply.isPending || !draft.trim()}><Send className="mr-1.5 size-3.5" />Send</Button>
+            </div>
+          </div>
+        </form>
       </div>
-    </main>
+
+      <aside className="hidden min-h-0 overflow-y-auto border-l border-border-subtle xl:block">
+        <div className="flex h-[68px] items-center border-b border-border-subtle px-5 text-[15px] font-semibold text-foreground">Customer</div>
+        <div className="flex items-center gap-3 border-b border-border-subtle px-5 py-4">
+          <Avatar name={name} size="lg" />
+          <div><p className="text-[15px] font-semibold text-foreground">{name}</p><p className="text-[12px] text-secondary">{CH_LABEL[c.channel]}</p></div>
+        </div>
+        <Section title="Booking">
+          {next ? (
+            <>
+              <p className="text-[14px] font-medium text-foreground">{next.service?.name} · {next.staff?.name}</p>
+              <p className="mt-0.5 text-[12px] text-secondary">{formatSalonDateTime(next.starts_at)} · {money(next.price_pence)}</p>
+              <div className="mt-2 flex gap-1.5">
+                <Badge variant={next.status === "CONFIRMED" ? "green" : "yellow"}>{human(next.status)}</Badge>
+                <Badge>Deposit {next.deposit_status.toLowerCase()}</Badge>
+              </div>
+            </>
+          ) : <p className="text-[13px] text-secondary">No upcoming booking</p>}
+          <div className="mt-2">{stateBadge(c)}</div>
+        </Section>
+        <Section title="AI summary"><p className="text-[13px] leading-relaxed text-secondary">{c.contact?.ai_summary || "No summary yet."}</p></Section>
+        <Section title="Attributes">
+          <dl className="space-y-2 text-[13px]">
+            <div className="flex justify-between gap-2"><dt className="text-secondary">Email</dt><dd className="truncate text-foreground">{c.contact?.email ?? "—"}</dd></div>
+            <div className="flex justify-between gap-2"><dt className="text-secondary">Phone</dt><dd className="text-foreground">{c.contact?.phone ?? "—"}</dd></div>
+          </dl>
+          {c.contact?.tags?.length ? <div className="mt-2 flex flex-wrap gap-1">{c.contact.tags.map((t) => <Badge key={t}>{t}</Badge>)}</div> : null}
+        </Section>
+        <Section title="Customer notes"><p className="text-[13px] text-secondary">{c.contact?.notes || "No notes yet."}</p></Section>
+        <Section title="Recent activity">
+          {detail.data.actions.length === 0 && <p className="text-[13px] text-tertiary">No AI actions yet</p>}
+          <ul className="space-y-1.5 text-[12px] text-secondary">
+            {detail.data.actions.slice(0, 6).map((a, i) => (
+              <li key={i} className="flex justify-between gap-2">
+                <span>{a.success ? "✓" : "✕"} {human(a.tool_name)}</span>
+                <span className="text-tertiary">{shortTime(a.created_at)}</span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      </aside>
+    </div>
   );
 }
 
-function Field({ label, htmlFor, children }: { label: string; htmlFor: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div>
-      <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-foreground">{label}</label>
+    <section className="border-b border-border-subtle px-5 py-4">
+      <h3 className="mb-2 text-[13px] font-semibold text-foreground">{title}</h3>
       {children}
-    </div>
-  );
-}
-
-function StatusBadge({ status }: { status: string }) {
-  const variant = status === "APPROVED" ? "green" : status === "REJECTED" ? "red" : "yellow";
-  return <Badge variant={variant}>{status}</Badge>;
-}
-
-function Notice({ ok, message }: { ok: boolean; message: string }) {
-  return (
-    <div
-      role="status"
-      className={`mt-5 flex items-start gap-2 rounded-md border px-3 py-2 text-sm ${
-        ok ? "border-green-strong/15 bg-green-soft text-green-strong" : "border-red-strong/15 bg-red-soft text-red-strong"
-      }`}
-    >
-      {ok ? <CheckCircle2 className="mt-0.5 size-4 shrink-0" /> : <XCircle className="mt-0.5 size-4 shrink-0" />}
-      <span>{message}</span>
-    </div>
+    </section>
   );
 }

@@ -27,6 +27,7 @@ import { Route as SearchRouteImport } from './routes/search'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TeamChatRouteImport } from './routes/team-chat'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TesterRouteImport } from './routes/tester'
 import { Route as WhatsNewRouteImport } from './routes/whats-new'
 import { Route as PayPaymentIdRouteImport } from './routes/pay.$paymentId'
 import { Route as ApiPublicWebhooksMetaRouteImport } from './routes/api/public/webhooks/meta'
@@ -123,6 +124,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TesterRoute = TesterRouteImport.update({
+  id: '/tester',
+  path: '/tester',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WhatsNewRoute = WhatsNewRouteImport.update({
   id: '/whats-new',
   path: '/whats-new',
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/team-chat': typeof TeamChatRoute
   '/terms': typeof TermsRoute
+  '/tester': typeof TesterRoute
   '/whats-new': typeof WhatsNewRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
@@ -195,6 +202,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/team-chat': typeof TeamChatRoute
   '/terms': typeof TermsRoute
+  '/tester': typeof TesterRoute
   '/whats-new': typeof WhatsNewRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/team-chat': typeof TeamChatRoute
   '/terms': typeof TermsRoute
+  '/tester': typeof TesterRoute
   '/whats-new': typeof WhatsNewRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team-chat'
     | '/terms'
+    | '/tester'
     | '/whats-new'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team-chat'
     | '/terms'
+    | '/tester'
     | '/whats-new'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/team-chat'
     | '/terms'
+    | '/tester'
     | '/whats-new'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
@@ -324,6 +336,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   TeamChatRoute: typeof TeamChatRoute
   TermsRoute: typeof TermsRoute
+  TesterRoute: typeof TesterRoute
   WhatsNewRoute: typeof WhatsNewRoute
   PayPaymentIdRoute: typeof PayPaymentIdRoute
   ApiPublicWebhooksMetaRoute: typeof ApiPublicWebhooksMetaRoute
@@ -459,6 +472,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tester': {
+      id: '/tester'
+      path: '/tester'
+      fullPath: '/tester'
+      preLoaderRoute: typeof TesterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/whats-new': {
       id: '/whats-new'
       path: '/whats-new'
@@ -516,6 +536,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   TeamChatRoute: TeamChatRoute,
   TermsRoute: TermsRoute,
+  TesterRoute: TesterRoute,
   WhatsNewRoute: WhatsNewRoute,
   PayPaymentIdRoute: PayPaymentIdRoute,
   ApiPublicWebhooksMetaRoute: ApiPublicWebhooksMetaRoute,
