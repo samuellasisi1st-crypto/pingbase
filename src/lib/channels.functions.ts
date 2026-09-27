@@ -141,3 +141,65 @@ export const disconnectWhatsApp = createServerFn({ method: "POST" })
     await logIntegration(WORKSPACE, "whatsapp", "info", "Disconnected WhatsApp");
     return { ok: true };
   });
+
+/** Public settings the browser needs to open Meta's WhatsApp Embedded Signup popup. */
+export const getEmbeddedSignupConfig = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => {
+    return {
+      appId: process.env['META_APP_ID'] ?? null,
+      configId: process.env['META_WA_CONFIG_ID'] ?? null,
+    };
+  });
+
+/** Finish Embedded Signup: swap the code for the business's token, subscribe our app, register the number. */
+export const completeEmbeddedSignup = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        code: z.string().min(10).max(2000),
+        wabaId: z.string().regex(/^\d{5,25}$/),
+        phoneNumberId: z.string().regex(/^\d{5,25}$/),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertMember(context.supabase as never);
+    const { connectWhatsApp, logIntegration } = await import("@/lib/channels.server");
+    const GRAPH = "https://graph.facebook.com/v21.0";
+    const appId = process.env['META_APP_ID'];
+    const appSecret = process.env['META_APP_SECRET'];
+    if (!appId || !appSecret) return { ok: false as const, error: "Pingbase's Meta app isn't configured yet." };
+
+    const tokenRes = await fetch(
+      `${GRAPH}/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&code=${encodeURIComponent(data.code)}`,
+    );
+    const tokenJson = (await tokenRes.json().catch(() => ({}))) as { access_token?: string; error?: { message?: string } };
+    if (!tokenRes.ok || !tokenJson.access_token) {
+      const error = tokenJson.error?.message ?? `Meta returned ${tokenRes.status}`;
+      await logIntegration(WORKSPACE, "whatsapp", "error", `Embedded signup token exchange failed: ${error}`);
+      return { ok: false as const, error };
+    }
+    const token = tokenJson.access_token;
+    const auth = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+
+    // Route this business's WhatsApp webhooks to Pingbase's platform webhook.
+    const sub = await fetch(`${GRAPH}/${data.wabaId}/subscribed_apps`, { method: "POST", headers: auth });
+    if (!sub.ok) {
+      const body = await sub.text();
+      await logIntegration(WORKSPACE, "whatsapp", "error", `Subscribing to WhatsApp account failed: ${body}`);
+      return { ok: false as const, error: "Couldn't subscribe Pingbase to this WhatsApp account." };
+    }
+
+    // Register the number for Cloud API. Already-registered numbers return an error we can ignore.
+    const pin = String(Math.floor(100000 + Math.random() * 900000));
+    const reg = await fetch(`${GRAPH}/${data.phoneNumberId}/register`, {
+      method: "POST",
+      headers: auth,
+      body: JSON.stringify({ messaging_product: "whatsapp", pin }),
+    });
+    if (!reg.ok) await logIntegration(WORKSPACE, "whatsapp", "warn", `Number registration: ${await reg.text()}`);
+
+    return connectWhatsApp(WORKSPACE, { access_token: token, phone_number_id: data.phoneNumberId, waba_id: data.wabaId });
+  });
