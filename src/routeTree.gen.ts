@@ -30,6 +30,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as WhatsNewRouteImport } from './routes/whats-new'
 import { Route as PayPaymentIdRouteImport } from './routes/pay.$paymentId'
 import { Route as ApiPublicWebhooksMetaRouteImport } from './routes/api/public/webhooks/meta'
+import { Route as ApiPublicOauthGoogleCallbackRouteImport } from './routes/api/public/oauth/google/callback'
 import { Route as ApiPublicOauthMetaCallbackRouteImport } from './routes/api/public/oauth/meta/callback'
 
 const IndexRoute = IndexRouteImport.update({
@@ -137,6 +138,12 @@ const ApiPublicWebhooksMetaRoute = ApiPublicWebhooksMetaRouteImport.update({
   path: '/api/public/webhooks/meta',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicOauthGoogleCallbackRoute =
+  ApiPublicOauthGoogleCallbackRouteImport.update({
+    id: '/api/public/oauth/google/callback',
+    path: '/api/public/oauth/google/callback',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicOauthMetaCallbackRoute =
   ApiPublicOauthMetaCallbackRouteImport.update({
     id: '/api/public/oauth/meta/callback',
@@ -166,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/whats-new': typeof WhatsNewRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
+  '/api/public/oauth/google/callback': typeof ApiPublicOauthGoogleCallbackRoute
   '/api/public/oauth/meta/callback': typeof ApiPublicOauthMetaCallbackRoute
 }
 export interface FileRoutesByTo {
@@ -190,6 +198,7 @@ export interface FileRoutesByTo {
   '/whats-new': typeof WhatsNewRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
+  '/api/public/oauth/google/callback': typeof ApiPublicOauthGoogleCallbackRoute
   '/api/public/oauth/meta/callback': typeof ApiPublicOauthMetaCallbackRoute
 }
 export interface FileRoutesById {
@@ -215,6 +224,7 @@ export interface FileRoutesById {
   '/whats-new': typeof WhatsNewRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
+  '/api/public/oauth/google/callback': typeof ApiPublicOauthGoogleCallbackRoute
   '/api/public/oauth/meta/callback': typeof ApiPublicOauthMetaCallbackRoute
 }
 export interface FileRouteTypes {
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/whats-new'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
+    | '/api/public/oauth/google/callback'
     | '/api/public/oauth/meta/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/whats-new'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
+    | '/api/public/oauth/google/callback'
     | '/api/public/oauth/meta/callback'
   id:
     | '__root__'
@@ -289,6 +301,7 @@ export interface FileRouteTypes {
     | '/whats-new'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
+    | '/api/public/oauth/google/callback'
     | '/api/public/oauth/meta/callback'
   fileRoutesById: FileRoutesById
 }
@@ -314,6 +327,7 @@ export interface RootRouteChildren {
   WhatsNewRoute: typeof WhatsNewRoute
   PayPaymentIdRoute: typeof PayPaymentIdRoute
   ApiPublicWebhooksMetaRoute: typeof ApiPublicWebhooksMetaRoute
+  ApiPublicOauthGoogleCallbackRoute: typeof ApiPublicOauthGoogleCallbackRoute
   ApiPublicOauthMetaCallbackRoute: typeof ApiPublicOauthMetaCallbackRoute
 }
 
@@ -466,6 +480,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicWebhooksMetaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/oauth/google/callback': {
+      id: '/api/public/oauth/google/callback'
+      path: '/api/public/oauth/google/callback'
+      fullPath: '/api/public/oauth/google/callback'
+      preLoaderRoute: typeof ApiPublicOauthGoogleCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/oauth/meta/callback': {
       id: '/api/public/oauth/meta/callback'
       path: '/api/public/oauth/meta/callback'
@@ -498,6 +519,7 @@ const rootRouteChildren: RootRouteChildren = {
   WhatsNewRoute: WhatsNewRoute,
   PayPaymentIdRoute: PayPaymentIdRoute,
   ApiPublicWebhooksMetaRoute: ApiPublicWebhooksMetaRoute,
+  ApiPublicOauthGoogleCallbackRoute: ApiPublicOauthGoogleCallbackRoute,
   ApiPublicOauthMetaCallbackRoute: ApiPublicOauthMetaCallbackRoute,
 }
 export const routeTree = rootRouteImport
