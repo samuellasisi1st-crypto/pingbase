@@ -515,7 +515,9 @@ export async function sendWhatsAppCalendarFile(
   opts: { ics: string; filename: string; caption?: string | null },
 ): Promise<SendResult> {
   try {
-    const blob = new Blob([opts.ics], { type: "text/calendar" });
+    // WhatsApp media rejects text/calendar, so upload as text/plain and keep the .ics filename;
+    // phones pick the calendar app from the extension.
+    const blob = new Blob([opts.ics], { type: "text/plain" });
     const mediaId = await uploadWhatsAppMedia(workspaceId, blob, opts.filename);
     return await postWhatsApp(workspaceId, {
       to,
