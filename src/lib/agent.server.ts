@@ -372,6 +372,26 @@ export function buildTools(ctx: Ctx) {
           payload: { from: appt.starts_at, to: updated.starts_at } as never,
         });
         await scheduleAutomations(ctx, appt.id, updated.starts_at);
+        try {
+          const { upsertGoogleEvent } = await import("@/lib/gcal.server");
+          const [{ data: settings }, { data: workspace }, { data: contact }] = await Promise.all([
+            db.from("business_settings").select("legal_name,address").eq("workspace_id", ctx.workspaceId).maybeSingle(),
+            db.from("workspaces").select("timezone,name").eq("id", ctx.workspaceId).maybeSingle(),
+            db.from("contacts").select("full_name,email").eq("id", ctx.contactId).maybeSingle(),
+          ]);
+          const serviceName = (updated.service as unknown as { name: string })?.name ?? "Appointment";
+          await upsertGoogleEvent(ctx.workspaceId, {
+            appointmentId: updated.id,
+            summary: `${serviceName}${contact?.full_name ? ` — ${contact.full_name}` : ""}`,
+            description: `${serviceName}. Booked with ${settings?.legal_name ?? workspace?.name ?? "the salon"}.`,
+            location: settings?.address ?? null,
+            startISO: updated.starts_at,
+            endISO: updated.ends_at,
+            timeZone: workspace?.timezone ?? "Europe/London",
+            attendeeEmail: contact?.email ?? null,
+            attendeeName: contact?.full_name ?? null,
+          });
+        } catch { /* calendar sync failure must not undo the reschedule */ }
         return { ok: true, appointment: { ...updated, when: formatSalonDateTime(updated.starts_at) } };
       }),
     }),
