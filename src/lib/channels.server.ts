@@ -280,7 +280,7 @@ export async function getWhatsAppSecrets(workspaceId: string): Promise<WhatsAppS
   if (envToken) {
     const config = await getWhatsAppConfig(workspaceId);
     if (config.phone_number_id) {
-      return { access_token: envToken, phone_number_id: config.phone_number_id, waba_id: config.waba_id };
+      return { access_token: envToken, phone_number_id: config.phone_number_id, waba_id: config.waba_id ?? null };
     }
   }
   return null;
