@@ -10,9 +10,9 @@ import { Button } from "@/design-system/components/Button";
 export const Route = createFileRoute("/ai-agents")({
   head: () => ({
     meta: [
-      { title: "AI Agents — Pink OS" },
+      { title: "AI Agents — Pingbase" },
       { name: "description", content: "Your AI concierge answers questions and books appointments 24/7." },
-      { property: "og:title", content: "AI Agents — Pink OS" },
+      { property: "og:title", content: "AI Agents — Pingbase" },
       { property: "og:description", content: "Your AI concierge answers questions and books appointments 24/7." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

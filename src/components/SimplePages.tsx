@@ -20,9 +20,9 @@ export function PlaceholderPage({ title, subtitle, icon, emptyTitle, emptyBody, 
 
 export const meta = (title: string, description: string) => ({
   meta: [
-    { title: `${title} — Pink OS` },
+    { title: `${title} — Pingbase` },
     { name: "description", content: description },
-    { property: "og:title", content: `${title} — Pink OS` },
+    { property: "og:title", content: `${title} — Pingbase` },
     { property: "og:description", content: description },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },

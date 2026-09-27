@@ -20,9 +20,9 @@ import { sendHumanReply, setHandlingMode } from "@/lib/concierge.functions";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Inbox — Pink OS" },
+      { title: "Inbox — Pingbase" },
       { name: "description", content: "Every customer conversation across every channel, handled by AI with human takeover." },
-      { property: "og:title", content: "Inbox — Pink OS" },
+      { property: "og:title", content: "Inbox — Pingbase" },
       { property: "og:description", content: "Every customer conversation across every channel, handled by AI with human takeover." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -179,7 +179,7 @@ function InboxPage() {
       })}
       <div className="mt-auto pt-6">
         <a href="/chat" target="_blank" rel="noreferrer" className="block rounded-xl border border-border bg-hover p-3 hover:bg-selected">
-          <p className="text-[13px] font-semibold text-foreground">Test Pink OS</p>
+          <p className="text-[13px] font-semibold text-foreground">Test Pingbase</p>
           <p className="mt-0.5 text-[12px] text-secondary">Chat as a customer and watch Nia reply here.</p>
         </a>
       </div>
