@@ -15,9 +15,9 @@ import { sendHumanReply, setHandlingMode } from "@/lib/concierge.functions";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Inbox — Studio Nine concierge" },
+      { title: "Inbox — Pink OS" },
       { name: "description", content: "Every customer conversation across every channel, handled by AI with human takeover." },
-      { property: "og:title", content: "Inbox — Studio Nine concierge" },
+      { property: "og:title", content: "Inbox — Pink OS" },
       { property: "og:description", content: "Every customer conversation across every channel, handled by AI with human takeover." },
     ],
   }),

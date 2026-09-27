@@ -34,7 +34,7 @@ export function AppShell({ children, title }: { children: ReactNode; title: stri
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-60 shrink-0 flex-col bg-sidebar px-4 py-6 text-sidebar-foreground md:flex">
         <div className="px-2">
-          <p className="font-display text-xl text-sidebar-foreground">Studio Nine</p>
+          <p className="font-display text-xl text-sidebar-foreground">Pink OS</p>
           <p className="text-xs text-sidebar-foreground/60">Booking concierge</p>
         </div>
         <nav className="mt-8 flex flex-1 flex-col gap-1">

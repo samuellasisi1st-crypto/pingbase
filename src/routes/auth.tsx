@@ -12,10 +12,10 @@ import { Label } from "@/components/ui/label";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "Sign in — Studio Nine concierge" },
-      { name: "description", content: "Sign in to the Studio Nine Hair booking inbox." },
-      { property: "og:title", content: "Sign in — Studio Nine concierge" },
-      { property: "og:description", content: "Sign in to the Studio Nine Hair booking inbox." },
+      { title: "Sign in — Pink OS" },
+      { name: "description", content: "Sign in to your Pink OS booking inbox." },
+      { property: "og:title", content: "Sign in — Pink OS" },
+      { property: "og:description", content: "Sign in to your Pink OS booking inbox." },
     ],
   }),
   component: AuthPage,
@@ -71,7 +71,7 @@ function AuthPage() {
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="hidden flex-col justify-between bg-sidebar p-12 text-sidebar-foreground lg:flex">
-        <p className="font-display text-2xl">Studio Nine Hair</p>
+        <p className="font-display text-2xl">Pink OS</p>
         <div>
           <h2 className="font-display text-4xl leading-tight text-sidebar-foreground">
             Every message becomes a confirmed appointment.
