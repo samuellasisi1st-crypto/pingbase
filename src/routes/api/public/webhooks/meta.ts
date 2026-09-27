@@ -6,7 +6,24 @@ type MetaMessaging = {
   message?: { mid?: string; text?: string; is_echo?: boolean; attachments?: Array<{ type?: string; payload?: { url?: string } }> };
   postback?: { mid?: string; title?: string; payload?: string };
 };
-type MetaPayload = { object?: string; entry?: Array<{ id?: string; messaging?: MetaMessaging[] }> };
+type WaMessage = {
+  from?: string;
+  id?: string;
+  timestamp?: string;
+  type?: string;
+  text?: { body?: string };
+  button?: { text?: string };
+  interactive?: { button_reply?: { title?: string }; list_reply?: { title?: string } };
+};
+type WaChange = {
+  field?: string;
+  value?: {
+    metadata?: { phone_number_id?: string; display_phone_number?: string };
+    contacts?: Array<{ wa_id?: string; profile?: { name?: string } }>;
+    messages?: WaMessage[];
+  };
+};
+type MetaPayload = { object?: string; entry?: Array<{ id?: string; messaging?: MetaMessaging[]; changes?: WaChange[] }> };
 
 // One platform-wide webhook for every Pingbase business. Events are routed to a workspace by Page / Instagram ID.
 export const Route = createFileRoute("/api/public/webhooks/meta")({
