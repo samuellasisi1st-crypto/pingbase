@@ -22,4 +22,5 @@
 ## Channels
 - Meta (Instagram + Messenger) share one credential set in `channel_secrets` (service-role only, no RLS policies) because tokens must never reach the browser; non-secret config lives on `channel_connections.config`.
 - All outbound replies (AI and human) go through `deliverOutbound` in `src/lib/channels.server.ts` so delivery failures are logged and stored on the message instead of silently dropped.
-- Meta webhooks hit `/api/public/webhooks/meta/$workspaceId`, verified by X-Hub-Signature-256 with the workspace's app secret.
+- Pink OS owns ONE Meta app (multi-tenant SaaS): META_APP_ID / META_APP_SECRET / META_WEBHOOK_VERIFY_TOKEN are platform env vars, never tenant settings. Businesses connect via Facebook Login (`/api/public/oauth/meta/callback`, HMAC-signed state); only their Page token is stored per workspace.
+- A single webhook `/api/public/webhooks/meta` receives all tenants' events and routes them to a workspace by Page ID / Instagram account ID.
