@@ -278,3 +278,112 @@ export const completeEmbeddedSignup = createServerFn({ method: "POST" })
 
     return connectWhatsApp(WORKSPACE, { access_token: token, phone_number_id: phoneNumberId, waba_id: wabaId });
   });
+
+// ---------- WhatsApp test console (App Review proof) ----------
+
+async function waContext() {
+  const { GRAPH, getWhatsAppSecrets, getWhatsAppConfig, logIntegration } = await import("@/lib/channels.server");
+  const secrets = await getWhatsAppSecrets(WORKSPACE);
+  if (!secrets) throw new Error("Connect WhatsApp first.");
+  const config = await getWhatsAppConfig(WORKSPACE);
+  const wabaId = secrets.waba_id || config.waba_id || null;
+  return { GRAPH, secrets, wabaId, logIntegration };
+}
+
+function graphError(json: any, fallback: string) {
+  return (json?.error?.error_user_msg || json?.error?.message || fallback) as string;
+}
+
+export const sendWhatsAppTest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        to: z.string().regex(/^\+?\d{7,15}$/, "Use the full number with country code, digits only."),
+        mode: z.enum(["text", "template"]),
+        text: z.string().max(4000).optional(),
+        templateName: z.string().regex(/^[a-z0-9_]{1,512}$/).optional(),
+        language: z.string().regex(/^[a-zA-Z_]{2,10}$/).optional(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertMember(context.supabase as never);
+    const { GRAPH, secrets, logIntegration } = await waContext();
+    const to = data.to.replace(/^\+/, "");
+    const body =
+      data.mode === "text"
+        ? { messaging_product: "whatsapp", recipient_type: "individual", to, type: "text", text: { preview_url: false, body: (data.text ?? "").trim() || "Hello from Pingbase" } }
+        : { messaging_product: "whatsapp", to, type: "template", template: { name: data.templateName ?? "hello_world", language: { code: data.language ?? "en_US" } } };
+    const res = await fetch(`${GRAPH}/${secrets.phone_number_id}/messages`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${secrets.access_token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const json = (await res.json().catch(() => ({}))) as any;
+    if (!res.ok) {
+      const error = graphError(json, `Meta returned ${res.status}`);
+      await logIntegration(WORKSPACE, "whatsapp", "error", `Test send failed: ${error}`);
+      return { ok: false as const, error };
+    }
+    const id = json?.messages?.[0]?.id ?? null;
+    await logIntegration(WORKSPACE, "whatsapp", "info", `Test ${data.mode} sent to +${to} (${id})`);
+    return { ok: true as const, messageId: id as string | null };
+  });
+
+export const listWhatsAppTemplates = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertMember(context.supabase as never);
+    const { GRAPH, secrets, wabaId } = await waContext();
+    if (!wabaId) return { ok: false as const, error: "No WhatsApp Business Account ID saved.", templates: [] };
+    const res = await fetch(`${GRAPH}/${wabaId}/message_templates?fields=name,status,category,language&limit=50`, {
+      headers: { Authorization: `Bearer ${secrets.access_token}` },
+    });
+    const json = (await res.json().catch(() => ({}))) as any;
+    if (!res.ok) return { ok: false as const, error: graphError(json, `Meta returned ${res.status}`), templates: [] };
+    const templates = ((json.data ?? []) as any[]).map((t) => ({
+      id: String(t.id),
+      name: String(t.name),
+      status: String(t.status),
+      category: String(t.category),
+      language: String(t.language),
+    }));
+    return { ok: true as const, error: null, templates };
+  });
+
+export const createWhatsAppTemplate = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        name: z.string().regex(/^[a-z0-9_]{1,512}$/, "Lowercase letters, numbers and underscores only."),
+        category: z.enum(["UTILITY", "MARKETING"]),
+        language: z.string().regex(/^[a-zA-Z_]{2,10}$/),
+        body: z.string().min(1).max(1024),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertMember(context.supabase as never);
+    const { GRAPH, secrets, wabaId, logIntegration } = await waContext();
+    if (!wabaId) return { ok: false as const, error: "No WhatsApp Business Account ID saved." };
+    const res = await fetch(`${GRAPH}/${wabaId}/message_templates`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${secrets.access_token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: data.name,
+        category: data.category,
+        language: data.language,
+        components: [{ type: "BODY", text: data.body }],
+      }),
+    });
+    const json = (await res.json().catch(() => ({}))) as any;
+    if (!res.ok) {
+      const error = graphError(json, `Meta returned ${res.status}`);
+      await logIntegration(WORKSPACE, "whatsapp", "error", `Template create failed: ${error}`);
+      return { ok: false as const, error };
+    }
+    await logIntegration(WORKSPACE, "whatsapp", "info", `Template ${data.name} created (${json.status})`);
+    return { ok: true as const, id: String(json.id), status: String(json.status ?? "PENDING") };
+  });

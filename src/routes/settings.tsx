@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { money } from "@/lib/time";
 import { MetaConnectForm } from "@/components/MetaConnectForm";
 import { WhatsAppConnectForm } from "@/components/WhatsAppConnectForm";
+import { WhatsAppTestConsole } from "@/components/WhatsAppTestConsole";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -176,7 +177,12 @@ function SettingsPage() {
               )}
             />
             <WhatsAppConnectForm />
-            {(d.channels as unknown as Array<{ id: string; channel: string; status: string; last_error: string | null }>).map((c) => (
+            {(d.channels as unknown as Array<{ channel: string; status: string }>).some(
+              (c) => c.channel === "whatsapp" && c.status === "CONNECTED",
+            ) && <WhatsAppTestConsole />}
+            {(d.channels as unknown as Array<{ id: string; channel: string; status: string; last_error: string | null }>)
+              .filter((c) => c.channel !== "whatsapp")
+              .map((c) => (
               <div key={c.id} className="flex items-center justify-between rounded-xl border bg-surface p-4">
                 <div>
                   <p className="font-medium capitalize">{c.channel === "test" ? "Internal test chat" : c.channel}</p>
