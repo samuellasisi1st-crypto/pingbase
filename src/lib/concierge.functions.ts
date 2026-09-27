@@ -123,6 +123,8 @@ export const payDepositTestMode = createServerFn({ method: "POST" })
         reason: "Deposit paid",
         actor: "SYSTEM",
       });
+      const { syncAppointmentToGoogle } = await import("./gcal.server");
+      await syncAppointmentToGoogle(payment.workspace_id, payment.appointment_id);
       const start = new Date(appt?.starts_at ?? new Date().toISOString()).getTime();
       await supabaseAdmin.from("automation_events").upsert(
         [
