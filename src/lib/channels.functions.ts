@@ -388,7 +388,7 @@ export const createWhatsAppTemplate = createServerFn({ method: "POST" })
     return { ok: true as const, id: String(json.id), status: String(json.status ?? "PENDING") };
   });
 
-// ---------- WhatsApp inbox (real messages only) ----------
+// ---------- Unified inbox: every channel in one timeline ----------
 
 export const listWhatsAppInbox = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -396,22 +396,43 @@ export const listWhatsAppInbox = createServerFn({ method: "GET" })
     const sb = context.supabase as any;
     const { data, error } = await sb
       .from("messages")
-      .select("id, direction, sender_type, sender_name, body, created_at, contact_id, contacts(full_name, phone)")
+      .select("id, channel, direction, sender_type, sender_name, body, created_at, contact_id, contacts(full_name, phone)")
       .eq("workspace_id", WORKSPACE)
-      .eq("channel", "whatsapp")
-      .like("external_message_id", "wamid%")
+      .in("channel", ["whatsapp", "instagram", "messenger"])
+      .neq("direction", "internal")
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(150);
     if (error) throw new Error(error.message);
-    return ((data ?? []) as any[]).map((m) => ({
-      id: String(m.id),
-      direction: String(m.direction) as "inbound" | "outbound",
-      sender: String(m.sender_type ?? ""),
-      name: (m.contacts?.full_name ?? m.sender_name ?? null) as string | null,
-      phone: (m.contacts?.phone ?? null) as string | null,
-      body: String(m.body ?? ""),
-      createdAt: String(m.created_at),
-    }));
+
+    const rows = (data ?? []) as any[];
+    const contactIds = Array.from(new Set(rows.map((m) => m.contact_id).filter(Boolean)));
+    const handles = new Map<string, string>();
+    if (contactIds.length) {
+      const { data: links } = await sb
+        .from("contact_channels")
+        .select("contact_id, channel, external_id, display_name")
+        .eq("workspace_id", WORKSPACE)
+        .in("contact_id", contactIds);
+      for (const l of (links ?? []) as any[]) {
+        handles.set(`${l.contact_id}:${l.channel}`, String(l.display_name || l.external_id));
+      }
+    }
+
+    return rows.map((m) => {
+      const channel = String(m.channel);
+      const handle = m.contact_id ? (handles.get(`${m.contact_id}:${channel}`) ?? null) : null;
+      return {
+        id: String(m.id),
+        channel,
+        direction: String(m.direction) as "inbound" | "outbound",
+        sender: String(m.sender_type ?? ""),
+        name: (m.contacts?.full_name ?? m.sender_name ?? handle ?? null) as string | null,
+        phone: (m.contacts?.phone ?? null) as string | null,
+        handle,
+        body: String(m.body ?? ""),
+        createdAt: String(m.created_at),
+      };
+    });
   });
 
 /** Tells Meta to forward this WhatsApp account's incoming messages to Pingbase's webhook. */

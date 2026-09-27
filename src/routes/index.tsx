@@ -33,6 +33,24 @@ export const Route = createFileRoute("/")({
 type Notice = { ok: boolean; message: string } | null;
 const TEMPLATE_NAME = "appointment_reminder";
 
+const CHANNEL_FILTERS = [
+  { value: "all", label: "All channels" },
+  { value: "whatsapp", label: "WhatsApp" },
+  { value: "instagram", label: "Instagram" },
+  { value: "messenger", label: "Messenger" },
+] as const;
+
+const CHANNEL_LABELS: Record<string, { label: string; variant: "green" | "purple" | "cyan" | "neutral" }> = {
+  whatsapp: { label: "WhatsApp", variant: "green" },
+  instagram: { label: "Instagram", variant: "purple" },
+  messenger: { label: "Messenger", variant: "cyan" },
+};
+
+function ChannelBadge({ channel }: { channel: string }) {
+  const meta = CHANNEL_LABELS[channel] ?? { label: channel, variant: "neutral" as const };
+  return <Badge variant={meta.variant}>{meta.label}</Badge>;
+}
+
 function WhatsAppTestPage() {
   const send = useServerFn(sendWhatsAppTest);
   const listTemplates = useServerFn(listWhatsAppTemplates);
@@ -67,6 +85,8 @@ function WhatsAppTestPage() {
     enabled: tab === "inbox" && signedIn === true,
     refetchInterval: 4000,
   });
+  const [channelFilter, setChannelFilter] = useState<(typeof CHANNEL_FILTERS)[number]["value"]>("all");
+  const visibleMessages = (inbox.data ?? []).filter((m) => channelFilter === "all" || m.channel === channelFilter);
   const enableIncoming = async () => {
     setSubscribing(true);
     setNotice(null);
@@ -209,36 +229,58 @@ function WhatsAppTestPage() {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h2 id="inbox-title" className="text-lg font-semibold text-foreground">Incoming messages</h2>
-                <p className="mt-1 text-sm text-secondary">Messages customers send to your business number, and Nia’s replies. Updates automatically.</p>
+                <p className="mt-1 text-sm text-secondary">Everything customers send on WhatsApp, Instagram and Messenger, and Nia’s replies. Updates automatically.</p>
               </div>
               <Button variant="tertiary" size="sm" onClick={() => void enableIncoming()} disabled={subscribing}>
                 {subscribing ? "Switching on…" : "Switch on incoming"}
               </Button>
             </div>
+
+            <div className="mt-4 flex flex-wrap gap-2">
+              {CHANNEL_FILTERS.map((f) => {
+                const count = f.value === "all" ? (inbox.data?.length ?? 0) : (inbox.data ?? []).filter((m) => m.channel === f.value).length;
+                const active = channelFilter === f.value;
+                return (
+                  <button
+                    key={f.value}
+                    type="button"
+                    onClick={() => setChannelFilter(f.value)}
+                    className={`rounded-full border px-3 py-1 text-caption font-medium transition-colors ${
+                      active ? "border-cyan-mid bg-cyan-soft text-primary-dark" : "border-border text-secondary hover:text-foreground"
+                    }`}
+                  >
+                    {f.label}
+                    {inbox.data ? ` · ${count}` : ""}
+                  </button>
+                );
+              })}
+            </div>
+
             {inbox.isLoading && <p className="mt-4 text-sm text-secondary">Loading messages…</p>}
             {inbox.error && <Notice ok={false} message={(inbox.error as Error).message} />}
-            {inbox.data && inbox.data.length === 0 && (
+            {inbox.data && visibleMessages.length === 0 && (
               <p className="mt-6 rounded-md border border-border bg-panel p-5 text-sm text-secondary">
-                No messages yet. Send a WhatsApp from your phone to your business number and it will appear here.
+                No messages here yet. Send a message to your business on WhatsApp, Instagram or Messenger and it will appear.
               </p>
             )}
-            {(inbox.data?.length ?? 0) > 0 && (
+            {visibleMessages.length > 0 && (
               <div className="mt-6 divide-y divide-border rounded-md border border-border bg-panel">
-                {inbox.data?.map((m) => (
+                {visibleMessages.map((m) => (
                   <div key={m.id} className="flex items-start justify-between gap-4 p-4">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
+                        <ChannelBadge channel={m.channel} />
                         <Badge variant={m.direction === "inbound" ? "green" : "neutral"}>
                           {m.direction === "inbound" ? "Received" : m.sender === "AI" ? "Nia replied" : "Sent"}
                         </Badge>
-                        <span className="text-sm font-medium text-foreground">{m.name ?? m.phone ?? "Unknown"}</span>
-                        {m.name && m.phone && <span className="text-caption text-tertiary">{m.phone}</span>}
+                        <span className="text-sm font-medium text-foreground">{m.name ?? m.handle ?? m.phone ?? "Unknown"}</span>
+                        {m.phone && m.name !== m.phone && <span className="text-caption text-tertiary">{m.phone}</span>}
                       </div>
                       <p className="mt-1.5 whitespace-pre-wrap text-sm text-foreground">{m.body}</p>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-2">
                       <span className="text-caption text-tertiary">{new Date(m.createdAt).toLocaleString()}</span>
-                      {m.phone && (
+                      {m.channel === "whatsapp" && m.phone && (
                         <Button variant="tertiary" size="sm" onClick={() => { setTo(m.phone!); setTab("send"); }}>
                           Reply
                         </Button>

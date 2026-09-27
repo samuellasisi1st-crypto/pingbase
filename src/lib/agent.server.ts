@@ -97,6 +97,81 @@ async function recipientFor(ctx: Ctx): Promise<string | null> {
   return data?.external_id ?? null;
 }
 
+/**
+ * One person = one contact. When a verified email or phone matches an older profile
+ * (same person arriving from a different channel), fold this channel into that profile.
+ * Never merges on names alone.
+ */
+async function linkToExistingPerson(ctx: Ctx, identity: { email?: string | null; phone?: string | null }) {
+  const db = supabaseAdmin;
+  const email = identity.email?.trim() || null;
+  const phone = identity.phone?.trim() || null;
+  if (!email && !phone) return null;
+
+  let match: { id: string; created_at: string } | null = null;
+  if (email) {
+    const { data } = await db
+      .from("contacts")
+      .select("id,created_at")
+      .eq("workspace_id", ctx.workspaceId)
+      .neq("id", ctx.contactId)
+      .ilike("email", email)
+      .order("created_at")
+      .limit(1);
+    match = data?.[0] ?? null;
+  }
+  if (!match && phone) {
+    const { data } = await db
+      .from("contacts")
+      .select("id,created_at")
+      .eq("workspace_id", ctx.workspaceId)
+      .neq("id", ctx.contactId)
+      .eq("phone", phone)
+      .order("created_at")
+      .limit(1);
+    match = data?.[0] ?? null;
+  }
+  if (!match) return null;
+
+  const survivorId = match.id;
+  const duplicateId = ctx.contactId;
+
+  const [{ data: survivor }, { data: duplicate }] = await Promise.all([
+    db.from("contacts").select("*").eq("id", survivorId).maybeSingle(),
+    db.from("contacts").select("*").eq("id", duplicateId).maybeSingle(),
+  ]);
+
+  // Move every record from the newly-created profile onto the known person.
+  await db.from("contact_channels").update({ contact_id: survivorId }).eq("contact_id", duplicateId);
+  await db.from("conversations").update({ contact_id: survivorId }).eq("contact_id", duplicateId);
+  await db.from("messages").update({ contact_id: survivorId }).eq("contact_id", duplicateId);
+  await db.from("appointments").update({ contact_id: survivorId }).eq("contact_id", duplicateId);
+  await db.from("payments").update({ contact_id: survivorId }).eq("contact_id", duplicateId);
+
+  const mergedNotes = [survivor?.notes ?? "", duplicate?.notes ?? ""]
+    .map((n) => n.trim())
+    .filter(Boolean)
+    .filter((n, i, all) => all.indexOf(n) === i)
+    .join("\n");
+  await db
+    .from("contacts")
+    .update({
+      full_name: survivor?.full_name ?? duplicate?.full_name ?? null,
+      email: survivor?.email ?? duplicate?.email ?? null,
+      phone: survivor?.phone ?? duplicate?.phone ?? null,
+      notes: mergedNotes || null,
+      tags: [...new Set([...(survivor?.tags ?? []), ...(duplicate?.tags ?? [])])],
+      ai_summary: survivor?.ai_summary ?? duplicate?.ai_summary ?? null,
+      last_interaction_at: new Date().toISOString(),
+    } as never)
+    .eq("id", survivorId);
+
+  await db.from("contacts").delete().eq("id", duplicateId);
+
+  ctx.contactId = survivorId;
+  return { merged: true, contact_id: survivorId };
+}
+
 export function buildTools(ctx: Ctx) {
   const db = supabaseAdmin;
 
@@ -229,6 +304,21 @@ export function buildTools(ctx: Ctx) {
           .select()
           .maybeSingle();
         if (error) throw error;
+
+        // A verified email or phone can reveal this is someone we already know from another channel.
+        let linked: Awaited<ReturnType<typeof linkToExistingPerson>> = null;
+        if (args.email || args.phone) {
+          linked = await linkToExistingPerson(ctx, { email: args.email, phone: args.phone });
+        }
+        if (linked) {
+          const { data: person } = await db.from("contacts").select("*").eq("id", ctx.contactId).maybeSingle();
+          return {
+            ok: true,
+            contact: person,
+            recognised_from_another_channel: true,
+            note: "This is an existing customer who previously messaged on another channel. Their bookings and history are now available.",
+          };
+        }
         return { ok: true, contact: data };
       }),
     }),
@@ -733,6 +823,8 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     { data: services },
     { data: staff },
     { data: appointments },
+    { data: linkedChannels },
+    { data: otherChannelHistory },
   ] = await Promise.all([
     db.from("business_settings").select("*").eq("workspace_id", ctx.workspaceId).maybeSingle(),
     db.from("ai_agent_settings").select("*").eq("workspace_id", ctx.workspaceId).maybeSingle(),
@@ -751,6 +843,19 @@ export async function runAgent(ctx: Ctx): Promise<string> {
       .select("id,starts_at,status,deposit_status,service:service_id(name),staff:staff_id(name)")
       .eq("contact_id", ctx.contactId)
       .order("starts_at"),
+    db
+      .from("contact_channels")
+      .select("channel,external_id,display_name")
+      .eq("workspace_id", ctx.workspaceId)
+      .eq("contact_id", ctx.contactId),
+    db
+      .from("messages")
+      .select("channel,direction,sender_type,body,created_at")
+      .eq("contact_id", ctx.contactId)
+      .neq("conversation_id", ctx.conversationId)
+      .neq("direction", "internal")
+      .order("created_at", { ascending: false })
+      .limit(12),
   ]);
 
   const now = new Date();
@@ -775,6 +880,15 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     `Customer: ${contact?.full_name ?? "unknown name"}${contact?.email ? `, ${contact.email}` : ""}${contact?.phone ? `, ${contact.phone}` : ""}. Channel: ${ctx.channel}.`,
     `Their appointments: ${(appointments ?? []).length ? (appointments ?? []).map((a) => `${a.id} ${formatSalonDateTime(a.starts_at)} ${(a.service as unknown as { name: string })?.name} with ${(a.staff as unknown as { name: string })?.name} [${a.status}/${a.deposit_status}]`).join("; ") : "none"}`,
     `Conversation state: ${conversation?.state ?? "DISCOVERY"}.`,
+    `Channels this same person uses: ${(linkedChannels ?? []).length ? (linkedChannels ?? []).map((c) => `${c.channel}${c.display_name ? ` (${c.display_name})` : ""}`).join(", ") : ctx.channel}.`,
+    ...((otherChannelHistory ?? []).length
+      ? [
+          "Recent messages with this same person on their other channels (most recent first):",
+          ...(otherChannelHistory ?? []).map(
+            (m) => `- [${m.channel}] ${m.direction === "inbound" ? "customer" : m.sender_type === "AI" ? "you" : "staff"}: ${String(m.body).slice(0, 200)}`,
+          ),
+        ]
+      : []),
     "",
     "RULES:",
     "- Never invent availability, prices, services, policies, payments or appointments. Always use your tools.",
@@ -785,6 +899,8 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     "- When a deposit is required, create the booking first, then send the payment link, and explain the slot is held until the deposit is paid.",
     "- Use escalate_to_human for refunds, complaints, policy exceptions, requests for a person, or repeated tool failures. After escalating, tell the customer a team member will pick it up, and stop.",
     "- Keep set_conversation_state up to date.",
+    "- The customer is one person across WhatsApp, Instagram and Messenger. If they already spoke to you or booked on another channel, use that history naturally (e.g. 'I see the booking you made on WhatsApp') instead of starting over, and never re-ask for details you already hold.",
+    "- As soon as you learn their email or phone number, save it with create_or_update_contact; that is how we recognise the same person across channels.",
     "- Reply as plain conversational text. No markdown headings or bullet lists unless listing slot options.",
     ...(ctx.channel === "whatsapp"
       ? [
