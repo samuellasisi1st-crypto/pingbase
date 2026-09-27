@@ -406,3 +406,125 @@ async function deliverWhatsApp(
     return { delivered: false, error };
   }
 }
+
+type SendResult = { delivered: boolean; externalMessageId?: string | undefined; error?: string | undefined };
+
+/** POST any WhatsApp Cloud API message payload for a workspace. */
+async function postWhatsApp(workspaceId: string, payload: Record<string, unknown>): Promise<SendResult> {
+  const secrets = await getWhatsAppSecrets(workspaceId);
+  if (!secrets) {
+    const error = "WhatsApp is not connected.";
+    await logIntegration(workspaceId, "whatsapp", "warn", `Message could not be delivered: ${error}`);
+    return { delivered: false, error };
+  }
+  try {
+    const res = await fetch(`${GRAPH}/${secrets.phone_number_id}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${secrets.access_token}` },
+      body: JSON.stringify({ messaging_product: "whatsapp", recipient_type: "individual", ...payload }),
+    });
+    const json = (await res.json().catch(() => ({}))) as { messages?: Array<{ id?: string }>; error?: { message?: string } };
+    if (!res.ok) {
+      const error = json.error?.message ?? `WhatsApp returned ${res.status}`;
+      await logIntegration(workspaceId, "whatsapp", "error", `Send failed: ${error}`, { status: res.status });
+      await setChannelError(workspaceId, "whatsapp", error);
+      return { delivered: false, error };
+    }
+    return { delivered: true, externalMessageId: json.messages?.[0]?.id };
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e);
+    await logIntegration(workspaceId, "whatsapp", "error", `Send failed: ${error}`);
+    return { delivered: false, error };
+  }
+}
+
+export type WaChoice = { id: string; title: string; description?: string | null };
+
+/**
+ * Send tappable options. Up to 3 → reply buttons; more → a single-select list.
+ * WhatsApp limits: button title 20 chars, list row title 24 chars, description 72.
+ */
+export async function sendWhatsAppChoices(
+  workspaceId: string,
+  to: string,
+  opts: { body: string; footer?: string | null; buttonLabel?: string; choices: WaChoice[] },
+): Promise<SendResult> {
+  const choices = opts.choices.slice(0, 10);
+  if (!choices.length) return { delivered: false, error: "No options to send." };
+
+  if (choices.length <= 3) {
+    return postWhatsApp(workspaceId, {
+      to,
+      type: "interactive",
+      interactive: {
+        type: "button",
+        body: { text: opts.body.slice(0, 1024) },
+        ...(opts.footer ? { footer: { text: opts.footer.slice(0, 60) } } : {}),
+        action: {
+          buttons: choices.map((c) => ({ type: "reply", reply: { id: c.id.slice(0, 256), title: c.title.slice(0, 20) } })),
+        },
+      },
+    });
+  }
+
+  return postWhatsApp(workspaceId, {
+    to,
+    type: "interactive",
+    interactive: {
+      type: "list",
+      body: { text: opts.body.slice(0, 1024) },
+      ...(opts.footer ? { footer: { text: opts.footer.slice(0, 60) } } : {}),
+      action: {
+        button: (opts.buttonLabel ?? "Choose a time").slice(0, 20),
+        sections: [
+          {
+            title: "Available",
+            rows: choices.map((c) => ({
+              id: c.id.slice(0, 200),
+              title: c.title.slice(0, 24),
+              ...(c.description ? { description: c.description.slice(0, 72) } : {}),
+            })),
+          },
+        ],
+      },
+    },
+  });
+}
+
+/** Upload a file to WhatsApp media storage and return its media id. */
+async function uploadWhatsAppMedia(workspaceId: string, file: Blob, filename: string): Promise<string> {
+  const secrets = await getWhatsAppSecrets(workspaceId);
+  if (!secrets) throw new Error("WhatsApp is not connected.");
+  const form = new FormData();
+  form.append("messaging_product", "whatsapp");
+  form.append("file", file, filename);
+  const res = await fetch(`${GRAPH}/${secrets.phone_number_id}/media`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${secrets.access_token}` },
+    body: form,
+  });
+  const json = (await res.json().catch(() => ({}))) as { id?: string; error?: { message?: string } };
+  if (!res.ok || !json.id) throw new Error(json.error?.message ?? `Media upload returned ${res.status}`);
+  return json.id;
+}
+
+/** Send a calendar (.ics) file the customer can tap to add to their phone calendar. */
+export async function sendWhatsAppCalendarFile(
+  workspaceId: string,
+  to: string,
+  opts: { ics: string; filename: string; caption?: string | null },
+): Promise<SendResult> {
+  try {
+    const blob = new Blob([opts.ics], { type: "text/calendar" });
+    const mediaId = await uploadWhatsAppMedia(workspaceId, blob, opts.filename);
+    return await postWhatsApp(workspaceId, {
+      to,
+      type: "document",
+      document: { id: mediaId, filename: opts.filename, ...(opts.caption ? { caption: opts.caption.slice(0, 1024) } : {}) },
+    });
+  } catch (e) {
+    const error = e instanceof Error ? e.message : String(e);
+    await logIntegration(workspaceId, "whatsapp", "error", `Calendar file failed: ${error}`);
+    return { delivered: false, error };
+  }
+}
