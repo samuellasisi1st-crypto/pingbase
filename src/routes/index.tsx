@@ -341,14 +341,14 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
     <div className="grid min-h-0 grid-cols-1 xl:grid-cols-[1fr_20rem]">
       <div className="flex min-h-0 flex-col">
         <div className="flex h-[68px] items-center justify-between gap-2 border-b border-border-subtle px-5">
-          <div className="flex items-center gap-3">
+          <div className="flex min-w-0 items-center gap-3">
             <Avatar name={name} size="md" />
             <div>
               <p className="text-[15px] font-semibold text-foreground">{name}</p>
-              <p className="text-[12px] text-secondary">{CH_LABEL[c.channel]} · {c.intent ? human(c.intent) : human(c.state)}</p>
+              <p className="truncate text-[12px] text-secondary">{CH_LABEL[c.channel]} · {c.intent ? human(c.intent) : human(c.state)}</p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
             <AIHandlingPill state={pill} />
             <button title="Pause AI" onClick={() => mode.mutate("PAUSED")} className="rounded-md p-2 text-secondary hover:bg-hover"><Clock className="size-4" /></button>
             <button title="Return to AI" onClick={() => mode.mutate("AI")} className="rounded-md p-2 text-secondary hover:bg-hover"><Check className="size-4" /></button>

@@ -84,7 +84,7 @@ function ContactsPage() {
         </div>
 
         <div className="overflow-hidden rounded-xl border border-border">
-          <table className="w-full text-left text-[13px]">
+          <table className="w-full whitespace-nowrap text-left text-[13px]">
             <thead className="border-b border-border bg-panel-subtle text-secondary">
               <tr>
                 <th className="px-4 py-3 font-medium">Name</th>
