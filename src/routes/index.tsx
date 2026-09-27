@@ -251,10 +251,8 @@ function WhatsAppTestPage() {
           </section>
         ) : tab === "social" ? (
           <section className="max-w-xl" aria-labelledby="social-title">
-            <h2 id="social-title" className="text-lg font-semibold text-foreground">Instagram &amp; Messenger</h2>
-            <p className="mt-1 mb-5 text-sm text-secondary">
-              Sign in with Facebook and choose your business Page. Nia will answer Instagram DMs and Messenger chats in the same inbox.
-            </p>
+            <h2 id="social-title" className="sr-only">Instagram and Messenger</h2>
+
             {signedIn ? <MetaConnectForm connected={false} /> : <p className="text-sm text-secondary">Sign in to connect Instagram.</p>}
           </section>
         ) : tab === "calendar" ? (
