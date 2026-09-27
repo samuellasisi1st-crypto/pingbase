@@ -134,7 +134,7 @@ export async function syncAppointmentToGoogle(workspaceId: string, appointmentId
     });
     await db.from("integration_logs").insert({
       workspace_id: workspaceId,
-      provider: "google_calendar",
+      channel: "google_calendar",
       level: result.ok ? "info" : "error",
       message: result.ok ? `Synced appointment ${appointmentId}` : `Sync failed: ${result.error}`,
     } as never);

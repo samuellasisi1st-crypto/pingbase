@@ -5,6 +5,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { findAvailableSlots, isSlotStillFree } from "./availability.server";
 import { sendWhatsAppChoices, sendWhatsAppLinkButton } from "./channels.server";
+import { syncAppointmentToGoogle } from "./gcal.server";
 import { formatSalonDateTime, formatSalonTime, money, SALON_TZ } from "./time";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
@@ -312,6 +313,7 @@ export function buildTools(ctx: Ctx) {
           .update({ state: service.deposit_pence > 0 ? "AWAITING_PAYMENT" : "BOOKED" })
           .eq("id", ctx.conversationId);
         if (service.deposit_pence === 0) await scheduleAutomations(ctx, appt.id, appt.starts_at);
+        const calendar = await syncAppointmentToGoogle(ctx.workspaceId, appt.id);
 
         return {
           ok: true,
@@ -319,6 +321,7 @@ export function buildTools(ctx: Ctx) {
           deposit_required: service.deposit_pence > 0,
           deposit: money(service.deposit_pence),
           status: appt.status,
+          google_calendar: calendar.ok ? ("invited" in calendar && calendar.invited ? "added, email invite sent" : "added to salon calendar") : "not synced",
         };
       }),
     }),
@@ -372,6 +375,7 @@ export function buildTools(ctx: Ctx) {
           payload: { from: appt.starts_at, to: updated.starts_at } as never,
         });
         await scheduleAutomations(ctx, appt.id, updated.starts_at);
+        await syncAppointmentToGoogle(ctx.workspaceId, appt.id);
         return { ok: true, appointment: { ...updated, when: formatSalonDateTime(updated.starts_at) } };
       }),
     }),
@@ -404,6 +408,7 @@ export function buildTools(ctx: Ctx) {
           .update({ status: "CANCELLED" })
           .eq("appointment_id", appt.id)
           .eq("status", "SCHEDULED");
+        await syncAppointmentToGoogle(ctx.workspaceId, appt.id);
         return { ok: true, cancelled: true, hours_notice: Math.round((new Date(appt.starts_at).getTime() - Date.now()) / 3600000) };
       }),
     }),
