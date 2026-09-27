@@ -5,6 +5,7 @@ import { CheckCircle2, MessageSquareText, RefreshCw, Send, XCircle } from "lucid
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { GoogleCalendarConnectForm } from "@/components/GoogleCalendarConnectForm";
+import { MetaConnectForm } from "@/components/MetaConnectForm";
 
 import { Badge, Button, Input, Tabs, Textarea } from "@/design-system";
 import {
