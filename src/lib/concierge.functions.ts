@@ -260,3 +260,16 @@ export const setHandlingMode = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
+/** Public payment details for the hosted deposit link. */
+export const getPaymentPublic = createServerFn({ method: "POST" })
+  .inputValidator((data: unknown) => z.object({ paymentId: z.string().uuid() }).parse(data))
+  .handler(async ({ data }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: payment } = await supabaseAdmin
+      .from("payments")
+      .select("id,amount_pence,currency,status,provider,description")
+      .eq("id", data.paymentId)
+      .maybeSingle();
+    return payment ?? null;
+  });
