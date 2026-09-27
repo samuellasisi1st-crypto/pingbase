@@ -396,7 +396,7 @@ export const listWhatsAppInbox = createServerFn({ method: "GET" })
     const sb = context.supabase as any;
     const { data, error } = await sb
       .from("messages")
-      .select("id, direction, sender_type, sender_name, body, created_at, contact_id, contacts(display_name, phone)")
+      .select("id, direction, sender_type, sender_name, body, created_at, contact_id, contacts(full_name, phone)")
       .eq("workspace_id", WORKSPACE)
       .eq("channel", "whatsapp")
       .like("external_message_id", "wamid%")
@@ -407,7 +407,7 @@ export const listWhatsAppInbox = createServerFn({ method: "GET" })
       id: String(m.id),
       direction: String(m.direction) as "inbound" | "outbound",
       sender: String(m.sender_type ?? ""),
-      name: (m.contacts?.display_name ?? m.sender_name ?? null) as string | null,
+      name: (m.contacts?.full_name ?? m.sender_name ?? null) as string | null,
       phone: (m.contacts?.phone ?? null) as string | null,
       body: String(m.body ?? ""),
       createdAt: String(m.created_at),
