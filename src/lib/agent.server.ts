@@ -86,6 +86,18 @@ async function scheduleAutomations(ctx: Ctx, appointmentId: string, startsAt: st
   await supabaseAdmin.from("automation_events").upsert(rows, { onConflict: "workspace_id,dedupe_key" });
 }
 
+/** The customer's address on the channel this conversation runs on. */
+async function recipientFor(ctx: Ctx): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("contact_channels")
+    .select("external_id")
+    .eq("workspace_id", ctx.workspaceId)
+    .eq("contact_id", ctx.contactId)
+    .eq("channel", ctx.channel)
+    .maybeSingle();
+  return data?.external_id ?? null;
+}
+
 export function buildTools(ctx: Ctx) {
   const db = supabaseAdmin;
 
