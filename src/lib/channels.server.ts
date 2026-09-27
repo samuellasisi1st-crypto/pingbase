@@ -95,7 +95,7 @@ export async function deliverOutbound(opts: {
   channel: string;
   recipientId: string;
   text: string;
-}): Promise<{ delivered: boolean; externalMessageId?: string; error?: string }> {
+}): Promise<{ delivered: boolean; externalMessageId?: string | undefined; error?: string | undefined }> {
   const { workspaceId, channel, recipientId, text } = opts;
   if (channel === "test") return { delivered: true };
   if (!(META_CHANNELS as readonly string[]).includes(channel)) {
