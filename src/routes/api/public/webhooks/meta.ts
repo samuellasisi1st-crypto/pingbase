@@ -66,7 +66,10 @@ export const Route = createFileRoute("/api/public/webhooks/meta")({
               const phoneNumberId = value?.metadata?.phone_number_id;
               if (!phoneNumberId || !value?.messages?.length) continue;
               const workspaceId = await findWorkspaceForWhatsAppPhoneId(phoneNumberId);
-              if (!workspaceId) continue;
+              if (!workspaceId) {
+                console.warn(`WhatsApp webhook: no workspace for phone_number_id ${phoneNumberId}`);
+                continue;
+              }
               for (const m of value.messages) {
                 const from = m.from;
                 if (!from) continue;

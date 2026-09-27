@@ -8,7 +8,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge, Button, Input, Tabs, Textarea } from "@/design-system";
 import {
   createWhatsAppTemplate,
+  listWhatsAppInbox,
   listWhatsAppTemplates,
+  subscribeWhatsAppWebhook,
   sendWhatsAppTest,
 } from "@/lib/channels.functions";
 
@@ -53,6 +55,28 @@ function WhatsAppTestPage() {
     queryFn: () => listTemplates(),
     enabled: tab === "templates" && signedIn === true,
   });
+
+  const listInbox = useServerFn(listWhatsAppInbox);
+  const subscribe = useServerFn(subscribeWhatsAppWebhook);
+  const [subscribing, setSubscribing] = useState(false);
+  const inbox = useQuery({
+    queryKey: ["whatsapp-inbox"],
+    queryFn: () => listInbox(),
+    enabled: tab === "inbox" && signedIn === true,
+    refetchInterval: 4000,
+  });
+  const enableIncoming = async () => {
+    setSubscribing(true);
+    setNotice(null);
+    try {
+      const r = await subscribe();
+      setNotice(r.ok ? { ok: true, message: "Incoming messages switched on. Send a WhatsApp to your business number to test." } : { ok: false, message: r.error });
+    } catch (e) {
+      setNotice({ ok: false, message: e instanceof Error ? e.message : "Something went wrong" });
+    } finally {
+      setSubscribing(false);
+    }
+  };
 
   const validNumber = /^\+?\d{7,15}$/.test(to.trim());
   const preset = templates.data?.templates.find((template) => template.name === TEMPLATE_NAME);
@@ -127,6 +151,7 @@ function WhatsAppTestPage() {
         <Tabs
           items={[
             { value: "send", label: "Send message" },
+            { value: "inbox", label: "Incoming" },
             { value: "templates", label: "Templates" },
           ]}
           value={tab}
@@ -174,6 +199,51 @@ function WhatsAppTestPage() {
               </Button>
               <p className="text-caption text-tertiary">Free-text replies work within 24 hours of the customer’s last message.</p>
             </form>
+          </section>
+        ) : tab === "inbox" ? (
+          <section aria-labelledby="inbox-title">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 id="inbox-title" className="text-lg font-semibold text-foreground">Incoming messages</h2>
+                <p className="mt-1 text-sm text-secondary">Messages customers send to your business number, and Nia’s replies. Updates automatically.</p>
+              </div>
+              <Button variant="tertiary" size="sm" onClick={() => void enableIncoming()} disabled={subscribing}>
+                {subscribing ? "Switching on…" : "Switch on incoming"}
+              </Button>
+            </div>
+            {inbox.isLoading && <p className="mt-4 text-sm text-secondary">Loading messages…</p>}
+            {inbox.error && <Notice ok={false} message={(inbox.error as Error).message} />}
+            {inbox.data && inbox.data.length === 0 && (
+              <p className="mt-6 rounded-md border border-border bg-panel p-5 text-sm text-secondary">
+                No messages yet. Send a WhatsApp from your phone to your business number and it will appear here.
+              </p>
+            )}
+            {(inbox.data?.length ?? 0) > 0 && (
+              <div className="mt-6 divide-y divide-border rounded-md border border-border bg-panel">
+                {inbox.data?.map((m) => (
+                  <div key={m.id} className="flex items-start justify-between gap-4 p-4">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant={m.direction === "inbound" ? "green" : "neutral"}>
+                          {m.direction === "inbound" ? "Received" : m.sender === "AI" ? "Nia replied" : "Sent"}
+                        </Badge>
+                        <span className="text-sm font-medium text-foreground">{m.name ?? m.phone ?? "Unknown"}</span>
+                        {m.name && m.phone && <span className="text-caption text-tertiary">{m.phone}</span>}
+                      </div>
+                      <p className="mt-1.5 whitespace-pre-wrap text-sm text-foreground">{m.body}</p>
+                    </div>
+                    <div className="flex shrink-0 flex-col items-end gap-2">
+                      <span className="text-caption text-tertiary">{new Date(m.createdAt).toLocaleString()}</span>
+                      {m.phone && (
+                        <Button variant="tertiary" size="sm" onClick={() => { setTo(m.phone!); setTab("send"); }}>
+                          Reply
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         ) : (
           <section aria-labelledby="templates-title">
