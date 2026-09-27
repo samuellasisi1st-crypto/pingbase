@@ -434,3 +434,46 @@ export const subscribeWhatsAppWebhook = createServerFn({ method: "POST" })
     await logIntegration(WORKSPACE, "whatsapp", "info", `Subscribed WABA ${wabaId} to webhook`);
     return { ok: true as const, error: null };
   });
+
+/** Google Calendar connection status for this business (no tokens). */
+export const getGoogleCalendarStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertMember(context.supabase as never);
+    const { getGoogleStatus } = await import("@/lib/gcal.server");
+    const configured = Boolean(process.env["GOOGLE_OAUTH_CLIENT_ID"] && process.env["GOOGLE_OAUTH_CLIENT_SECRET"]);
+    return { configured, ...(await getGoogleStatus(WORKSPACE)) };
+  });
+
+/** Build the Google consent URL for this business. */
+export const startGoogleCalendarConnect = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ origin: z.string().url() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertMember(context.supabase as never);
+    const { googlePlatform, GOOGLE_SCOPES } = await import("@/lib/gcal.server");
+    const { signState } = await import("@/lib/channels.server");
+    const { getRequest } = await import("@tanstack/react-start/server");
+    const { clientId } = googlePlatform();
+    const serverOrigin = new URL(getRequest().url).origin;
+    const params = new URLSearchParams({
+      client_id: clientId,
+      redirect_uri: `${serverOrigin}/api/public/oauth/google/callback`,
+      response_type: "code",
+      scope: GOOGLE_SCOPES.join(" "),
+      access_type: "offline",
+      prompt: "consent",
+      include_granted_scopes: "true",
+      state: signState({ w: WORKSPACE, u: context.userId, o: data.origin }),
+    });
+    return { url: `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}` };
+  });
+
+export const disconnectGoogleCalendar = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertMember(context.supabase as never);
+    const { disconnectGoogle } = await import("@/lib/gcal.server");
+    await disconnectGoogle(WORKSPACE);
+    return { ok: true };
+  });

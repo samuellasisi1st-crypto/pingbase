@@ -9,6 +9,7 @@ import { money } from "@/lib/time";
 import { MetaConnectForm } from "@/components/MetaConnectForm";
 import { WhatsAppConnectForm } from "@/components/WhatsAppConnectForm";
 import { WhatsAppTestConsole } from "@/components/WhatsAppTestConsole";
+import { GoogleCalendarConnectForm } from "@/components/GoogleCalendarConnectForm";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({
@@ -177,6 +178,7 @@ function SettingsPage() {
               )}
             />
             <WhatsAppConnectForm />
+            <GoogleCalendarConnectForm />
             {(d.channels as unknown as Array<{ channel: string; status: string }>).some(
               (c) => c.channel === "whatsapp" && c.status === "CONNECTED",
             ) && <WhatsAppTestConsole />}

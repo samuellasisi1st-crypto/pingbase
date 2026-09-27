@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { CheckCircle2, MessageSquareText, RefreshCw, Send, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { GoogleCalendarConnectForm } from "@/components/GoogleCalendarConnectForm";
 
 import { Badge, Button, Input, Tabs, Textarea } from "@/design-system";
 import {
@@ -153,6 +154,7 @@ function WhatsAppTestPage() {
             { value: "send", label: "Send message" },
             { value: "inbox", label: "Incoming" },
             { value: "templates", label: "Templates" },
+            { value: "calendar", label: "Calendar" },
           ]}
           value={tab}
           onChange={(value) => {
@@ -244,6 +246,10 @@ function WhatsAppTestPage() {
                 ))}
               </div>
             )}
+          </section>
+        ) : tab === "calendar" ? (
+          <section className="max-w-xl">
+            {signedIn ? <GoogleCalendarConnectForm /> : <p className="text-sm text-secondary">Sign in to connect Google Calendar.</p>}
           </section>
         ) : (
           <section aria-labelledby="templates-title">
