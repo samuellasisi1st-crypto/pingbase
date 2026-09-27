@@ -36,7 +36,10 @@ export function GoogleCalendarConnectForm() {
 
   const onConnect = async () => {
     const popup = window.open("", "pingbase-google", "width=520,height=680");
-    if (!popup) return toast.error("Please allow pop-ups and try again.");
+    if (!popup) {
+      toast.error("Please allow pop-ups and try again.");
+      return;
+    }
     setBusy(true);
     try {
       const { url } = await start({ data: { origin: window.location.origin } });
