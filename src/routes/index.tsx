@@ -343,8 +343,8 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
         <div className="flex h-[68px] items-center justify-between gap-2 border-b border-border-subtle px-5">
           <div className="flex min-w-0 items-center gap-3">
             <Avatar name={name} size="md" />
-            <div>
-              <p className="text-[15px] font-semibold text-foreground">{name}</p>
+            <div className="min-w-0">
+              <p className="truncate text-[15px] font-semibold text-foreground">{name}</p>
               <p className="truncate text-[12px] text-secondary">{CH_LABEL[c.channel]} · {c.intent ? human(c.intent) : human(c.state)}</p>
             </div>
           </div>
