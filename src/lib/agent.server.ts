@@ -4,7 +4,9 @@ import { z } from "zod";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { findAvailableSlots, isSlotStillFree } from "./availability.server";
-import { formatSalonDateTime, money, SALON_TZ } from "./time";
+import { sendWhatsAppCalendarFile, sendWhatsAppChoices } from "./channels.server";
+import { buildIcs } from "./ics";
+import { formatSalonDateTime, formatSalonTime, money, SALON_TZ } from "./time";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
 const MODEL = "openai/gpt-6-astra";
