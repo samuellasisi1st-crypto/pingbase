@@ -246,7 +246,7 @@ function WhatsAppTestPage() {
                     type="button"
                     onClick={() => setChannelFilter(f.value)}
                     className={`rounded-full border px-3 py-1 text-caption font-medium transition-colors ${
-                      active ? "border-primary bg-primary-soft text-primary" : "border-border text-secondary hover:text-foreground"
+                      active ? "border-cyan-mid bg-cyan-soft text-primary-dark" : "border-border text-secondary hover:text-foreground"
                     }`}
                   >
                     {f.label}
