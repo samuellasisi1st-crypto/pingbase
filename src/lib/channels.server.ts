@@ -273,7 +273,17 @@ const WA = () => (supabaseAdmin as unknown as { from: (t: string) => any }).from
 export async function getWhatsAppSecrets(workspaceId: string): Promise<WhatsAppSecrets | null> {
   const { data } = await WA().select("secrets").eq("workspace_id", workspaceId).eq("channel", "whatsapp").maybeSingle();
   const s = data?.secrets as Partial<WhatsAppSecrets> | undefined;
-  return s?.access_token && s?.phone_number_id ? (s as WhatsAppSecrets) : null;
+  if (s?.access_token && s?.phone_number_id) return s as WhatsAppSecrets;
+  // Platform-level fallback: token saved via the secure secret store, phone
+  // number ID from the workspace's channel connection config.
+  const envToken = process.env["WHATSAPP_ACCESS_TOKEN"];
+  if (envToken) {
+    const config = await getWhatsAppConfig(workspaceId);
+    if (config.phone_number_id) {
+      return { access_token: envToken, phone_number_id: config.phone_number_id, waba_id: config.waba_id ?? null };
+    }
+  }
+  return null;
 }
 
 export async function saveWhatsAppSecrets(workspaceId: string, secrets: WhatsAppSecrets) {
