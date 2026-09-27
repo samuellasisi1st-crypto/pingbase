@@ -13,7 +13,7 @@ type WaMessage = {
   type?: string;
   text?: { body?: string };
   button?: { text?: string };
-  interactive?: { button_reply?: { title?: string }; list_reply?: { title?: string } };
+  interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string } };
 };
 type WaChange = {
   field?: string;
