@@ -790,9 +790,10 @@ export async function runAgent(ctx: Ctx): Promise<string> {
       ? [
           "- On WhatsApp, whenever you offer times, call send_slot_options so the customer can tap a time instead of typing. Do not also list the same times in your text reply; a one-line lead-in is enough.",
           "- A message that exactly matches one of the options you sent means the customer tapped that option. Treat it as their choice.",
-          "- Right after an appointment is confirmed (deposit paid, or none required), call send_calendar_invite to send the booking card with its 'Add to calendar' button.",
         ]
       : []),
+    "- Right after an appointment is confirmed (deposit paid, or none required), call send_calendar_invite. It puts the appointment in the business's calendar, emails the customer a calendar invite if we have their email, and on WhatsApp sends the booking card with its 'Add to calendar' button.",
+    "- Before confirming, ask once for the customer's email address so they can be sent a proper calendar invite, and save it with create_or_update_contact. If they decline, carry on without it.",
     "- Keep the CRM profile current: call create_or_update_contact whenever the customer mentions their name, email, a preference, a sensitivity or allergy, who they usually see, or anything a stylist would want to know next time. Add short tags and keep summary to one sentence.",
   ].join("\n");
 
