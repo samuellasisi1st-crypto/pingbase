@@ -24,19 +24,26 @@ export function ChatComposerTools({ conversationId, workspaceId, draft, setDraft
 
   const btn = "rounded p-1.5 hover:bg-hover disabled:opacity-40";
 
-  const onFile = async (file: File | undefined) => {
-    if (!file) return;
-    if (file.size > 16 * 1024 * 1024) { toast.error("Files must be under 16 MB"); return; }
+  const onFiles = async (files: FileList | null) => {
+    const list = Array.from(files ?? []);
+    if (list.length === 0) return;
+    const tooBig = list.find((f) => f.size > 16 * 1024 * 1024);
+    if (tooBig) { toast.error(`"${tooBig.name}" is over 16 MB`); return; }
     setUploading(true);
+    let sent = 0;
     try {
-      const path = `${workspaceId}/${conversationId}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
-      const up = await supabase.storage.from("attachments").upload(path, file, { contentType: file.type });
-      if (up.error) throw up.error;
-      await sendAttachment({ data: { conversationId, path, filename: file.name, mime: file.type || "application/octet-stream" } });
-      toast.success("File sent");
+      for (const file of list) {
+        const path = `${workspaceId}/${conversationId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${file.name.replace(/[^\w.\-]+/g, "_")}`;
+        const up = await supabase.storage.from("attachments").upload(path, file, { contentType: file.type });
+        if (up.error) throw up.error;
+        await sendAttachment({ data: { conversationId, path, filename: file.name, mime: file.type || "application/octet-stream" } });
+        sent += 1;
+      }
+      toast.success(sent === 1 ? "File sent" : `${sent} files sent`);
       onSent();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not send the file");
+      if (sent > 0) onSent();
     } finally {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
@@ -57,7 +64,7 @@ export function ChatComposerTools({ conversationId, workspaceId, draft, setDraft
 
   return (
     <div className="relative flex gap-1 text-secondary">
-      <input ref={fileRef} type="file" className="hidden" onChange={(e) => void onFile(e.target.files?.[0])} />
+      <input ref={fileRef} type="file" multiple className="hidden" onChange={(e) => void onFiles(e.target.files)} />
       <button type="button" title="Attach a file" aria-label="Attach a file" className={btn} disabled={uploading} onClick={() => fileRef.current?.click()}>
         {uploading ? <Loader2 className="size-4 animate-spin" /> : <Paperclip className="size-4" />}
       </button>
