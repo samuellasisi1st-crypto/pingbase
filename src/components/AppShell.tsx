@@ -2,8 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import {
-  Inbox, MessagesSquare, Send, Zap, Users, CalendarDays, Star, BarChart3, Bot,
-  Search, Bell, HelpCircle, Megaphone, Settings, ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen,
+  Inbox, Users, CalendarDays, Bot, Search, Settings, ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -13,27 +12,19 @@ import { Button } from "@/design-system/components/Button";
 
 const NAV = [
   { to: "/", label: "Inbox", icon: Inbox },
-  { to: "/team-chat", label: "Team Chat", icon: MessagesSquare },
-  { to: "/campaigns", label: "Campaigns", icon: Send },
-  { to: "/automations", label: "Automations", icon: Zap },
   { to: "/contacts", label: "Contacts", icon: Users },
   { to: "/appointments", label: "Appointments", icon: CalendarDays },
-  { to: "/reviews", label: "Reviews", icon: Star },
-  { to: "/analytics", label: "Analytics", icon: BarChart3 },
   { to: "/ai-agents", label: "AI Agents", icon: Bot },
 ] as const;
 
 const FOOT = [
   { to: "/search", label: "Search", icon: Search },
-  { to: "/notifications", label: "Notifications", icon: Bell },
-  { to: "/help", label: "Help", icon: HelpCircle },
-  { to: "/whats-new", label: "What's new?", icon: Megaphone },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
 const itemCls =
   "flex h-8 items-center gap-2 rounded-lg border border-transparent px-2.5 text-[12px] font-medium text-secondary transition-colors hover:bg-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
-const activeCls = "border-border bg-panel font-semibold text-foreground shadow-xs";
+const activeCls = "border-border bg-panel font-normal text-foreground shadow-xs";
 
 export function AppShell({
   children,
@@ -70,7 +61,7 @@ export function AppShell({
           <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-foreground text-[12px] font-bold text-panel">P</span>
           {navOpen && <span className="min-w-0 flex-1">
             <span className="block text-micro font-semibold uppercase text-tertiary">Workspace</span>
-            <span className="block truncate text-[12px] font-semibold text-foreground">Studio Nine Hair</span>
+            <span className="block truncate text-[12px] font-normal text-foreground">Studio Nine Hair</span>
           </span>}
           {navOpen && <ChevronDown className="size-3 text-tertiary" />}
           </button>
@@ -101,7 +92,7 @@ export function AppShell({
           <div className={`mt-2 flex items-center border-t border-border-subtle pt-2 ${navOpen ? "gap-2 px-1" : "flex-col gap-1"}`}>
             <Link to="/profile" title="My profile" className={`flex min-w-0 items-center rounded-lg p-1 hover:bg-hover ${navOpen ? "flex-1 gap-2" : "justify-center"}`}>
               <Avatar name={email} size="sm" />
-              {navOpen && <span className="truncate text-[12px] text-secondary">My profile</span>}
+              {navOpen && <span className="truncate text-[12px] font-normal text-secondary">My profile</span>}
             </Link>
             {navOpen && <button
               aria-label="Sign out"

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  AlertTriangle, Bot, Search, Plus, Filter, SlidersHorizontal, Inbox as InboxIcon, UserCheck, UserX,
+  AlertTriangle, Bot, Search, Plus, Filter, SlidersHorizontal, Inbox as InboxIcon, UserCheck,
   MailOpen, CalendarClock, CreditCard, CheckCircle2, Paperclip, Smile, CalendarDays, Sparkles as Wand, Send, Clock, Users, PanelRightOpen, PanelLeftClose, PanelLeftOpen, X,
 } from "lucide-react";
 
@@ -31,19 +31,18 @@ export const Route = createFileRoute("/")({
   component: InboxPage,
 });
 
-type View = "all" | "attention" | "ai" | "human" | "unassigned" | "unread" | "booking" | "payment" | "confirmed";
+type View = "all" | "attention" | "ai" | "human" | "unread" | "booking" | "payment" | "confirmed";
 const VIEWS: { v: View; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
   { v: "all", label: "All conversations", icon: InboxIcon },
   { v: "attention", label: "Needs attention", icon: AlertTriangle },
   { v: "ai", label: "AI handling", icon: Bot },
   { v: "human", label: "Assigned to team", icon: UserCheck },
-  { v: "unassigned", label: "Not assigned", icon: UserX },
   { v: "unread", label: "Unread", icon: MailOpen },
   { v: "booking", label: "Booking enquiries", icon: CalendarClock },
   { v: "payment", label: "Awaiting payment", icon: CreditCard },
   { v: "confirmed", label: "Confirmed", icon: CheckCircle2 },
 ];
-const CHANNELS = ["instagram", "messenger", "whatsapp", "telegram", "gmail", "outlook", "test"];
+const CHANNELS = ["instagram", "messenger", "whatsapp", "telegram", "gmail", "outlook"];
 const CH_LABEL: Record<string, string> = {
   instagram: "Instagram", messenger: "Messenger", whatsapp: "WhatsApp", telegram: "Telegram",
   gmail: "Email", outlook: "Email", test: "Test chat",
@@ -131,7 +130,6 @@ function InboxPage() {
       case "attention": return c.needs_attention;
       case "ai": return c.handling_mode === "AI";
       case "human": return c.handling_mode === "HUMAN";
-      case "unassigned": return !c.assigned_to;
       case "unread": return c.unread;
       case "booking": return ["DISCOVERY", "COLLECTING_REQUIREMENTS", "CHECKING_AVAILABILITY", "AWAITING_SLOT_SELECTION", "AWAITING_DETAILS"].includes(c.state);
       case "payment": return c.state === "AWAITING_PAYMENT";
@@ -167,19 +165,13 @@ function InboxPage() {
         const n = all.filter((c) => c.channel === ch).length;
         return (
           <button key={ch} onClick={() => { setChannel(ch); setView("all"); }}
-            className={`flex h-8 w-full items-center gap-2 rounded-md border px-2.5 text-[12px] ${channel === ch ? "border-border bg-panel font-semibold text-foreground shadow-xs" : "border-transparent text-secondary hover:bg-hover"}`}>
+            className={`flex h-8 w-full items-center gap-2 rounded-md border px-2.5 text-[12px] font-normal ${channel === ch ? "border-border bg-panel text-foreground shadow-xs" : "border-transparent text-secondary hover:bg-hover"}`}>
             <span className={`size-2 rounded-full ${CH_DOT[ch]}`} />
             <span className="flex-1 text-left">{ch === "gmail" ? "Gmail" : ch === "outlook" ? "Outlook" : CH_LABEL[ch]}</span>
             {n > 0 && <span className="text-[11px] text-tertiary">{n}</span>}
           </button>
         );
       })}
-      <div className="mt-auto pt-6">
-        <a href="/tester" className="block rounded-lg border border-border bg-hover p-2.5 hover:bg-selected">
-          <p className="text-[12px] font-semibold text-foreground">Channel setup &amp; tester</p>
-          <p className="mt-0.5 text-[11px] text-secondary">Connect messaging and calendar.</p>
-        </a>
-      </div>
     </>
   );
 
