@@ -122,7 +122,7 @@ function Dashboard() {
                     <p className="mt-1 text-[14px] text-secondary">{focus.service?.name ?? "Service"} with {focus.staff?.name ?? "team"} · {money(focus.price_pence)}</p>
                     <p className="mt-2 text-[13px] text-tertiary">{new Date(focus.starts_at).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" })} at {formatSalonTime(focus.starts_at)} · {until(+new Date(focus.starts_at) - now)}</p>
                   </div>
-                  <div className="flex flex-wrap gap-2"><Link to="/appointments"><Button size="sm" variant="secondary">View booking</Button></Link><Link to="/inbox"><Button size="sm" variant="ghost">Message customer</Button></Link></div>
+                  <div className="flex flex-wrap gap-2"><Link to="/appointments"><Button size="sm" variant="secondary">View booking</Button></Link><Link to="/inbox"><Button size="sm" variant="tertiary">Message customer</Button></Link></div>
                 </>
               ) : (
                 <>
