@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Clock3, CreditCard, Search, UserRound, X } from "lucide-react";
+import { CalendarDays, Clock3, CreditCard, Search, Settings2, UserRound, X } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { BookingCalendar } from "@/components/BookingCalendar";
 import { AppShell, EmptyState, Page, PageHeader } from "@/components/AppShell";
 import { Avatar, Badge, Button, Input, Tabs } from "@/design-system";
