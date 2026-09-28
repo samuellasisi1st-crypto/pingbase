@@ -61,11 +61,16 @@ type Conversation = {
 };
 
 const human = (s: string) => s.replaceAll("_", " ").toLowerCase().replace(/^./, (x) => x.toUpperCase());
-function stateBadge(c: Pick<Conversation, "state" | "needs_attention">) {
-  if (c.needs_attention) return <Badge variant="yellow">Needs human</Badge>;
-  if (DONE.includes(c.state)) return <Badge variant="green">Confirmed</Badge>;
-  if (c.state === "AWAITING_PAYMENT") return <Badge variant="purple">Awaiting payment</Badge>;
-  return <Badge variant="cyan">{human(c.state)}</Badge>;
+/** One uniform "who's handling it" tag, driven only by handling mode. */
+function stateBadge(c: Pick<Conversation, "state" | "needs_attention" | "handling_mode">) {
+  const dot = <span className="h-1.5 w-1.5 rounded-full bg-current" />;
+  let tag;
+  if (c.handling_mode === "HUMAN") tag = <Badge variant="purple">{dot}Human handling</Badge>;
+  else if (c.handling_mode === "PAUSED" || c.needs_attention) tag = <Badge variant="yellow">{dot}Needs human</Badge>;
+  else tag = <Badge variant="cyan">{dot}AI handling</Badge>;
+  const extra = DONE.includes(c.state) ? <Badge variant="green">Booked</Badge>
+    : c.state === "AWAITING_PAYMENT" ? <Badge variant="neutral">Awaiting payment</Badge> : null;
+  return <span className="inline-flex flex-wrap gap-1">{tag}{extra}</span>;
 }
 function shortTime(iso: string) {
   const d = new Date(iso);
