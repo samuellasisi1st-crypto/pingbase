@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   AlertTriangle, Bot, Search, Plus, Filter, SlidersHorizontal, Inbox as InboxIcon, UserCheck, UserX,
-  MailOpen, CalendarClock, CreditCard, CheckCircle2, Paperclip, Smile, CalendarDays, Sparkles as Wand, Send, Clock, Check, Users, PanelLeft,
+  MailOpen, CalendarClock, CreditCard, CheckCircle2, Paperclip, Smile, CalendarDays, Sparkles as Wand, Send, Clock, Users, PanelRightOpen, X,
 } from "lucide-react";
 
 import { AppShell, SideItem, SideLabel } from "@/components/AppShell";
@@ -156,10 +156,6 @@ function InboxPage() {
 
   const secondary = (
     <>
-      <div className="mb-3 flex items-center justify-between px-2">
-        <p className="text-[13px] text-secondary">Inbox</p>
-        <PanelLeft className="size-4 text-tertiary" />
-      </div>
       {VIEWS.map((x) => (
         <SideItem key={x.v} icon={x.icon} label={x.label} active={view === x.v && !channel}
           count={all.filter((c) => matches(c, x.v)).length || undefined}
@@ -170,17 +166,17 @@ function InboxPage() {
         const n = all.filter((c) => c.channel === ch).length;
         return (
           <button key={ch} onClick={() => { setChannel(ch); setView("all"); }}
-            className={`flex h-9 w-full items-center gap-2.5 rounded-md border px-2.5 text-[13px] ${channel === ch ? "border-border bg-panel font-semibold text-foreground shadow-xs" : "border-transparent text-secondary hover:bg-hover"}`}>
-            <span className={`size-2.5 rounded-full ${CH_DOT[ch]}`} />
+            className={`flex h-8 w-full items-center gap-2 rounded-md border px-2.5 text-[12px] ${channel === ch ? "border-border bg-panel font-semibold text-foreground shadow-xs" : "border-transparent text-secondary hover:bg-hover"}`}>
+            <span className={`size-2 rounded-full ${CH_DOT[ch]}`} />
             <span className="flex-1 text-left">{ch === "gmail" ? "Gmail" : ch === "outlook" ? "Outlook" : CH_LABEL[ch]}</span>
             {n > 0 && <span className="text-[11px] text-tertiary">{n}</span>}
           </button>
         );
       })}
       <div className="mt-auto pt-6">
-        <a href="/tester" className="block rounded-xl border border-border bg-hover p-3 hover:bg-selected">
-          <p className="text-[13px] font-semibold text-foreground">Channel setup &amp; tester</p>
-          <p className="mt-0.5 text-[12px] text-secondary">Connect WhatsApp, Instagram, Messenger and Google Calendar.</p>
+        <a href="/tester" className="block rounded-lg border border-border bg-hover p-2.5 hover:bg-selected">
+          <p className="text-[12px] font-semibold text-foreground">Channel setup &amp; tester</p>
+          <p className="mt-0.5 text-[11px] text-secondary">Connect messaging and calendar.</p>
         </a>
       </div>
     </>
@@ -188,7 +184,7 @@ function InboxPage() {
 
   return (
     <AppShell secondary={secondary}>
-      <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-[20rem_1fr]">
+      <div className="grid h-full min-h-0 min-w-0 grid-cols-1 overflow-x-hidden lg:grid-cols-[minmax(16rem,18rem)_minmax(0,1fr)]">
         <div className="flex min-h-0 flex-col border-r border-border-subtle bg-panel-subtle">
           <div className="flex items-center justify-between px-5 pb-3 pt-5">
             <p className="text-[15px] font-semibold text-foreground">
@@ -268,6 +264,7 @@ type Appt = { id: string; starts_at: string; status: string; deposit_status: str
 function ConversationPane({ conversationId }: { conversationId: string }) {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState("");
+  const [customerOpen, setCustomerOpen] = useState(false);
 
   const detail = useQuery({
     queryKey: ["conversation-detail", conversationId],
@@ -338,9 +335,9 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
   let lastDay = "";
 
   return (
-    <div className="grid min-h-0 grid-cols-1 xl:grid-cols-[1fr_20rem]">
-      <div className="flex min-h-0 flex-col">
-        <div className="flex h-16 items-center justify-between gap-2 border-b border-border-subtle px-6">
+    <div className={`grid min-h-0 min-w-0 grid-cols-1 overflow-x-hidden ${customerOpen ? "xl:grid-cols-[minmax(0,1fr)_18rem]" : ""}`}>
+      <div className="flex min-h-0 min-w-0 flex-col">
+        <div className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-border-subtle px-4 py-2">
           <div className="flex min-w-0 items-center gap-3">
             <Avatar name={name} size="md" />
             <div className="min-w-0">
@@ -357,6 +354,7 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
             {c.handling_mode !== "AI" && (
               <Button size="sm" onClick={() => mode.mutate("AI")}><Bot className="mr-1.5 size-3.5" />Return to AI</Button>
             )}
+            {!customerOpen && <Button title="Show customer details" aria-label="Show customer details" size="sm" variant="tertiary" onClick={() => setCustomerOpen(true)}><PanelRightOpen className="size-4" /></Button>}
           </div>
         </div>
 
@@ -410,8 +408,8 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
         </form>
       </div>
 
-      <aside className="hidden min-h-0 overflow-y-auto border-l border-border-subtle xl:block">
-         <div className="flex h-16 items-center border-b border-border-subtle px-5 text-[15px] font-semibold text-foreground">Customer</div>
+      {customerOpen && <aside className="hidden min-h-0 overflow-y-auto border-l border-border-subtle xl:block">
+         <div className="flex h-14 items-center justify-between border-b border-border-subtle px-4 text-[14px] font-semibold text-foreground">Customer<Button title="Close customer details" aria-label="Close customer details" size="sm" variant="tertiary" onClick={() => setCustomerOpen(false)}><X className="size-4" /></Button></div>
         <div className="flex items-center gap-3 border-b border-border-subtle px-5 py-4">
           <Avatar name={name} size="lg" />
           <div><p className="text-[15px] font-semibold text-foreground">{name}</p><p className="text-[12px] text-secondary">{CH_LABEL[c.channel]}</p></div>
@@ -449,7 +447,7 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
             ))}
           </ul>
         </Section>
-      </aside>
+      </aside>}
     </div>
   );
 }

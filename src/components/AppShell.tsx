@@ -1,14 +1,15 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Inbox, MessagesSquare, Send, Zap, Users, CalendarDays, Star, BarChart3, Bot,
-  Search, Bell, HelpCircle, Megaphone, Settings, ChevronDown, LogOut, Sparkles,
+  Search, Bell, HelpCircle, Megaphone, Settings, ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/design-system/components/Avatar";
+import { Button } from "@/design-system/components/Button";
 
 const NAV = [
   { to: "/", label: "Inbox", icon: Inbox },
@@ -31,7 +32,7 @@ const FOOT = [
 ] as const;
 
 const itemCls =
-  "flex min-h-9 items-center gap-2.5 rounded-lg border border-transparent px-3 text-[13px] font-medium text-secondary transition-colors hover:bg-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+  "flex h-8 items-center gap-2 rounded-lg border border-transparent px-2.5 text-[12px] font-medium text-secondary transition-colors hover:bg-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 const activeCls = "border-border bg-panel font-semibold text-foreground shadow-xs";
 
 export function AppShell({
@@ -45,6 +46,8 @@ export function AppShell({
 }) {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
+  const [navOpen, setNavOpen] = useState(false);
+  const [secondaryOpen, setSecondaryOpen] = useState(true);
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth" });
@@ -59,40 +62,42 @@ export function AppShell({
   return (
     <div className="flex h-dvh overflow-hidden bg-app p-2">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-panel focus:px-3 focus:py-2 focus:text-sm">Skip to content</a>
-      <aside className="hidden w-60 shrink-0 flex-col rounded-l-xl border border-border-subtle bg-panel px-3 py-3 md:flex">
-        <button className="mb-3 flex items-center gap-2 rounded-lg border border-border bg-panel p-2 text-left shadow-xs hover:bg-hover">
-          <span className="grid size-8 place-items-center rounded-lg bg-foreground text-[13px] font-bold text-panel">P</span>
-          <span className="min-w-0 flex-1">
+      <aside className={`hidden shrink-0 flex-col rounded-l-xl border border-border-subtle bg-panel py-3 transition-[width] md:flex ${navOpen ? "w-52 px-2.5" : "w-12 px-1.5"}`}>
+        <div className={`mb-3 flex items-center ${navOpen ? "gap-1" : "justify-center"}`}>
+          <button title="Switch workspace" className={`flex min-w-0 items-center rounded-lg border border-border bg-panel text-left shadow-xs hover:bg-hover ${navOpen ? "flex-1 gap-2 p-1.5" : "p-1"}`}>
+          <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-foreground text-[12px] font-bold text-panel">P</span>
+          {navOpen && <span className="min-w-0 flex-1">
             <span className="block text-micro font-semibold uppercase text-tertiary">Workspace</span>
-            <span className="block truncate text-body font-semibold text-foreground">Studio Nine Hair</span>
-          </span>
-          <ChevronDown className="size-3.5 text-tertiary" />
-        </button>
-        <div className="relative mb-5">
-          <Search className="absolute left-3 top-2.5 size-4 text-tertiary" />
-          <input aria-label="Search Pingbase" placeholder="Search" className="h-9 w-full rounded-lg border border-transparent bg-hover pl-9 pr-3 text-body text-foreground placeholder:text-tertiary focus:border-border-strong focus:bg-panel focus:outline-none" />
+            <span className="block truncate text-[12px] font-semibold text-foreground">Studio Nine Hair</span>
+          </span>}
+          {navOpen && <ChevronDown className="size-3 text-tertiary" />}
+          </button>
         </div>
-        <p className="mb-2 px-3 text-micro font-semibold uppercase text-tertiary">Workspace</p>
+        {navOpen ? <div className="relative mb-4">
+          <Search className="absolute left-2.5 top-2 size-3.5 text-tertiary" />
+          <input aria-label="Search Pingbase" placeholder="Search" className="h-8 w-full rounded-lg border border-transparent bg-hover pl-8 pr-2 text-[12px] text-foreground placeholder:text-tertiary focus:border-border-strong focus:bg-panel focus:outline-none" />
+        </div> : <Link to="/search" title="Search" aria-label="Search" className={`${itemCls} mb-3 justify-center px-0`}><Search className="size-3.5" /></Link>}
+        {navOpen && <p className="mb-1.5 px-2.5 text-micro font-semibold uppercase text-tertiary">Workspace</p>}
         <nav aria-label="Main" className="flex flex-1 flex-col gap-0.5">
           {NAV.map((i) => (
-            <Link key={i.to} to={i.to} activeOptions={{ exact: i.to === "/" }} className={itemCls} activeProps={{ className: activeCls }}>
-              <i.icon className="size-4 shrink-0" aria-hidden="true" /> {i.label}
+            <Link key={i.to} to={i.to} title={!navOpen ? i.label : undefined} aria-label={!navOpen ? i.label : undefined} activeOptions={{ exact: i.to === "/" }} className={`${itemCls} ${navOpen ? "" : "justify-center px-0"}`} activeProps={{ className: activeCls }}>
+              <i.icon className="size-3.5 shrink-0" aria-hidden="true" /> {navOpen && i.label}
             </Link>
           ))}
         </nav>
-        <p className="mb-2 mt-4 px-3 text-micro font-semibold uppercase text-tertiary">Manage</p>
+        {navOpen && <p className="mb-1.5 mt-3 px-2.5 text-micro font-semibold uppercase text-tertiary">Manage</p>}
         <nav aria-label="Account" className="flex flex-col gap-0.5">
           {FOOT.map((i) => (
-            <Link key={i.to} to={i.to} className={itemCls} activeProps={{ className: activeCls }}>
-              <i.icon className="size-4 shrink-0" aria-hidden="true" /> {i.label}
+            <Link key={i.to} to={i.to} title={!navOpen ? i.label : undefined} aria-label={!navOpen ? i.label : undefined} className={`${itemCls} ${navOpen ? "" : "justify-center px-0"}`} activeProps={{ className: activeCls }}>
+              <i.icon className="size-3.5 shrink-0" aria-hidden="true" /> {navOpen && i.label}
             </Link>
           ))}
-          <div className="mt-3 flex items-center gap-2 border-t border-border-subtle px-2 pt-3">
-            <Link to="/profile" className="flex min-w-0 flex-1 items-center gap-2 rounded-lg p-1 hover:bg-hover">
+          <div className={`mt-2 flex items-center border-t border-border-subtle pt-2 ${navOpen ? "gap-2 px-1" : "flex-col gap-1"}`}>
+            <Link to="/profile" title="My profile" className={`flex min-w-0 items-center rounded-lg p-1 hover:bg-hover ${navOpen ? "flex-1 gap-2" : "justify-center"}`}>
               <Avatar name={email} size="sm" />
-              <span className="truncate text-[13px] text-secondary">My profile</span>
+              {navOpen && <span className="truncate text-[12px] text-secondary">My profile</span>}
             </Link>
-            <button
+            {navOpen && <button
               aria-label="Sign out"
               title="Sign out"
               onClick={async () => {
@@ -102,14 +107,23 @@ export function AppShell({
               className="rounded p-1 text-tertiary hover:bg-hover hover:text-foreground"
             >
               <LogOut className="size-3.5" />
-            </button>
+            </button>}
           </div>
         </nav>
+        <Button type="button" title={navOpen ? "Collapse navigation" : "Expand navigation"} aria-label={navOpen ? "Collapse navigation" : "Expand navigation"} size="sm" variant="tertiary" className="mt-2 w-full" onClick={() => setNavOpen((open) => !open)}>
+          {navOpen ? <PanelLeftClose className="size-3.5" /> : <PanelLeftOpen className="size-3.5" />}
+        </Button>
       </aside>
 
       {secondary && (
-        <aside aria-label="Views" className="hidden w-60 shrink-0 flex-col overflow-y-auto border-y border-r border-border-subtle bg-panel-subtle px-3 py-4 lg:flex">
+        secondaryOpen ? <aside aria-label="Views" className="hidden w-52 shrink-0 flex-col overflow-y-auto border-y border-r border-border-subtle bg-panel-subtle px-2.5 py-3 lg:flex">
+          <div className="mb-2 flex items-center justify-between px-2">
+            <p className="text-[12px] font-semibold text-secondary">Inbox</p>
+            <Button type="button" title="Collapse inbox views" aria-label="Collapse inbox views" size="sm" variant="tertiary" onClick={() => setSecondaryOpen(false)}><PanelLeftClose className="size-3.5" /></Button>
+          </div>
           {secondary}
+        </aside> : <aside className="hidden w-10 shrink-0 border-y border-r border-border-subtle bg-panel-subtle pt-3 lg:flex lg:justify-center">
+          <Button type="button" title="Expand inbox views" aria-label="Expand inbox views" size="sm" variant="tertiary" onClick={() => setSecondaryOpen(true)}><PanelLeftOpen className="size-3.5" /></Button>
         </aside>
       )}
 
