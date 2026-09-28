@@ -9,6 +9,7 @@ import {
 
 import { AppShell, SideItem, SideLabel } from "@/components/AppShell";
 import { ChatComposerTools } from "@/components/ChatComposerTools";
+import { MessageContent } from "@/components/MessageContent";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/design-system/components/Avatar";
 import { Badge } from "@/design-system/components/Badge";
@@ -386,7 +387,7 @@ function ConversationPane({ conversationId, onBack }: { conversationId: string; 
                 ) : (
                   <div className={m.direction === "outbound" ? "flex justify-end" : "flex justify-start"}>
                      <div className={`max-w-[88%] rounded-xl border px-3.5 py-2.5 text-[14px] shadow-xs sm:max-w-[72%] ${m.direction === "outbound" ? "border-outbound-border bg-outbound text-foreground" : "border-border-subtle bg-panel-subtle text-foreground"}`}>
-                      <p className="whitespace-pre-wrap">{m.body}</p>
+                      <MessageContent body={m.body} attachments={m.attachments} />
                       <p className="mt-1 text-right text-[11px] text-tertiary">
                         {time}{m.direction === "outbound" && ` · ${m.sender_type === "AI" ? "Nia" : m.sender_name ?? "Team"}`}
                       </p>

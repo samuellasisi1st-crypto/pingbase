@@ -599,3 +599,41 @@ export async function deliverAttachment(opts: {
     return { delivered: false, error: e instanceof Error ? e.message : String(e) };
   }
 }
+
+export type StoredAttachment = { path: string; filename: string; mime: string; kind: "image" | "file" };
+const EXT: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif", "application/pdf": "pdf", "video/mp4": "mp4", "audio/ogg": "ogg", "audio/mpeg": "mp3" };
+
+/** Download a media file and store it privately under <workspace>/inbound/. Never throws. */
+async function storeMedia(workspaceId: string, url: string, headers: Record<string, string>, hint: { mime?: string | null | undefined; filename?: string | null | undefined }): Promise<StoredAttachment | null> {
+  try {
+    const res = await fetch(url, { headers });
+    if (!res.ok) throw new Error(`download returned ${res.status}`);
+    const mime = (hint.mime || res.headers.get("content-type") || "application/octet-stream").split(";")[0]!.trim();
+    const buf = await res.arrayBuffer();
+    if (buf.byteLength > 20 * 1024 * 1024) throw new Error("file larger than 20MB");
+    const ext = EXT[mime] ?? mime.split("/")[1]?.replace(/[^a-z0-9]/gi, "") ?? "bin";
+    const filename = (hint.filename || `${mime.startsWith("image/") ? "photo" : "file"}.${ext}`).replace(/[^\w.\- ]/g, "_");
+    const path = `${workspaceId}/inbound/${crypto.randomUUID()}-${filename}`;
+    const { error } = await supabaseAdmin.storage.from("attachments").upload(path, buf, { contentType: mime });
+    if (error) throw new Error(error.message);
+    return { path, filename, mime, kind: mime.startsWith("image/") ? "image" : "file" };
+  } catch (e) {
+    await logIntegration(workspaceId, "media", "error", `Inbound media download failed: ${e instanceof Error ? e.message : String(e)}`);
+    return null;
+  }
+}
+
+/** WhatsApp: resolve a media id to a temporary URL, then download with the business token. */
+export async function storeWhatsAppMedia(workspaceId: string, mediaId: string, hint: { mime?: string | null | undefined; filename?: string | null | undefined }) {
+  const secrets = await getWhatsAppSecrets(workspaceId);
+  if (!secrets) return null;
+  const auth = { Authorization: `Bearer ${secrets.access_token}` };
+  const meta = (await fetch(`${GRAPH}/${mediaId}`, { headers: auth }).then((r) => r.json()).catch(() => ({}))) as { url?: string; mime_type?: string };
+  if (!meta.url) return null;
+  return storeMedia(workspaceId, meta.url, auth, { mime: hint.mime ?? meta.mime_type, filename: hint.filename });
+}
+
+/** Instagram / Messenger attachments arrive as temporary CDN URLs. */
+export async function storeMetaMedia(workspaceId: string, url: string, type?: string) {
+  return storeMedia(workspaceId, url, {}, { mime: type === "image" ? null : null, filename: null });
+}

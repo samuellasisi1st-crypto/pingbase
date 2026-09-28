@@ -42,3 +42,6 @@
 - Settings sections are selected by the `?section=` search param (profile, workspace, team, staff, rules, files, templates, channels), so other pages can link directly to a section.
 - Workspace settings merge business details; the workspace logo and name live on `workspaces` and are shown at the top of the side nav.
 - Uploaded files live in `workspace_files` + the `attachments` bucket under `<workspace_id>/files/`, and appear in one list alongside knowledge entries.
+
+## Media
+- Inbound customer media is downloaded from Meta/WhatsApp into the private `attachments` bucket under `<workspace_id>/inbound/` and stored on `messages.attachments`, because Meta media URLs expire within minutes.
