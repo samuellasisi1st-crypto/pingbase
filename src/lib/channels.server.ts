@@ -604,7 +604,7 @@ export type StoredAttachment = { path: string; filename: string; mime: string; k
 const EXT: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif", "application/pdf": "pdf", "video/mp4": "mp4", "audio/ogg": "ogg", "audio/mpeg": "mp3" };
 
 /** Download a media file and store it privately under <workspace>/inbound/. Never throws. */
-async function storeMedia(workspaceId: string, url: string, headers: Record<string, string>, hint: { mime?: string | null; filename?: string | null }): Promise<StoredAttachment | null> {
+async function storeMedia(workspaceId: string, url: string, headers: Record<string, string>, hint: { mime?: string | null | undefined; filename?: string | null | undefined }): Promise<StoredAttachment | null> {
   try {
     const res = await fetch(url, { headers });
     if (!res.ok) throw new Error(`download returned ${res.status}`);
@@ -624,7 +624,7 @@ async function storeMedia(workspaceId: string, url: string, headers: Record<stri
 }
 
 /** WhatsApp: resolve a media id to a temporary URL, then download with the business token. */
-export async function storeWhatsAppMedia(workspaceId: string, mediaId: string, hint: { mime?: string | null; filename?: string | null }) {
+export async function storeWhatsAppMedia(workspaceId: string, mediaId: string, hint: { mime?: string | null | undefined; filename?: string | null | undefined }) {
   const secrets = await getWhatsAppSecrets(workspaceId);
   if (!secrets) return null;
   const auth = { Authorization: `Bearer ${secrets.access_token}` };
