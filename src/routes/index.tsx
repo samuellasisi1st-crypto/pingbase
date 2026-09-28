@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import type { ComponentType, ReactNode } from "react";
-import { AlertTriangle, ArrowRight, Bot, CalendarClock, CalendarDays, CheckCircle2, CreditCard, Instagram, MailOpen, MessageCircle, Sparkles, UserCheck } from "lucide-react";
+import { AlertTriangle, ArrowRight, Bot, CalendarClock, CalendarDays, CheckCircle2, CreditCard, Instagram, MailOpen, MessageCircle, UserCheck } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Badge, Button, Card } from "@/design-system";
 import { supabase } from "@/integrations/supabase/client";
@@ -156,22 +156,34 @@ function Dashboard() {
           </div>
           </div>
 
-          <Card className="flex h-full flex-col p-5 lg:col-span-4">
-            <div className="flex items-start justify-between gap-3">
-              <div><p className="text-[11px] uppercase tracking-wide text-tertiary">Revenue this week</p><p className="mt-2 text-3xl text-foreground">{money(weekRevenue)}</p></div>
-              <div className="grid size-9 place-items-center rounded-lg bg-blue-soft text-primary"><CreditCard className="size-4" /></div>
-            </div>
-            <p className="mt-1 text-[12px] text-secondary">From {bookedWeek} completed or active booking{bookedWeek === 1 ? "" : "s"}</p>
-            <div className="mt-6 flex h-2 overflow-hidden rounded-full bg-hover">
-              {topRevenue.map(([service, amount], index) => <span key={service} className={index === 0 ? "bg-primary" : index === 1 ? "bg-blue-mid" : index === 2 ? "bg-cyan-mid" : "bg-green-strong"} style={{ width: `${weekRevenue ? (amount / weekRevenue) * 100 : 0}%` }} />)}
-            </div>
-            <div className="mt-5 flex-1 divide-y divide-border-subtle">
-              {topRevenue.length === 0 && <p className="py-5 text-[12px] text-secondary">Revenue from this week's appointments will appear here.</p>}
-              {topRevenue.map(([service, amount], index) => (
-                <div key={service} className="flex items-center gap-2 py-2.5 text-[12px]"><span className={`size-2 rounded-full ${index === 0 ? "bg-primary" : index === 1 ? "bg-blue-mid" : index === 2 ? "bg-cyan-mid" : "bg-green-strong"}`} /><span className="min-w-0 flex-1 truncate text-secondary">{service}</span><span className="text-foreground">{money(amount)}</span><span className="w-9 text-right text-tertiary">{weekRevenue ? Math.round((amount / weekRevenue) * 100) : 0}%</span></div>
-              ))}
-            </div>
-          </Card>
+          <div className="grid grid-rows-[auto_1fr] gap-4 lg:col-span-4">
+            <Card className="flex flex-col p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div><p className="text-[11px] uppercase tracking-wide text-tertiary">Revenue this week</p><p className="mt-2 text-3xl text-foreground">{money(weekRevenue)}</p></div>
+                <div className="grid size-9 place-items-center rounded-lg bg-blue-soft text-primary"><CreditCard className="size-4" /></div>
+              </div>
+              <p className="mt-1 text-[12px] text-secondary">From {bookedWeek} completed or active booking{bookedWeek === 1 ? "" : "s"}</p>
+              <div className="mt-6 flex h-2 overflow-hidden rounded-full bg-hover">
+                {topRevenue.map(([service, amount], index) => <span key={service} className={index === 0 ? "bg-primary" : index === 1 ? "bg-blue-mid" : index === 2 ? "bg-cyan-mid" : "bg-green-strong"} style={{ width: `${weekRevenue ? (amount / weekRevenue) * 100 : 0}%` }} />)}
+              </div>
+              <div className="mt-5 flex-1 divide-y divide-border-subtle">
+                {topRevenue.length === 0 && <p className="py-5 text-[12px] text-secondary">Revenue from this week's appointments will appear here.</p>}
+                {topRevenue.map(([service, amount], index) => (
+                  <div key={service} className="flex items-center gap-2 py-2.5 text-[12px]"><span className={`size-2 rounded-full ${index === 0 ? "bg-primary" : index === 1 ? "bg-blue-mid" : index === 2 ? "bg-cyan-mid" : "bg-green-strong"}`} /><span className="min-w-0 flex-1 truncate text-secondary">{service}</span><span className="text-foreground">{money(amount)}</span><span className="w-9 text-right text-tertiary">{weekRevenue ? Math.round((amount / weekRevenue) * 100) : 0}%</span></div>
+                ))}
+              </div>
+            </Card>
+            <Panel title="Needs your attention">
+              <div className="grid h-full auto-rows-fr gap-2">
+                {todos.length === 0 && <p className="flex items-center gap-2 text-[13px] text-secondary"><CheckCircle2 className="size-4 text-green-strong" />You're all caught up.</p>}
+                {todos.map((t) => (
+                  <Link key={t.label} to={t.to} className="flex min-h-11 items-center gap-3 rounded-lg border border-border px-3 py-2 text-[12px] text-foreground hover:bg-hover">
+                    <Badge variant={t.tone}><t.icon className="size-3" /></Badge><span className="flex-1">{t.label}</span><ArrowRight className="size-3.5 text-tertiary" />
+                  </Link>
+                ))}
+              </div>
+            </Panel>
+          </div>
 
         </div>
 
@@ -194,12 +206,14 @@ function Dashboard() {
         </section>
 
         <div className="grid gap-4 lg:grid-cols-3">
-          <Panel title="Needs your attention">
+          <Panel title="Next best steps">
             <div className="grid h-full auto-rows-fr gap-2">
-              {todos.length === 0 && <p className="flex items-center gap-2 text-[13px] text-secondary"><CheckCircle2 className="size-4 text-green-strong" />You're all caught up.</p>}
-              {todos.map((t) => (
-                <Link key={t.label} to={t.to} className="flex min-h-11 items-center gap-3 rounded-lg border border-border px-3 py-2 text-[12px] text-foreground hover:bg-hover">
-                  <Badge variant={t.tone}><t.icon className="size-3" /></Badge><span className="flex-1">{t.label}</span><ArrowRight className="size-3.5 text-tertiary" />
+              {steps.length === 0 && <p className="flex items-center gap-2 text-[13px] text-secondary"><CheckCircle2 className="size-4 text-green-strong" />You're all set up.</p>}
+              {steps.map((s, i) => (
+                <Link key={s.label} to="/settings" search={{ section: s.section } as never} className="flex min-h-11 items-center gap-3 rounded-lg border border-border px-3 py-2 text-[12px] text-foreground hover:bg-hover">
+                  <span className="grid size-6 shrink-0 place-items-center rounded-full bg-blue-soft text-[11px] text-primary">{i + 1}</span>
+                  <span className="min-w-0 flex-1"><span className="block truncate">{s.label}</span><span className="block truncate text-[11px] text-secondary">{s.body}</span></span>
+                  <ArrowRight className="size-3.5 text-tertiary" />
                 </Link>
               ))}
             </div>
@@ -223,18 +237,6 @@ function Dashboard() {
           </Panel>
         </div>
 
-        {steps.length > 0 && (
-          <section>
-            <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-tertiary"><Sparkles className="size-3" />Next best steps</p>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {steps.map((s) => (
-                <Link key={s.label} to="/settings" search={{ section: s.section } as never} className="rounded-xl border border-border bg-panel p-4 shadow-xs hover:border-border-strong hover:bg-panel-subtle">
-                  <p className="text-[13px] text-foreground">{s.label}</p><p className="mt-1 text-[12px] text-secondary">{s.body}</p>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
       </div>
     </AppShell>
   );
