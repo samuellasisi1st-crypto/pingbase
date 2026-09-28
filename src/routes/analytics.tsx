@@ -42,7 +42,7 @@ function AnalyticsPage() {
   return (
     <AppShell>
       <Page>
-        <PageHeader title="Analytics" subtitle="How Pingbase is working for Studio Nine Hair." />
+        <PageHeader title="Analytics" subtitle="How Pingbase is working for your business." />
         <div className="grid gap-4 md:grid-cols-4">
           <StatCard label="Conversations" value={convs.length} hint="All channels" />
           <StatCard label="Handled by AI" value={`${aiShare}%`} hint="No team reply needed" />
