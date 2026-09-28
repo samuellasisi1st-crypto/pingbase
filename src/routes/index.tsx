@@ -149,9 +149,6 @@ function InboxPage() {
     return true;
   }), [all, channel, view, tab, q, previews.data]);
 
-  useEffect(() => {
-  }, [list]);
-
   const secondary = (
     <>
       {VIEWS.map((x) => (
@@ -178,9 +175,9 @@ function InboxPage() {
     <AppShell secondary={secondary} secondaryOpen={viewsOpen}>
       <div className="grid h-full min-h-0 min-w-0 grid-cols-1 overflow-x-hidden lg:grid-cols-[minmax(16rem,18rem)_minmax(0,1fr)]">
         <div className={`${activeId ? "hidden lg:flex" : "flex"} min-h-0 flex-col border-r border-border-subtle bg-panel`}>
-          <div className="flex items-center justify-between px-5 pb-3 pt-5">
+          <div className="flex items-center justify-between px-4 pb-3 pt-4 sm:px-5 sm:pt-5">
             <div className="flex min-w-0 items-center gap-1.5">
-              <Button type="button" title={viewsOpen ? "Collapse inbox views" : "Expand inbox views"} aria-label={viewsOpen ? "Collapse inbox views" : "Expand inbox views"} size="sm" variant="tertiary" className="px-1.5" onClick={() => setViewsOpen((open) => !open)}>
+              <Button type="button" title={viewsOpen ? "Collapse inbox views" : "Expand inbox views"} aria-label={viewsOpen ? "Collapse inbox views" : "Expand inbox views"} size="sm" variant="tertiary" className="hidden px-1.5 lg:inline-flex" onClick={() => setViewsOpen((open) => !open)}>
                 {viewsOpen ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
               </Button>
               <p className="truncate text-[15px] font-semibold text-foreground">
@@ -193,6 +190,7 @@ function InboxPage() {
               <Plus className="size-4" />
             </a>
           </div>
+          <div className="-mt-1 flex gap-2 overflow-x-auto px-4 pb-3 lg:hidden">{VIEWS.map((item) => <button key={item.v} type="button" onClick={() => { setView(item.v); setChannel(null); }} className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] ${view === item.v && !channel ? "border-border-strong bg-hover text-foreground" : "border-border-subtle text-secondary"}`}>{item.label}</button>)}</div>
           <div className="px-4">
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 size-4 text-tertiary" />
