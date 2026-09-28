@@ -66,14 +66,47 @@ function wrap<T>(ctx: Ctx, name: string, fn: (args: T) => Promise<unknown>) {
   };
 }
 
+type FlowNode = { id: string; type?: string; data?: { kind?: string; event?: string; minutes?: number; relative?: string } };
+type FlowEdge = { source: string; target: string };
+
+/** Walk each saved flow from its booking trigger, summing waits until each message step. */
+function stepsFromFlow(flow: { id: string; kind: string; nodes: unknown; edges: unknown }, start: number) {
+  const nodes = (flow.nodes ?? []) as FlowNode[];
+  const edges = (flow.edges ?? []) as FlowEdge[];
+  const trigger = nodes.find((n) => n.data?.kind === "trigger" && (n.data?.event ?? "booking_confirmed") === "booking_confirmed");
+  if (!trigger) return [];
+  const out: Array<{ kind: string; scheduled_for: string }> = [];
+  const walk = (id: string, at: number, depth: number) => {
+    if (depth > 20) return;
+    for (const e of edges.filter((x) => x.source === id)) {
+      const n = nodes.find((x) => x.id === e.target);
+      if (!n) continue;
+      let next = at;
+      if (n.data?.kind === "wait") {
+        const ms = (n.data.minutes ?? 0) * 60000;
+        next = n.data.relative === "before_start" ? start - ms : n.data.relative === "after_start" ? start + ms : at + ms;
+      }
+      if (n.data?.kind === "message") out.push({ kind: flow.kind === "custom" ? `FLOW:${flow.id}:${n.id}` : flow.kind, scheduled_for: new Date(at).toISOString() });
+      walk(n.id, next, depth + 1);
+    }
+  };
+  walk(trigger.id, Date.now(), 0);
+  return out;
+}
+
 async function scheduleAutomations(ctx: Ctx, appointmentId: string, startsAt: string) {
   const start = new Date(startsAt).getTime();
-  const rows = [
-    { kind: "CONFIRMATION", scheduled_for: new Date().toISOString() },
-    { kind: "REMINDER_24H", scheduled_for: new Date(start - 24 * 3600000).toISOString() },
-    { kind: "REMINDER_2H", scheduled_for: new Date(start - 2 * 3600000).toISOString() },
-    { kind: "FOLLOW_UP", scheduled_for: new Date(start + 26 * 3600000).toISOString() },
-  ].map((r) => ({
+  const { data: flows } = await supabaseAdmin.from("automation_flows").select("id,kind,nodes,edges,enabled").eq("workspace_id", ctx.workspaceId);
+  const planned = flows?.length
+    ? flows.filter((f) => f.enabled).flatMap((f) => stepsFromFlow(f, start)).filter((r) => new Date(r.scheduled_for).getTime() >= Date.now() - 60000)
+    : [
+        { kind: "CONFIRMATION", scheduled_for: new Date().toISOString() },
+        { kind: "REMINDER_24H", scheduled_for: new Date(start - 24 * 3600000).toISOString() },
+        { kind: "REMINDER_2H", scheduled_for: new Date(start - 2 * 3600000).toISOString() },
+        { kind: "FOLLOW_UP", scheduled_for: new Date(start + 26 * 3600000).toISOString() },
+      ];
+  if (!planned.length) return;
+  const rows = planned.map((r) => ({
     workspace_id: ctx.workspaceId,
     conversation_id: ctx.conversationId,
     appointment_id: appointmentId,
@@ -809,6 +842,33 @@ export function buildTools(ctx: Ctx) {
   };
 }
 
+/** Pick the agent for a conversation: pinned agent → channel match → default → first. */
+export async function resolveAgentForConversation(workspaceId: string, conversationId: string) {
+  const db = supabaseAdmin;
+  const [{ data: conv }, { data: agents }] = await Promise.all([
+    db.from("conversations").select("agent_id,channel").eq("id", conversationId).maybeSingle(),
+    db.from("ai_agents").select("*").eq("workspace_id", workspaceId).eq("enabled", true).order("created_at"),
+  ]);
+  const list = agents ?? [];
+  const picked =
+    list.find((a) => a.id === conv?.agent_id) ??
+    list.find((a) => conv?.channel && (a.channels ?? []).includes(conv.channel)) ??
+    list.find((a) => a.is_default) ??
+    list[0];
+  if (!picked) return null;
+  if (conv && conv.agent_id !== picked.id) {
+    await db.from("conversations").update({ agent_id: picked.id }).eq("id", conversationId);
+  }
+  return {
+    id: picked.id,
+    agent_name: picked.name,
+    tone: picked.tone,
+    instructions: [picked.purpose ? `Your role: ${picked.purpose}.` : "", picked.instructions].filter(Boolean).join("\n"),
+    escalation_rules: picked.escalation_rules,
+    forbidden_topics: picked.forbidden_topics,
+  };
+}
+
 export async function runAgent(ctx: Ctx): Promise<string> {
   const db = supabaseAdmin;
   const apiKey = process.env["LOVABLE_API_KEY"];
@@ -827,7 +887,7 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     { data: otherChannelHistory },
   ] = await Promise.all([
     db.from("business_settings").select("*").eq("workspace_id", ctx.workspaceId).maybeSingle(),
-    db.from("ai_agent_settings").select("*").eq("workspace_id", ctx.workspaceId).maybeSingle(),
+    resolveAgentForConversation(ctx.workspaceId, ctx.conversationId).then((data) => ({ data })),
     db.from("contacts").select("*").eq("id", ctx.contactId).maybeSingle(),
     db.from("conversations").select("*").eq("id", ctx.conversationId).maybeSingle(),
     db

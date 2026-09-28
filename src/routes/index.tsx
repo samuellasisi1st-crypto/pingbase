@@ -4,10 +4,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   AlertTriangle, Bot, Search, Plus, Filter, SlidersHorizontal, Inbox as InboxIcon, UserCheck, ChevronLeft,
-  MailOpen, CalendarClock, CreditCard, CheckCircle2, Paperclip, Smile, CalendarDays, Sparkles as Wand, Send, Clock, Users, PanelRightOpen, PanelLeftClose, PanelLeftOpen, X,
+  MailOpen, CalendarClock, CreditCard, CheckCircle2, Send, Clock, Users, PanelRightOpen, PanelLeftClose, PanelLeftOpen, X,
 } from "lucide-react";
 
 import { AppShell, SideItem, SideLabel } from "@/components/AppShell";
+import { ChatComposerTools } from "@/components/ChatComposerTools";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/design-system/components/Avatar";
 import { Badge } from "@/design-system/components/Badge";
@@ -399,9 +400,7 @@ function ConversationPane({ conversationId, onBack }: { conversationId: string; 
               placeholder={c.handling_mode === "AI" ? `Reply to ${name}… (this takes the conversation off Nia)` : `Reply to ${name}…`}
                className="block w-full resize-none rounded-t-lg bg-transparent px-4 py-3 text-[14px] placeholder:text-tertiary focus:outline-none" />
             <div className="flex items-center justify-between border-t border-border-subtle px-3 py-2">
-              <div className="flex gap-1 text-secondary">
-                {[Paperclip, Smile, CalendarDays, Wand].map((I, i) => <span key={i} className="rounded p-1.5 hover:bg-hover"><I className="size-4" /></span>)}
-              </div>
+              <ChatComposerTools conversationId={conversationId} workspaceId={(c as unknown as { workspace_id: string }).workspace_id} draft={draft} setDraft={setDraft} onSent={refresh} />
               <Button type="submit" size="sm" disabled={reply.isPending || !draft.trim()}><Send className="mr-1.5 size-3.5" />Send</Button>
             </div>
           </div>
