@@ -56,7 +56,15 @@ function useDashboard() {
 function Dashboard() {
   const q = useDashboard();
   const gStatus = useServerFn(getGoogleCalendarStatus);
-  const google = useQuery({ queryKey: ["gcal-status"], queryFn: () => gStatus() });
+  const google = useQuery({
+    queryKey: ["gcal-status"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) return null;
+      try { return await gStatus(); } catch { return null; }
+    },
+    retry: false,
+  });
   const now = Date.now();
   const d = q.data;
   const live = (d?.appts ?? []).filter((a) => a.status !== "CANCELLED");
