@@ -41,7 +41,7 @@ const MOBILE_MORE = [
 
 const itemCls =
   "flex h-8 items-center gap-2 rounded-lg border border-transparent px-2.5 text-[12px] font-normal text-secondary transition-[background-color,border-color,color,box-shadow,transform] duration-150 hover:border-border hover:bg-hover hover:text-foreground hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
-const activeCls = "border-border-strong bg-accent font-normal text-foreground shadow-control";
+const activeCls = "bg-accent font-normal text-foreground shadow-control ring-1 ring-inset ring-border-strong";
 
 export function AppShell({
   children,
@@ -75,7 +75,7 @@ export function AppShell({
     <div className="flex h-dvh min-w-0 overflow-hidden bg-app md:p-2">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-panel focus:px-3 focus:py-2 focus:text-sm">Skip to content</a>
       <TooltipProvider delayDuration={120}>
-      <aside className={`hidden shrink-0 flex-col rounded-l-xl border border-border bg-panel py-3 shadow-xs transition-[width] md:flex ${navOpen ? "w-52 px-2.5" : "w-12 px-1.5"}`}>
+      <aside className={`hidden shrink-0 flex-col rounded-l-xl border border-border-strong bg-panel py-3 shadow-xs transition-[width] md:flex ${navOpen ? "w-52 px-2.5" : "w-12 px-1.5"}`}>
         <div className={`mb-3 flex items-center ${navOpen ? "gap-1" : "justify-center"}`}>
           <button title="Switch workspace" className={`flex min-w-0 items-center rounded-lg border border-border bg-panel text-left shadow-xs hover:bg-hover ${navOpen ? "flex-1 gap-2 p-1.5" : "p-1"}`}>
           <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-foreground text-[12px] font-bold text-panel">P</span>
