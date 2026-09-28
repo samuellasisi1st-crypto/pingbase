@@ -38,7 +38,7 @@ function ServicesPage() {
     setForm(service ? { name: service.name, description: service.description ?? "", price: String(service.price_pence / 100), duration: String(service.duration_minutes), deposit: String(service.deposit_pence / 100), active: service.active } : emptyForm);
   };
   const save = async () => {
-    if (!form.name.trim()) return toast.error("Add a service name.");
+    if (!form.name.trim()) { toast.error("Add a service name."); return; }
     setSaving(true);
     try {
       const values = { name: form.name.trim(), description: form.description.trim() || null, price_pence: Math.round(Number(form.price || 0) * 100), duration_minutes: Number(form.duration || 0), deposit_pence: Math.round(Number(form.deposit || 0) * 100), active: form.active };
@@ -50,10 +50,10 @@ function ServicesPage() {
       toast.success(editing === "new" ? "Service created" : "Service updated"); setEditing(null); await qc.invalidateQueries({ queryKey: ["services"] });
     } catch (error) { toast.error(error instanceof Error ? error.message : "Couldn't save the service."); } finally { setSaving(false); }
   };
-  const toggle = async (service: Service) => { const { error } = await supabase.from("services").update({ active: !service.active }).eq("id", service.id); if (error) return toast.error(error.message); await qc.invalidateQueries({ queryKey: ["services"] }); };
+  const toggle = async (service: Service) => { const { error } = await supabase.from("services").update({ active: !service.active }).eq("id", service.id); if (error) { toast.error(error.message); return; } await qc.invalidateQueries({ queryKey: ["services"] }); };
 
   return <AppShell><Page>
-    <PageHeader title="Services" subtitle="Everything Nia can recommend and book for customers." count={services.data?.length} actions={<Button size="sm" onClick={() => open()}><Plus className="size-3.5"/>New service</Button>} />
+    <PageHeader title="Services" subtitle="Everything Nia can recommend and book for customers." count={services.data?.length ?? 0} actions={<Button size="sm" onClick={() => open()}><Plus className="size-3.5"/>New service</Button>} />
     <div className="flex items-center justify-between gap-3 border-t border-border-subtle pt-4"><div className="relative w-full max-w-md"><Search className="absolute left-2.5 top-2.5 size-3.5 text-tertiary"/><Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search services…" className="pl-8"/></div><Badge variant="green">{(services.data ?? []).filter((s) => s.active).length} bookable</Badge></div>
     <div className="overflow-hidden rounded-lg border border-border bg-panel shadow-xs">
       <div className="hidden grid-cols-[minmax(0,1.4fr)_8rem_8rem_8rem_7rem] border-b border-border-subtle bg-panel-subtle px-4 py-2.5 text-[11px] text-secondary md:grid"><span>Service</span><span>Duration</span><span>Price</span><span>Deposit</span><span>Status</span></div>
