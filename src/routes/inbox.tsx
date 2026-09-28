@@ -18,7 +18,7 @@ import { Tabs } from "@/design-system/components/Tabs";
 import { formatSalonDateTime, money } from "@/lib/time";
 import { sendHumanReply, setHandlingMode } from "@/lib/concierge.functions";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/inbox")({
   head: () => ({
     meta: [
       { title: "Inbox — Pingbase" },
