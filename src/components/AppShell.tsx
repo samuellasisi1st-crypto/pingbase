@@ -23,7 +23,7 @@ const FOOT = [
 ] as const;
 
 const itemCls =
-  "flex h-8 items-center gap-2 rounded-lg border border-transparent px-2.5 text-[12px] font-medium text-secondary transition-colors hover:bg-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+  "flex h-8 items-center gap-2 rounded-lg border border-transparent px-2.5 text-[12px] font-normal text-secondary transition-colors hover:bg-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 const activeCls = "border-border bg-panel font-normal text-foreground shadow-xs";
 
 export function AppShell({
