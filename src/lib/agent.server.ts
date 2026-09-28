@@ -809,6 +809,33 @@ export function buildTools(ctx: Ctx) {
   };
 }
 
+/** Pick the agent for a conversation: pinned agent → channel match → default → first. */
+export async function resolveAgentForConversation(workspaceId: string, conversationId: string) {
+  const db = supabaseAdmin;
+  const [{ data: conv }, { data: agents }] = await Promise.all([
+    db.from("conversations").select("agent_id,channel").eq("id", conversationId).maybeSingle(),
+    db.from("ai_agents").select("*").eq("workspace_id", workspaceId).eq("enabled", true).order("created_at"),
+  ]);
+  const list = agents ?? [];
+  const picked =
+    list.find((a) => a.id === conv?.agent_id) ??
+    list.find((a) => conv?.channel && (a.channels ?? []).includes(conv.channel)) ??
+    list.find((a) => a.is_default) ??
+    list[0];
+  if (!picked) return null;
+  if (conv && conv.agent_id !== picked.id) {
+    await db.from("conversations").update({ agent_id: picked.id }).eq("id", conversationId);
+  }
+  return {
+    id: picked.id,
+    agent_name: picked.name,
+    tone: picked.tone,
+    instructions: [picked.purpose ? `Your role: ${picked.purpose}.` : "", picked.instructions].filter(Boolean).join("\n"),
+    escalation_rules: picked.escalation_rules,
+    forbidden_topics: picked.forbidden_topics,
+  };
+}
+
 export async function runAgent(ctx: Ctx): Promise<string> {
   const db = supabaseAdmin;
   const apiKey = process.env["LOVABLE_API_KEY"];
