@@ -74,21 +74,21 @@ function ContactsPage() {
           subtitle={`${list.length} people · one profile per person across every channel`}
           actions={<><Button variant="secondary" disabled>Export all</Button><Button disabled title="Contacts are created automatically when customers message you"><Plus className="mr-1.5 size-4" />New contact</Button></>}
         />
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-full max-w-md">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border-subtle py-4">
+          <div className="relative w-full max-w-lg">
             <Search className="absolute left-2.5 top-2.5 size-4 text-tertiary" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search for contact…"
-              className="h-9 w-full rounded-md border border-border bg-panel pl-8 pr-2 text-[13px] placeholder:text-tertiary focus:border-primary focus:outline-none" />
+               className="h-10 w-full rounded-lg border border-border bg-panel pl-9 pr-3 text-[13px] shadow-xs placeholder:text-tertiary focus:border-primary focus:outline-none" />
           </div>
-          <Button variant="secondary" size="sm"><Filter className="mr-1.5 size-3.5" />Filter</Button>
-          <Button variant="secondary" size="sm"><Columns3 className="mr-1.5 size-3.5" />View</Button>
+          <div className="flex items-center gap-2"><Button variant="secondary" size="sm"><Filter className="mr-1.5 size-3.5" />Filter</Button>
+          <Button variant="secondary" size="sm"><Columns3 className="mr-1.5 size-3.5" />View</Button></div>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-border">
+        <div className="overflow-hidden rounded-lg border border-border bg-panel shadow-xs">
           <table className="w-full whitespace-nowrap text-left text-[13px]">
             <thead className="border-b border-border bg-panel-subtle text-secondary">
               <tr>
-                <th className="px-4 py-3 font-medium">Name</th>
+                <th className="px-4 py-3 font-semibold">Name</th>
                 <th className="px-4 py-3 font-medium">Conversations</th>
                 <th className="px-4 py-3 font-medium">Email</th>
                 <th className="px-4 py-3 font-medium">Phone</th>
@@ -99,8 +99,8 @@ function ContactsPage() {
             </thead>
             <tbody>
               {list.map((c) => (
-                <tr key={c.id} onClick={() => setSelected(c)} className="cursor-pointer border-b border-border-subtle last:border-0 hover:bg-hover">
-                  <td className="px-4 py-3"><span className="flex items-center gap-2.5"><Avatar name={c.full_name ?? "?"} size="sm" /><span className="font-medium text-foreground">{c.full_name ?? "Unnamed"}</span></span></td>
+                 <tr key={c.id} onClick={() => setSelected(c)} className="cursor-pointer border-b border-border-subtle last:border-0 hover:bg-panel-subtle">
+                   <td className="px-4 py-3.5"><span className="flex items-center gap-2.5"><Avatar name={c.full_name ?? "?"} size="sm" /><span className="font-semibold text-foreground">{c.full_name ?? "Unnamed"}</span></span></td>
                   <td className="px-4 py-3 text-secondary">{c.conversations.length}</td>
                   <td className="px-4 py-3 text-secondary">{c.email ?? "—"}</td>
                   <td className="px-4 py-3 text-secondary">{c.phone ?? "—"}</td>
@@ -119,7 +119,7 @@ function ContactsPage() {
 
       {selected && (
         <div className="fixed inset-0 z-40 flex justify-end bg-foreground/20" onClick={() => setSelected(null)}>
-          <div className="h-full w-full max-w-md overflow-y-auto bg-panel shadow-xl" onClick={(e) => e.stopPropagation()}>
+           <div className="m-2 h-[calc(100%-1rem)] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-panel shadow-lg" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
               <p className="text-[15px] font-semibold">Contact</p>
               <button onClick={() => setSelected(null)} className="rounded p-1 hover:bg-hover"><X className="size-4" /></button>

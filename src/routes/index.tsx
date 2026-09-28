@@ -188,15 +188,15 @@ function InboxPage() {
 
   return (
     <AppShell secondary={secondary}>
-      <div className="grid h-screen grid-cols-1 lg:grid-cols-[22rem_1fr]">
-        <div className="flex min-h-0 flex-col border-r border-border-subtle">
-          <div className="flex items-center justify-between px-4 pb-3 pt-4">
+      <div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-[20rem_1fr]">
+        <div className="flex min-h-0 flex-col border-r border-border-subtle bg-panel-subtle">
+          <div className="flex items-center justify-between px-5 pb-3 pt-5">
             <p className="text-[15px] font-semibold text-foreground">
               {channel ? CH_LABEL[channel] : VIEWS.find((x) => x.v === view)?.label}{" "}
               <span className="text-[13px] font-normal text-tertiary">{list.length}</span>
             </p>
             <a href="/chat" target="_blank" rel="noreferrer" aria-label="New test conversation"
-              className="grid size-8 place-items-center rounded-full bg-primary text-panel shadow-control hover:bg-primary-hover">
+              className="grid size-8 place-items-center rounded-lg bg-primary text-panel shadow-control hover:bg-primary-hover">
               <Plus className="size-4" />
             </a>
           </div>
@@ -204,7 +204,7 @@ function InboxPage() {
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 size-4 text-tertiary" />
               <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search conversations…"
-                className="h-9 w-full rounded-md border border-border bg-panel pl-8 pr-2 text-[13px] placeholder:text-tertiary focus:border-primary focus:outline-none" />
+                 className="h-9 w-full rounded-lg border border-border bg-panel pl-8 pr-2 text-[13px] shadow-xs placeholder:text-tertiary focus:border-primary focus:outline-none" />
             </div>
             <div className="mt-2 flex items-center justify-between">
               <Tabs value={tab} onChange={setTab} items={[{ value: "open", label: "Open" }, { value: "snoozed", label: "Paused" }, { value: "done", label: "Done" }]} />
@@ -229,7 +229,7 @@ function InboxPage() {
               const selected = activeId === c.id;
               return (
                 <button key={c.id} onClick={() => setActiveId(c.id)}
-                  className={`flex w-full gap-3 border-b border-border-subtle px-4 py-3 text-left transition-colors ${selected ? "bg-selected" : "hover:bg-hover"}`}>
+                   className={`flex w-full gap-3 border-b border-border-subtle px-5 py-3.5 text-left transition-colors ${selected ? "bg-panel shadow-[inset_3px_0_0_var(--action-primary)]" : "hover:bg-hover"}`}>
                   <span className="relative shrink-0">
                     <Avatar name={name} size="lg" />
                     <span className={`absolute -bottom-0.5 -right-0.5 size-3 rounded-full border-2 border-panel ${CH_DOT[c.channel] ?? "bg-gray-400"}`} />
@@ -340,7 +340,7 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
   return (
     <div className="grid min-h-0 grid-cols-1 xl:grid-cols-[1fr_20rem]">
       <div className="flex min-h-0 flex-col">
-        <div className="flex h-[68px] items-center justify-between gap-2 border-b border-border-subtle px-5">
+        <div className="flex h-16 items-center justify-between gap-2 border-b border-border-subtle px-6">
           <div className="flex min-w-0 items-center gap-3">
             <Avatar name={name} size="md" />
             <div className="min-w-0">
@@ -350,7 +350,7 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
           </div>
           <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
             <AIHandlingPill state={pill} />
-            <button title="Pause AI" onClick={() => mode.mutate("PAUSED")} className="rounded-md p-2 text-secondary hover:bg-hover"><Clock className="size-4" /></button>
+             <Button title="Pause AI" aria-label="Pause AI" size="sm" variant="tertiary" onClick={() => mode.mutate("PAUSED")}><Clock className="size-4" /></Button>
             {c.handling_mode !== "HUMAN" && (
               <Button size="sm" variant="secondary" onClick={() => mode.mutate("HUMAN")}><Users className="mr-1.5 size-3.5" />Take over</Button>
             )}
@@ -361,14 +361,14 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
         </div>
 
         {openHandoff && (
-          <div className="border-b border-border-subtle bg-yellow-soft px-5 py-3 text-[13px]">
+          <div className="mx-6 mt-4 rounded-lg border border-yellow-strong/25 bg-yellow-soft px-4 py-3 text-[13px]">
             <p className="flex items-center gap-2 font-semibold text-foreground"><AlertTriangle className="size-4" /> Handed over: {openHandoff.reason}</p>
             <p className="mt-1 text-secondary">{openHandoff.summary}</p>
             {openHandoff.recommended_action && <p className="mt-1 text-secondary">Suggested: {openHandoff.recommended_action}</p>}
           </div>
         )}
 
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-6 py-5">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-8 py-6">
           {detail.data.messages.map((m) => {
             const day = new Date(m.created_at).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/London" });
             const showDay = day !== lastDay;
@@ -381,7 +381,7 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
                   <p className="flex items-center gap-2 text-[12px] text-secondary"><Bot className="size-3.5 text-primary" /> {m.body}</p>
                 ) : (
                   <div className={m.direction === "outbound" ? "flex justify-end" : "flex justify-start"}>
-                    <div className={`max-w-[70%] rounded-xl px-4 py-2.5 text-[14px] ${m.direction === "outbound" ? "bg-cyan-soft text-foreground" : "bg-hover text-foreground"}`}>
+                     <div className={`max-w-[72%] rounded-xl border px-4 py-2.5 text-[14px] shadow-xs ${m.direction === "outbound" ? "border-outbound-border bg-outbound text-foreground" : "border-border-subtle bg-panel-subtle text-foreground"}`}>
                       <p className="whitespace-pre-wrap">{m.body}</p>
                       <p className="mt-1 text-right text-[11px] text-tertiary">
                         {time}{m.direction === "outbound" && ` · ${m.sender_type === "AI" ? "Nia" : m.sender_name ?? "Team"}`}
@@ -395,11 +395,11 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
         </div>
 
         <form className="p-4" onSubmit={(e) => { e.preventDefault(); if (draft.trim()) reply.mutate(draft.trim()); }}>
-          <div className="rounded-xl border border-border bg-panel shadow-xs focus-within:border-primary">
+           <div className="rounded-lg border border-border bg-panel shadow-sm focus-within:border-primary">
             <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={2}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (draft.trim()) reply.mutate(draft.trim()); } }}
               placeholder={c.handling_mode === "AI" ? `Reply to ${name}… (this takes the conversation off Nia)` : `Reply to ${name}…`}
-              className="block w-full resize-none rounded-t-xl bg-transparent px-4 py-3 text-[14px] placeholder:text-tertiary focus:outline-none" />
+               className="block w-full resize-none rounded-t-lg bg-transparent px-4 py-3 text-[14px] placeholder:text-tertiary focus:outline-none" />
             <div className="flex items-center justify-between border-t border-border-subtle px-3 py-2">
               <div className="flex gap-1 text-secondary">
                 {[Paperclip, Smile, CalendarDays, Wand].map((I, i) => <span key={i} className="rounded p-1.5 hover:bg-hover"><I className="size-4" /></span>)}
@@ -411,7 +411,7 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
       </div>
 
       <aside className="hidden min-h-0 overflow-y-auto border-l border-border-subtle xl:block">
-        <div className="flex h-[68px] items-center border-b border-border-subtle px-5 text-[15px] font-semibold text-foreground">Customer</div>
+         <div className="flex h-16 items-center border-b border-border-subtle px-5 text-[15px] font-semibold text-foreground">Customer</div>
         <div className="flex items-center gap-3 border-b border-border-subtle px-5 py-4">
           <Avatar name={name} size="lg" />
           <div><p className="text-[15px] font-semibold text-foreground">{name}</p><p className="text-[12px] text-secondary">{CH_LABEL[c.channel]}</p></div>
