@@ -4,6 +4,8 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useNavigate,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -14,7 +16,21 @@ import { Toaster } from "../components/ui/sonner";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 
+// Some clients (and old bookmarks) land on "/index" instead of "/". That path
+// has no route, so send it home instead of showing a 404.
+const HOME_ALIASES = ["/index", "/index/", "/index.html", "/home", "/dashboard"];
+
 function NotFoundComponent() {
+  const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isHomeAlias = HOME_ALIASES.includes(pathname.toLowerCase());
+
+  useEffect(() => {
+    if (isHomeAlias) navigate({ to: "/", replace: true });
+  }, [isHomeAlias, navigate]);
+
+  if (isHomeAlias) return null;
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -35,6 +51,7 @@ function NotFoundComponent() {
     </div>
   );
 }
+
 
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
