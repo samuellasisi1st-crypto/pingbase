@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bot, CalendarHandshake, Save, ShieldCheck } from "lucide-react";
+import { Bot, CalendarCheck, Handshake, Save, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell, Page, PageHeader } from "@/components/AppShell";
 import { Badge, Button, Card, Input, Select, Switch, Textarea } from "@/design-system";
