@@ -8,7 +8,7 @@ import { Badge, Button, Card } from "@/design-system";
 import { supabase } from "@/integrations/supabase/client";
 import { getGoogleCalendarStatus } from "@/lib/channels.functions";
 import { formatSalonTime, money } from "@/lib/time";
-import dashboardSculpture from "@/assets/dashboard-sculpture.png";
+import dashboardSculpture from "@/assets/dashboard-glass-sculpture.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -121,7 +121,7 @@ function Dashboard() {
         <div className="grid items-stretch gap-4 lg:grid-cols-12">
           <div className="grid gap-4 lg:col-span-8">
           <section className="relative overflow-hidden rounded-xl border border-border bg-panel-subtle">
-            <img src={dashboardSculpture} width={1024} height={768} alt="" aria-hidden className="pointer-events-none absolute -bottom-8 -right-12 hidden h-[115%] w-[52%] object-contain object-bottom opacity-95 md:block dark:brightness-[.72] dark:saturate-[.7]" />
+            <img src={dashboardSculpture} width={1024} height={768} alt="" aria-hidden className="pointer-events-none absolute -bottom-9 -right-8 hidden h-[118%] w-[54%] object-contain object-bottom opacity-95 md:block dark:brightness-[.78] dark:saturate-[.82]" />
             <div className="relative flex min-h-[310px] flex-col justify-center gap-4 p-6 md:max-w-[58%] md:p-9">
               {focus ? (
                 <>
@@ -159,16 +159,16 @@ function Dashboard() {
           <Card className="flex h-full flex-col p-5 lg:col-span-4">
             <div className="flex items-start justify-between gap-3">
               <div><p className="text-[11px] uppercase tracking-wide text-tertiary">Revenue this week</p><p className="mt-2 text-3xl text-foreground">{money(weekRevenue)}</p></div>
-              <div className="grid size-9 place-items-center rounded-lg bg-berry-soft text-primary"><CreditCard className="size-4" /></div>
+              <div className="grid size-9 place-items-center rounded-lg bg-blue-soft text-primary"><CreditCard className="size-4" /></div>
             </div>
             <p className="mt-1 text-[12px] text-secondary">From {bookedWeek} completed or active booking{bookedWeek === 1 ? "" : "s"}</p>
             <div className="mt-6 flex h-2 overflow-hidden rounded-full bg-hover">
-              {topRevenue.map(([service, amount], index) => <span key={service} className={index === 0 ? "bg-primary" : index === 1 ? "bg-berry-mid" : index === 2 ? "bg-yellow-strong" : "bg-green-strong"} style={{ width: `${weekRevenue ? (amount / weekRevenue) * 100 : 0}%` }} />)}
+              {topRevenue.map(([service, amount], index) => <span key={service} className={index === 0 ? "bg-primary" : index === 1 ? "bg-blue-mid" : index === 2 ? "bg-cyan-mid" : "bg-green-strong"} style={{ width: `${weekRevenue ? (amount / weekRevenue) * 100 : 0}%` }} />)}
             </div>
             <div className="mt-5 flex-1 divide-y divide-border-subtle">
               {topRevenue.length === 0 && <p className="py-5 text-[12px] text-secondary">Revenue from this week's appointments will appear here.</p>}
               {topRevenue.map(([service, amount], index) => (
-                <div key={service} className="flex items-center gap-2 py-2.5 text-[12px]"><span className={`size-2 rounded-full ${index === 0 ? "bg-primary" : index === 1 ? "bg-berry-mid" : index === 2 ? "bg-yellow-strong" : "bg-green-strong"}`} /><span className="min-w-0 flex-1 truncate text-secondary">{service}</span><span className="text-foreground">{money(amount)}</span><span className="w-9 text-right text-tertiary">{weekRevenue ? Math.round((amount / weekRevenue) * 100) : 0}%</span></div>
+                <div key={service} className="flex items-center gap-2 py-2.5 text-[12px]"><span className={`size-2 rounded-full ${index === 0 ? "bg-primary" : index === 1 ? "bg-blue-mid" : index === 2 ? "bg-cyan-mid" : "bg-green-strong"}`} /><span className="min-w-0 flex-1 truncate text-secondary">{service}</span><span className="text-foreground">{money(amount)}</span><span className="w-9 text-right text-tertiary">{weekRevenue ? Math.round((amount / weekRevenue) * 100) : 0}%</span></div>
               ))}
             </div>
           </Card>
