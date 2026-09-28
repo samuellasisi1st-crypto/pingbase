@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   AlertTriangle, Bot, Search, Plus, Filter, SlidersHorizontal, Inbox as InboxIcon, UserCheck, UserX,
-  MailOpen, CalendarClock, CreditCard, CheckCircle2, Paperclip, Smile, CalendarDays, Sparkles as Wand, Send, Clock, Users, PanelRightOpen, X,
+  MailOpen, CalendarClock, CreditCard, CheckCircle2, Paperclip, Smile, CalendarDays, Sparkles as Wand, Send, Clock, Users, PanelRightOpen, PanelLeftClose, PanelLeftOpen, X,
 } from "lucide-react";
 
 import { AppShell, SideItem, SideLabel } from "@/components/AppShell";
@@ -84,6 +84,7 @@ function InboxPage() {
   const [tab, setTab] = useState("open");
   const [q, setQ] = useState("");
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [viewsOpen, setViewsOpen] = useState(true);
 
   const conversations = useQuery({
     queryKey: ["conversations"],
@@ -183,14 +184,19 @@ function InboxPage() {
   );
 
   return (
-    <AppShell secondary={secondary}>
+    <AppShell secondary={secondary} secondaryOpen={viewsOpen}>
       <div className="grid h-full min-h-0 min-w-0 grid-cols-1 overflow-x-hidden lg:grid-cols-[minmax(16rem,18rem)_minmax(0,1fr)]">
-        <div className="flex min-h-0 flex-col border-r border-border-subtle bg-panel-subtle">
+        <div className="flex min-h-0 flex-col border-r border-border-subtle bg-panel">
           <div className="flex items-center justify-between px-5 pb-3 pt-5">
-            <p className="text-[15px] font-semibold text-foreground">
-              {channel ? CH_LABEL[channel] : VIEWS.find((x) => x.v === view)?.label}{" "}
-              <span className="text-[13px] font-normal text-tertiary">{list.length}</span>
-            </p>
+            <div className="flex min-w-0 items-center gap-1.5">
+              <Button type="button" title={viewsOpen ? "Collapse inbox views" : "Expand inbox views"} aria-label={viewsOpen ? "Collapse inbox views" : "Expand inbox views"} size="sm" variant="tertiary" className="px-1.5" onClick={() => setViewsOpen((open) => !open)}>
+                {viewsOpen ? <PanelLeftClose className="size-4" /> : <PanelLeftOpen className="size-4" />}
+              </Button>
+              <p className="truncate text-[15px] font-semibold text-foreground">
+                {channel ? CH_LABEL[channel] : VIEWS.find((x) => x.v === view)?.label}{" "}
+                <span className="text-[13px] font-normal text-tertiary">{list.length}</span>
+              </p>
+            </div>
             <a href="/chat" target="_blank" rel="noreferrer" aria-label="New test conversation"
               className="grid size-8 place-items-center rounded-lg bg-primary text-panel shadow-control hover:bg-primary-hover">
               <Plus className="size-4" />
@@ -335,9 +341,9 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
   let lastDay = "";
 
   return (
-    <div className={`grid min-h-0 min-w-0 grid-cols-1 overflow-x-hidden ${customerOpen ? "xl:grid-cols-[minmax(0,1fr)_18rem]" : ""}`}>
+    <div className={`grid min-h-0 min-w-0 grid-cols-1 overflow-x-hidden bg-panel-subtle ${customerOpen ? "xl:grid-cols-[minmax(0,1fr)_18rem]" : ""}`}>
       <div className="flex min-h-0 min-w-0 flex-col">
-        <div className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-border-subtle px-4 py-2">
+        <div className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-border-subtle bg-panel px-4 py-2">
           <div className="flex min-w-0 items-center gap-3">
             <Avatar name={name} size="md" />
             <div className="min-w-0">
@@ -392,7 +398,7 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
           })}
         </div>
 
-        <form className="p-4" onSubmit={(e) => { e.preventDefault(); if (draft.trim()) reply.mutate(draft.trim()); }}>
+        <form className="bg-panel-subtle p-4" onSubmit={(e) => { e.preventDefault(); if (draft.trim()) reply.mutate(draft.trim()); }}>
            <div className="rounded-lg border border-border bg-panel shadow-sm focus-within:border-primary">
             <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={2}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (draft.trim()) reply.mutate(draft.trim()); } }}
@@ -408,7 +414,7 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
         </form>
       </div>
 
-      {customerOpen && <aside className="hidden min-h-0 overflow-y-auto border-l border-border-subtle xl:block">
+      {customerOpen && <aside className="hidden min-h-0 overflow-y-auto border-l border-border-subtle bg-panel xl:block">
          <div className="flex h-14 items-center justify-between border-b border-border-subtle px-4 text-[14px] font-semibold text-foreground">Customer<Button title="Close customer details" aria-label="Close customer details" size="sm" variant="tertiary" onClick={() => setCustomerOpen(false)}><X className="size-4" /></Button></div>
         <div className="flex items-center gap-3 border-b border-border-subtle px-5 py-4">
           <Avatar name={name} size="lg" />

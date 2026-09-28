@@ -39,15 +39,17 @@ export function AppShell({
   children,
   title,
   secondary,
+  secondaryOpen: controlledSecondaryOpen,
 }: {
   children: ReactNode;
   title?: string;
   secondary?: ReactNode;
+  secondaryOpen?: boolean;
 }) {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
   const [navOpen, setNavOpen] = useState(false);
-  const [secondaryOpen, setSecondaryOpen] = useState(true);
+  const secondaryOpen = controlledSecondaryOpen ?? true;
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth" });
@@ -92,6 +94,10 @@ export function AppShell({
               <i.icon className="size-3.5 shrink-0" aria-hidden="true" /> {navOpen && i.label}
             </Link>
           ))}
+          <Button type="button" title={navOpen ? "Collapse navigation" : "Expand navigation"} aria-label={navOpen ? "Collapse navigation" : "Expand navigation"} size="sm" variant="tertiary" className={`w-full ${navOpen ? "justify-start px-2.5" : "px-0"}`} onClick={() => setNavOpen((open) => !open)}>
+            {navOpen ? <PanelLeftClose className="size-3.5" /> : <PanelLeftOpen className="size-3.5" />}
+            {navOpen && <span>Collapse</span>}
+          </Button>
           <div className={`mt-2 flex items-center border-t border-border-subtle pt-2 ${navOpen ? "gap-2 px-1" : "flex-col gap-1"}`}>
             <Link to="/profile" title="My profile" className={`flex min-w-0 items-center rounded-lg p-1 hover:bg-hover ${navOpen ? "flex-1 gap-2" : "justify-center"}`}>
               <Avatar name={email} size="sm" />
@@ -110,20 +116,11 @@ export function AppShell({
             </button>}
           </div>
         </nav>
-        <Button type="button" title={navOpen ? "Collapse navigation" : "Expand navigation"} aria-label={navOpen ? "Collapse navigation" : "Expand navigation"} size="sm" variant="tertiary" className="mt-2 w-full" onClick={() => setNavOpen((open) => !open)}>
-          {navOpen ? <PanelLeftClose className="size-3.5" /> : <PanelLeftOpen className="size-3.5" />}
-        </Button>
       </aside>
 
-      {secondary && (
-        secondaryOpen ? <aside aria-label="Views" className="hidden w-52 shrink-0 flex-col overflow-y-auto border-y border-r border-border-subtle bg-panel-subtle px-2.5 py-3 lg:flex">
-          <div className="mb-2 flex items-center justify-between px-2">
-            <p className="text-[12px] font-semibold text-secondary">Inbox</p>
-            <Button type="button" title="Collapse inbox views" aria-label="Collapse inbox views" size="sm" variant="tertiary" onClick={() => setSecondaryOpen(false)}><PanelLeftClose className="size-3.5" /></Button>
-          </div>
+      {secondary && secondaryOpen && (
+        <aside aria-label="Views" className="hidden w-52 shrink-0 flex-col overflow-y-auto border-y border-r border-border-subtle bg-panel px-2.5 py-3 lg:flex">
           {secondary}
-        </aside> : <aside className="hidden w-10 shrink-0 border-y border-r border-border-subtle bg-panel-subtle pt-3 lg:flex lg:justify-center">
-          <Button type="button" title="Expand inbox views" aria-label="Expand inbox views" size="sm" variant="tertiary" onClick={() => setSecondaryOpen(true)}><PanelLeftOpen className="size-3.5" /></Button>
         </aside>
       )}
 
