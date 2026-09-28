@@ -68,6 +68,8 @@
  * single source of truth for colour, radius, shadow and spacing.
  */
 :root {
+  /* Darker app canvas so the side nav sits a step below the page container. */
+  --bg-app: #dfe2e8;
   --radius: var(--radius-xl);
   --background: var(--bg-app);
   --foreground: var(--text-primary);

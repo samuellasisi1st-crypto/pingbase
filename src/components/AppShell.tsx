@@ -56,7 +56,7 @@ export function AppShell({
   return (
     <div className="flex h-dvh overflow-hidden bg-app p-2">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-panel focus:px-3 focus:py-2 focus:text-sm">Skip to content</a>
-      <aside className={`hidden shrink-0 flex-col rounded-l-xl border border-border-subtle bg-panel py-3 transition-[width] md:flex ${navOpen ? "w-52 px-2.5" : "w-12 px-1.5"}`}>
+      <aside className={`hidden shrink-0 flex-col bg-transparent py-3 pr-2 transition-[width] md:flex ${navOpen ? "w-52 pl-1.5" : "w-14 pl-1.5"}`}>
         <div className={`mb-3 flex items-center ${navOpen ? "gap-1" : "justify-center"}`}>
           <button title="Switch workspace" className={`flex min-w-0 items-center rounded-lg border border-border bg-panel text-left shadow-xs hover:bg-hover ${navOpen ? "flex-1 gap-2 p-1.5" : "p-1"}`}>
           <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-foreground text-[12px] font-bold text-panel">P</span>
@@ -110,22 +110,24 @@ export function AppShell({
         </nav>
       </aside>
 
-      {secondary && secondaryOpen && (
-        <aside aria-label="Views" className="hidden w-52 shrink-0 flex-col overflow-y-auto border-y border-r border-border-subtle bg-panel px-2.5 py-3 lg:flex">
-          {secondary}
-        </aside>
-      )}
-
-      <main id="main" className="min-w-0 flex-1 overflow-y-auto rounded-r-xl border-y border-r border-border-subtle bg-panel shadow-xs">
-        {title ? (
-          <div className="px-8 pb-8 pt-5">
-            <h1 className="flex h-10 items-center text-2xl font-semibold text-foreground">{title}</h1>
-            <div className="mt-6">{children}</div>
-          </div>
-        ) : (
-          children
+      <div className="flex min-w-0 flex-1 overflow-hidden rounded-xl border border-border-subtle bg-panel shadow-sm">
+        {secondary && secondaryOpen && (
+          <aside aria-label="Views" className="hidden w-52 shrink-0 flex-col overflow-y-auto border-r border-border-subtle bg-panel px-2.5 py-3 lg:flex">
+            {secondary}
+          </aside>
         )}
-      </main>
+
+        <main id="main" className="min-w-0 flex-1 overflow-y-auto bg-panel">
+          {title ? (
+            <div className="px-8 pb-8 pt-5">
+              <h1 className="flex h-10 items-center text-2xl font-semibold text-foreground">{title}</h1>
+              <div className="mt-6">{children}</div>
+            </div>
+          ) : (
+            children
+          )}
+        </main>
+      </div>
     </div>
   );
 }
