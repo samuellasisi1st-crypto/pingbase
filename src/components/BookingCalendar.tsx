@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState , useEffect, useRef} from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button, Tabs } from "@/design-system";
@@ -8,7 +8,7 @@ import { formatSalonTime, zonedParts, zonedToUtc } from "@/lib/time";
 export type CalItem = { id: string; starts_at: string; ends_at: string; status: string; service: { name: string } | null; staff: { name: string } | null; contact: { full_name: string | null } | null };
 type View = "day" | "week" | "month";
 
-const HOUR_START = 7, HOUR_END = 21, ROW = 48; // px per hour
+const HOUR_START = 0, HOUR_END = 24, ROW = 60; // px per hour
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 /** Calendar days as London-local {y,m,d} anchored at noon UTC-ish to avoid DST slips. */
@@ -28,6 +28,8 @@ export function BookingCalendar({ items, onSelect, toolbarLeft }: { items: CalIt
   const today = useMemo(() => { const p = zonedParts(new Date()); return mkDay(p.year, p.month, p.day); }, []);
   const [view, setView] = useState<View>(() => (typeof window !== "undefined" && window.innerWidth < 768 ? "day" : "week"));
   const [anchor, setAnchor] = useState<Day>(today);
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (view !== "month" && scroller.current) scroller.current.scrollTop = 7 * ROW; }, [view]);
 
   const days = useMemo(() => {
     if (view === "day") return [anchor];
@@ -40,7 +42,8 @@ export function BookingCalendar({ items, onSelect, toolbarLeft }: { items: CalIt
   const busy = useQuery({ queryKey: ["calendar-busy", range.fromISO, range.toISO], queryFn: () => calendarBusy({ data: range }), staleTime: 60_000 });
 
   const step = (dir: number) => setAnchor(view === "day" ? addDays(anchor, dir) : view === "week" ? addDays(anchor, 7 * dir) : mkDay(anchor.m + dir > 12 ? anchor.y + 1 : anchor.m + dir < 1 ? anchor.y - 1 : anchor.y, ((anchor.m + dir + 11) % 12) + 1, 1));
-  const title = new Intl.DateTimeFormat("en-GB", view === "day" ? { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" } : { month: "long", year: "numeric", timeZone: "Europe/London" }).format(zonedToUtc(anchor.y, anchor.m, anchor.d, 12, 0));
+  const fmt = (d: Day, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-GB", { ...o, timeZone: "Europe/London" }).format(zonedToUtc(d.y, d.m, d.d, 12, 0));
+  const title = view === "week" ? `${fmt(days[0]!, days[0]!.m === days[6]!.m ? { day: "numeric" } : { day: "numeric", month: "short" })} – ${fmt(days[6]!, { day: "numeric", month: "short", year: "numeric" })}` : new Intl.DateTimeFormat("en-GB", view === "day" ? { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "Europe/London" } : { month: "long", year: "numeric", timeZone: "Europe/London" }).format(zonedToUtc(anchor.y, anchor.m, anchor.d, 12, 0));
 
   const byDay = useMemo(() => items.reduce<Record<string, CalItem[]>>((acc, a) => { (acc[keyOf(a.starts_at)] ??= []).push(a); return acc; }, {}), [items]);
   const hours = busy.data?.hours ?? {};
@@ -56,7 +59,7 @@ export function BookingCalendar({ items, onSelect, toolbarLeft }: { items: CalIt
           <Button variant="secondary" size="sm" onClick={() => setAnchor(today)}>Today</Button>
           <Button variant="secondary" size="sm" title="Previous" onClick={() => step(-1)}><ChevronLeft className="size-3.5" /></Button>
           <Button variant="secondary" size="sm" title="Next" onClick={() => step(1)}><ChevronRight className="size-3.5" /></Button>
-          <span className="min-w-0 truncate px-1 text-[13px] text-foreground">{title}</span>
+          <span className="min-w-0 truncate px-1 text-title font-semibold text-foreground">{title}</span>
           <Tabs items={[{ value: "day", label: "Day" }, { value: "week", label: "Week" }, { value: "month", label: "Month" }]} value={view} onChange={(v) => setView(v as View)} variant="segmented" size="sm" />
         </div>
       </div>
@@ -70,13 +73,13 @@ export function BookingCalendar({ items, onSelect, toolbarLeft }: { items: CalIt
       {busy.data?.error && <p className="flex items-center gap-2 rounded-lg border border-border bg-red-soft px-3 py-2 text-[12px] text-red-strong"><AlertTriangle className="size-3.5" />Google Calendar couldn't be read, so busy times may be missing: {busy.data.error}</p>}
 
       {view === "month" ? (
-        <div className="overflow-hidden rounded-lg border border-border bg-panel shadow-xs">
+        <div className="flex h-[calc(100dvh-240px)] min-h-[420px] flex-col overflow-hidden rounded-xl border border-border bg-panel shadow-xs">
           <div className="grid grid-cols-7 border-b border-border-subtle bg-panel-subtle">{WEEKDAYS.map((d) => <span key={d} className="px-2 py-2 text-[10px] uppercase text-tertiary">{d}</span>)}</div>
-          <div className="grid grid-cols-7">
+          <div className="grid flex-1 grid-cols-7 grid-rows-6">
             {days.map((d) => {
               const rows = byDay[d.key] ?? []; const g = googleFor(d); const inMonth = d.m === anchor.m; const shut = closed(d) || offFor(d).length > 0;
               return (
-                <button key={d.key} type="button" onClick={() => { setAnchor(d); setView("day"); }} className={`min-h-16 min-w-0 border-b border-r border-border-subtle p-1 text-left sm:min-h-24 sm:p-1.5 [&:nth-child(7n)]:border-r-0 ${shut ? "bg-hover" : inMonth ? "bg-panel" : "bg-panel-subtle"} hover:bg-hover`}>
+                <button key={d.key} type="button" onClick={() => { setAnchor(d); setView("day"); }} className={`min-h-0 min-w-0 overflow-hidden border-b border-r border-border-subtle p-1 text-left sm:min-h-24 sm:p-1.5 [&:nth-child(7n)]:border-r-0 ${shut ? "bg-hover" : inMonth ? "bg-panel" : "bg-panel-subtle"} hover:bg-hover`}>
                   <span className={`inline-grid size-5 place-items-center rounded-full text-[11px] ${d.key === today.key ? "bg-primary text-white" : inMonth ? "text-foreground" : "text-tertiary"}`}>{d.d}</span>
                   <div className="mt-1 grid gap-0.5">
                     {g.length > 0 && <span className="busy-stripes truncate rounded px-1 py-0.5 text-[10px] text-secondary">{g.length} busy</span>}
@@ -89,19 +92,19 @@ export function BookingCalendar({ items, onSelect, toolbarLeft }: { items: CalIt
           </div>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-border bg-panel shadow-xs">
+        <div className="overflow-hidden rounded-xl border border-border bg-panel shadow-xs">
           <div className="grid border-b border-border-subtle bg-panel-subtle" style={{ gridTemplateColumns: `3.25rem repeat(${days.length}, minmax(0,1fr))` }}>
             <span />
             {days.map((d) => (
-              <button key={d.key} type="button" onClick={() => { setAnchor(d); setView("day"); }} className="flex flex-col items-center gap-0.5 border-l border-border-subtle py-2 hover:bg-hover">
+              <button key={d.key} type="button" onClick={() => { setAnchor(d); setView("day"); }} className="flex flex-col items-center gap-0.5 border-l border-border-subtle py-2.5 hover:bg-hover">
                 <span className="text-[10px] uppercase text-tertiary">{WEEKDAYS[mondayIndex(d.wd)]}</span>
-                <span className={`grid size-6 place-items-center rounded-full text-[12px] ${d.key === today.key ? "bg-primary text-white" : "text-foreground"}`}>{d.d}</span>
+                <span className={`grid size-7 place-items-center rounded-full text-[13px] ${d.key === today.key ? "bg-primary text-white" : "text-foreground"}`}>{d.d}</span>
               </button>
             ))}
           </div>
-          <div className="max-h-[68vh] overflow-y-auto">
+          <div ref={scroller} className="h-[calc(100dvh-240px)] min-h-[420px] overflow-y-auto">
             <div className="relative grid" style={{ gridTemplateColumns: `3.25rem repeat(${days.length}, minmax(0,1fr))`, height: (HOUR_END - HOUR_START) * ROW }}>
-              <div className="relative">{Array.from({ length: HOUR_END - HOUR_START }, (_, i) => <span key={i} className="absolute right-2 -translate-y-1/2 text-[10px] text-tertiary" style={{ top: i * ROW }}>{i === 0 ? "" : `${String(HOUR_START + i).padStart(2, "0")}:00`}</span>)}</div>
+              <div className="relative">{Array.from({ length: HOUR_END - HOUR_START }, (_, i) => <span key={i} className="absolute right-2 -translate-y-1/2 text-[10px] text-tertiary" style={{ top: i * ROW }}>{i === 0 ? "" : `${(HOUR_START + i) % 12 || 12}${HOUR_START + i < 12 ? "am" : "pm"}`}</span>)}</div>
               {days.map((d) => {
                 const open = hours[String(d.wd)];
                 const toMin = (s: string) => { const [h = 0, m = 0] = s.split(":").map(Number); return h * 60 + m; };
