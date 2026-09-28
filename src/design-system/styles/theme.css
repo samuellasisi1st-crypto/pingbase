@@ -13,7 +13,7 @@
   --yellow-50:#fffbed; --yellow-100:#fff4c7; --yellow-200:#ffeaa0; --yellow-400:#f7cd51; --yellow-500:#eab72d;
   --red-50:#fff3f2; --red-100:#ffe1df; --red-500:#ea4e48; --red-600:#cf3d38;
   --channel-whatsapp:#25d366; --channel-instagram:#e1306c; --channel-facebook:#1877f2; --channel-telegram:#2aabee; --channel-email:#ea4335; --channel-outlook:#0078d4;
-  --bg-app:var(--gray-50); --bg-shell:var(--gray-75); --bg-panel:var(--white); --bg-panel-subtle:var(--gray-25); --bg-hover:var(--gray-75); --bg-active-neutral:var(--gray-100); --bg-selected:#e8f7fd;
+  --bg-app:var(--gray-100); --bg-shell:var(--gray-75); --bg-panel:var(--white); --bg-panel-subtle:var(--gray-25); --bg-hover:var(--gray-75); --bg-active-neutral:var(--gray-100); --bg-selected:#e8f7fd;
   --text-primary:var(--gray-900); --text-secondary:var(--gray-600); --text-tertiary:var(--gray-500); --text-disabled:var(--gray-400);
   --border-default:var(--gray-200); --border-subtle:var(--gray-150); --border-strong:var(--gray-300);
   --action-primary:var(--cyan-500); --action-primary-hover:var(--cyan-600); --action-primary-pressed:var(--cyan-700); --focus-ring:rgba(32,181,237,.22);

@@ -366,7 +366,7 @@ function ConversationPane({ conversationId, onBack }: { conversationId: string; 
           </div>
         )}
 
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 sm:px-8 sm:py-6">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto bg-app px-4 py-4 sm:px-8 sm:py-6">
           {detail.data.messages.map((m) => {
             const day = new Date(m.created_at).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/London" });
             const showDay = day !== lastDay;
