@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar } from "@/design-system/components/Avatar";
 import { Button } from "@/design-system/components/Button";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const NAV = [
   { to: "/", label: "Inbox", icon: Inbox },
@@ -98,6 +99,7 @@ export function AppShell({
               <i.icon className="size-3.5 shrink-0" aria-hidden="true" /> {navOpen && i.label}
             </Link>
           ))}
+          <ThemeToggle expanded={navOpen} />
           <Button type="button" title={navOpen ? "Collapse navigation" : "Expand navigation"} aria-label={navOpen ? "Collapse navigation" : "Expand navigation"} size="sm" variant="tertiary" className={`w-full ${navOpen ? "justify-start px-2.5" : "px-0"}`} onClick={() => setNavOpen((open) => !open)}>
             {navOpen ? <PanelLeftClose className="size-3.5" /> : <PanelLeftOpen className="size-3.5" />}
             {navOpen && <span>Collapse</span>}
