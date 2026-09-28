@@ -51,7 +51,7 @@ function AgentDetail() {
       escalation_rules: form.escalation_rules, forbidden_topics: form.forbidden_topics, channels: form.channels, is_default: form.is_default, enabled: form.enabled,
     }).eq("id", form.id);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success(`${form.name} saved`);
     await qc.invalidateQueries({ queryKey: ["ai-agents"] });
     await qc.invalidateQueries({ queryKey: ["ai-agent", agentId] });
@@ -59,7 +59,7 @@ function AgentDetail() {
   const remove = async () => {
     if (!form || !confirm(`Delete ${form.name}?`)) return;
     const { error } = await supabase.from("ai_agents").delete().eq("id", form.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await qc.invalidateQueries({ queryKey: ["ai-agents"] });
     void navigate({ to: "/ai-agents" });
   };

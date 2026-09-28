@@ -26,7 +26,7 @@ export function ChatComposerTools({ conversationId, workspaceId, draft, setDraft
 
   const onFile = async (file: File | undefined) => {
     if (!file) return;
-    if (file.size > 16 * 1024 * 1024) return toast.error("Files must be under 16 MB");
+    if (file.size > 16 * 1024 * 1024) { toast.error("Files must be under 16 MB"); return; }
     setUploading(true);
     try {
       const path = `${workspaceId}/${conversationId}/${Date.now()}-${file.name.replace(/[^\w.\-]+/g, "_")}`;

@@ -109,7 +109,7 @@ function AutomationsPage() {
     const { data: m } = await supabase.from("workspace_members").select("workspace_id").limit(1).maybeSingle();
     if (!m) return;
     const { data, error } = await supabase.from("automation_flows").insert({ workspace_id: m.workspace_id, name: "New automation", kind: "custom", ...linear([{ kind: "trigger", event: "booking_confirmed" }]) } as never).select("id").single();
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     await qc.invalidateQueries({ queryKey: ["automation-flows"] });
     setSelectedId(data.id);
   };
@@ -165,14 +165,14 @@ function FlowEditor({ flow, onBack, onSaved, onDeleted }: { flow: Flow; onBack: 
     const clean = nodes.map(({ id, type, position, data }) => ({ id, type, position, data }));
     const { error } = await supabase.from("automation_flows").update({ name, enabled, nodes: clean as never, edges: edges.map(({ id, source, target }) => ({ id, source, target })) as never }).eq("id", flow.id);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Automation saved");
     onSaved();
   };
   const del = async () => {
     if (!confirm(`Delete "${flow.name}"?`)) return;
     const { error } = await supabase.from("automation_flows").delete().eq("id", flow.id);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     onDeleted();
   };
 

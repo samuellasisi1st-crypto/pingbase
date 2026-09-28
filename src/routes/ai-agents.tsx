@@ -37,16 +37,16 @@ function AgentsList() {
 
   const create = async () => {
     const { data: m } = await supabase.from("workspace_members").select("workspace_id").limit(1).maybeSingle();
-    if (!m) return toast.error("No workspace found");
+    if (!m) { toast.error("No workspace found"); return; }
     const { data, error } = await supabase.from("ai_agents").insert({ workspace_id: m.workspace_id, name: "New agent", is_default: !(agents.data?.length) }).select("id").single();
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     void navigate({ to: "/ai-agents/$agentId", params: { agentId: data.id } });
   };
 
   return (
     <AppShell>
       <Page>
-        <PageHeader title="AI Agents" count={agents.data?.length} subtitle="Each agent has its own name, instructions and channels. Conversations go to the agent assigned to their channel."
+        <PageHeader title="AI Agents" count={agents.data?.length ?? 0} subtitle="Each agent has its own name, instructions and channels. Conversations go to the agent assigned to their channel."
           actions={<Button size="sm" onClick={() => void create()}><Plus className="size-3.5" />New agent</Button>} />
         {agents.data && agents.data.length === 0 && <EmptyState icon={Bot} title="No agents yet" body="Create your first agent to start replying to customers." />}
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
