@@ -121,7 +121,7 @@ function Dashboard() {
         <div className="grid items-stretch gap-4 lg:grid-cols-12">
           <div className="grid gap-4 lg:col-span-8">
           <section className="relative overflow-hidden rounded-xl border border-border bg-panel-subtle">
-            <img src={dashboardSculpture} width={1024} height={768} alt="" aria-hidden className="pointer-events-none absolute -right-[18%] -top-[18%] hidden h-[165%] w-[76%] object-contain object-top opacity-95 md:block dark:brightness-[.78] dark:saturate-[.82]" />
+            <img src={dashboardSculpture} width={1024} height={768} alt="" aria-hidden className="pointer-events-none absolute -right-[12%] top-0 hidden h-[135%] w-[72%] object-contain object-top opacity-95 md:block dark:brightness-[.78] dark:saturate-[.82]" />
             <div className="relative flex min-h-[310px] flex-col justify-center gap-4 p-6 md:max-w-[58%] md:p-9">
               {focus ? (
                 <>
