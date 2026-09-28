@@ -562,8 +562,9 @@ export function buildTools(ctx: Ctx) {
         "DISABLED: online payment is not available yet. Do not call. Book with create_booking payment_method 'IN_STORE' instead.",
       inputSchema: z.object({ appointment_id: z.string() }),
       execute: wrap(ctx, "send_payment_link", async ({ appointment_id }) => {
-        return { ok: false, error: "ONLINE_PAYMENT_UNAVAILABLE", message: "Online payment isn't available yet. Confirm the booking as pay in store (create_booking with payment_method IN_STORE) — do NOT escalate." };
-        // eslint-disable-next-line no-unreachable
+        const onlinePaymentsEnabled = false as boolean;
+        if (!onlinePaymentsEnabled)
+          return { ok: false, error: "ONLINE_PAYMENT_UNAVAILABLE", message: "Online payment isn't available yet. Confirm the booking as pay in store (create_booking with payment_method IN_STORE) — do NOT escalate." };
         const { data: appt } = await db.from("appointments").select("*").eq("id", appointment_id).maybeSingle();
         if (!appt) return { ok: false, error: "Appointment not found" };
         if (appt.deposit_pence <= 0) return { ok: true, deposit_required: false };
