@@ -827,7 +827,7 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     { data: otherChannelHistory },
   ] = await Promise.all([
     db.from("business_settings").select("*").eq("workspace_id", ctx.workspaceId).maybeSingle(),
-    db.from("ai_agent_settings").select("*").eq("workspace_id", ctx.workspaceId).maybeSingle(),
+    resolveAgentForConversation(ctx.workspaceId, ctx.conversationId).then((data) => ({ data })),
     db.from("contacts").select("*").eq("id", ctx.contactId).maybeSingle(),
     db.from("conversations").select("*").eq("id", ctx.conversationId).maybeSingle(),
     db
