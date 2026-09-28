@@ -118,8 +118,9 @@ function Dashboard() {
           <Link to="/inbox"><Button size="sm">Open inbox<ArrowRight className="size-3.5" /></Button></Link>
         </header>
 
-        <div className="grid auto-rows-min gap-4 lg:grid-cols-12">
-          <section className="relative overflow-hidden rounded-xl border border-border bg-panel-subtle lg:col-span-8 lg:row-span-2">
+        <div className="grid items-stretch gap-4 lg:grid-cols-12">
+          <div className="grid gap-4 lg:col-span-8">
+          <section className="relative overflow-hidden rounded-xl border border-border bg-panel-subtle">
             <img src={dashboardSculpture} width={1024} height={768} alt="" aria-hidden className="pointer-events-none absolute -bottom-8 -right-12 hidden h-[115%] w-[52%] object-contain object-bottom opacity-95 md:block dark:brightness-[.72] dark:saturate-[.7]" />
             <div className="relative flex min-h-[310px] flex-col justify-center gap-4 p-6 md:max-w-[58%] md:p-9">
               {focus ? (
@@ -142,7 +143,20 @@ function Dashboard() {
             </div>
           </section>
 
-          <Card className="p-5 lg:col-span-4 lg:row-span-3">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Stat icon={CalendarDays} label="Bookings today" value={String(today.length)} />
+            <Stat icon={MessageCircle} label="Waiting on you" value={String(waiting)} />
+            <Stat icon={Bot} label="Replies by Nia" value={`${aiShare}%`} />
+            <Stat icon={CreditCard} label="Revenue, 30 days" value={money(rev(past(30)))} />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Meter label="Today's pace" hint={`${soon.length} booking${soon.length === 1 ? "" : "s"} in the next 24 hours`} value={today.length} max={Math.max(today.length, 8)} />
+            <Meter label="Nia handling" hint="Share of replies in the last 30 days" value={aiShare} max={100} suffix="%" />
+          </div>
+          </div>
+
+          <Card className="flex h-full flex-col p-5 lg:col-span-4">
             <div className="flex items-start justify-between gap-3">
               <div><p className="text-[11px] uppercase tracking-wide text-tertiary">Revenue this week</p><p className="mt-2 text-3xl text-foreground">{money(weekRevenue)}</p></div>
               <div className="grid size-9 place-items-center rounded-lg bg-berry-soft text-primary"><CreditCard className="size-4" /></div>
@@ -151,7 +165,7 @@ function Dashboard() {
             <div className="mt-6 flex h-2 overflow-hidden rounded-full bg-hover">
               {topRevenue.map(([service, amount], index) => <span key={service} className={index === 0 ? "bg-primary" : index === 1 ? "bg-berry-mid" : index === 2 ? "bg-yellow-strong" : "bg-green-strong"} style={{ width: `${weekRevenue ? (amount / weekRevenue) * 100 : 0}%` }} />)}
             </div>
-            <div className="mt-5 divide-y divide-border-subtle">
+            <div className="mt-5 flex-1 divide-y divide-border-subtle">
               {topRevenue.length === 0 && <p className="py-5 text-[12px] text-secondary">Revenue from this week's appointments will appear here.</p>}
               {topRevenue.map(([service, amount], index) => (
                 <div key={service} className="flex items-center gap-2 py-2.5 text-[12px]"><span className={`size-2 rounded-full ${index === 0 ? "bg-primary" : index === 1 ? "bg-berry-mid" : index === 2 ? "bg-yellow-strong" : "bg-green-strong"}`} /><span className="min-w-0 flex-1 truncate text-secondary">{service}</span><span className="text-foreground">{money(amount)}</span><span className="w-9 text-right text-tertiary">{weekRevenue ? Math.round((amount / weekRevenue) * 100) : 0}%</span></div>
@@ -159,17 +173,6 @@ function Dashboard() {
             </div>
           </Card>
 
-          <div className="grid grid-cols-2 gap-3 lg:col-span-8 lg:grid-cols-4">
-            <Stat icon={CalendarDays} label="Bookings today" value={String(today.length)} />
-            <Stat icon={MessageCircle} label="Waiting on you" value={String(waiting)} />
-            <Stat icon={Bot} label="Replies by Nia" value={`${aiShare}%`} />
-            <Stat icon={CreditCard} label="Revenue, 30 days" value={money(rev(past(30)))} />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2 lg:col-span-8">
-            <Meter label="Today's pace" hint={`${soon.length} booking${soon.length === 1 ? "" : "s"} in the next 24 hours`} value={today.length} max={Math.max(today.length, 8)} />
-            <Meter label="Nia handling" hint="Share of replies in the last 30 days" value={aiShare} max={100} suffix="%" />
-          </div>
         </div>
 
         <section>
@@ -192,19 +195,21 @@ function Dashboard() {
 
         <div className="grid gap-4 lg:grid-cols-3">
           <Panel title="Needs your attention">
-            <div className="space-y-1.5">
+            <div className="grid h-full auto-rows-fr gap-2">
               {todos.length === 0 && <p className="flex items-center gap-2 text-[13px] text-secondary"><CheckCircle2 className="size-4 text-green-strong" />You're all caught up.</p>}
               {todos.map((t) => (
-                <Link key={t.label} to={t.to} className="flex items-center gap-3 rounded-lg border border-border px-3 py-2 text-[12px] text-foreground hover:bg-hover">
+                <Link key={t.label} to={t.to} className="flex min-h-11 items-center gap-3 rounded-lg border border-border px-3 py-2 text-[12px] text-foreground hover:bg-hover">
                   <Badge variant={t.tone}><t.icon className="size-3" /></Badge><span className="flex-1">{t.label}</span><ArrowRight className="size-3.5 text-tertiary" />
                 </Link>
               ))}
             </div>
           </Panel>
           <Panel title="Messages by channel (30 days)">
-            {byChannel.map((b) => (
-              <Bar key={b.c} label={b.c === "whatsapp" ? "WhatsApp" : b.c === "instagram" ? "Instagram" : "Messenger"} icon={b.c === "instagram" ? Instagram : MessageCircle} n={b.n} pct={(b.n / maxCh) * 100} />
-            ))}
+            <div className="flex h-full flex-col justify-between gap-3">
+              {byChannel.map((b) => (
+                <Bar key={b.c} label={b.c === "whatsapp" ? "WhatsApp" : b.c === "instagram" ? "Instagram" : "Messenger"} icon={b.c === "instagram" ? Instagram : MessageCircle} n={b.n} pct={(b.n / maxCh) * 100} />
+              ))}
+            </div>
           </Panel>
           <Panel title="Busiest days">
             <div className="flex h-28 items-end gap-2">
@@ -249,8 +254,8 @@ function Stat({ icon: Icon, label, value }: { icon: ComponentType<{ className?: 
   return <Card className="p-4"><Icon className="size-4 text-primary" /><p className="mt-3 text-[11px] text-tertiary">{label}</p><p className="mt-0.5 text-xl text-foreground">{value}</p></Card>;
 }
 function Panel({ title, children }: { title: string; children: ReactNode }) {
-  return <Card className="p-5"><p className="mb-3 text-[11px] uppercase tracking-wide text-tertiary">{title}</p>{children}</Card>;
+  return <Card className="flex h-full flex-col p-5"><p className="mb-3 text-[11px] uppercase tracking-wide text-tertiary">{title}</p><div className="min-h-0 flex-1">{children}</div></Card>;
 }
 function Bar({ label, icon: Icon, n, pct }: { label: string; icon: ComponentType<{ className?: string }>; n: number; pct: number }) {
-  return <div className="mb-2.5"><div className="mb-1 flex items-center justify-between text-[12px]"><span className="flex items-center gap-1.5 text-secondary"><Icon className="size-3.5" />{label}</span><span className="text-foreground">{n}</span></div><div className="h-1.5 rounded-full bg-hover"><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div></div>;
+  return <div><div className="mb-1 flex items-center justify-between text-[12px]"><span className="flex items-center gap-1.5 text-secondary"><Icon className="size-3.5" />{label}</span><span className="text-foreground">{n}</span></div><div className="h-1.5 rounded-full bg-hover"><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div></div>;
 }
