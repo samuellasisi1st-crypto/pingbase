@@ -377,14 +377,17 @@ export function buildTools(ctx: Ctx) {
 
     create_booking: tool({
       description:
-        "Create an appointment. Only call with a slot returned by find_available_slots. Returns the booking and whether a deposit is required.",
+        "Create an appointment. Only call with a slot returned by find_available_slots. payment_method: 'IN_STORE' confirms the booking immediately and the customer pays at the salon; 'ONLINE' is not available yet. Returns the booking.",
       inputSchema: z.object({
         service_id: z.string(),
         staff_id: z.string(),
         starts_at: z.string(),
         notes: z.string().nullable(),
+        payment_method: z.enum(["IN_STORE", "ONLINE"]).default("IN_STORE"),
       }),
       execute: wrap(ctx, "create_booking", async (args) => {
+        if (args.payment_method === "ONLINE")
+          return { ok: false, error: "ONLINE_PAYMENT_UNAVAILABLE", message: "Online payment isn't available yet. Offer pay in store instead." };
         const { data: service } = await db.from("services").select("*").eq("id", args.service_id).maybeSingle();
         if (!service) return { ok: false, error: "Service not found" };
         const start = new Date(args.starts_at);
@@ -407,11 +410,11 @@ export function buildTools(ctx: Ctx) {
             staff_id: args.staff_id,
             starts_at: start.toISOString(),
             ends_at: end.toISOString(),
-            status: service.deposit_pence > 0 ? "PENDING" : "CONFIRMED",
+            status: "CONFIRMED",
             price_pence: service.price_pence,
             deposit_pence: service.deposit_pence,
-            deposit_status: service.deposit_pence > 0 ? "REQUIRED" : "NOT_REQUIRED",
-            notes: args.notes,
+            deposit_status: service.deposit_pence > 0 ? "PAY_IN_STORE" : "NOT_REQUIRED",
+            notes: [args.notes, "Payment: in store"].filter(Boolean).join(" · "),
           })
           .select("*, service:service_id(name), staff:staff_id(name)")
           .single();
@@ -421,7 +424,7 @@ export function buildTools(ctx: Ctx) {
           workspace_id: ctx.workspaceId,
           appointment_id: appt.id,
           to_status: appt.status,
-          reason: "Created by AI agent",
+          reason: "Created by AI agent (pay in store)",
           actor: "AI",
         });
         await db.from("booking_events").insert({
@@ -429,19 +432,18 @@ export function buildTools(ctx: Ctx) {
           appointment_id: appt.id,
           conversation_id: ctx.conversationId,
           kind: "CREATED",
+          payload: { payment_method: "IN_STORE" } as never,
         });
-        await db
-          .from("conversations")
-          .update({ state: service.deposit_pence > 0 ? "AWAITING_PAYMENT" : "BOOKED" })
-          .eq("id", ctx.conversationId);
-        if (service.deposit_pence === 0) await scheduleAutomations(ctx, appt.id, appt.starts_at);
+        await db.from("conversations").update({ state: "BOOKED" }).eq("id", ctx.conversationId);
+        await scheduleAutomations(ctx, appt.id, appt.starts_at);
 
         return {
           ok: true,
           appointment: { ...appt, when: formatSalonDateTime(appt.starts_at) },
-          deposit_required: service.deposit_pence > 0,
-          deposit: money(service.deposit_pence),
+          payment: "Pay in store on the day",
+          price: money(service.price_pence),
           status: appt.status,
+          next_step: "Call send_calendar_invite now, then confirm the details (service, stylist, date/time, price payable in store) to the customer.",
         };
       }),
     }),
@@ -990,7 +992,8 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     "- Offer at most 3 options at a time and keep replies short, like a real person messaging.",
     "- Remember what the customer already told you. Never re-ask for information you already have.",
     "- Ask only for information you genuinely still need (name is required before booking).",
-    "- When a deposit is required, create the booking first, then send the payment link, and explain the slot is held until the deposit is paid.",
+    "- Payment: only 'pay in store' is available right now. Online payment is coming soon; if asked, say so politely and offer pay in store. Before booking, tell the customer the price and that they pay at the salon on the day, then call create_booking with payment_method 'IN_STORE'. Do not use send_payment_link.",
+    "- Booking checklist: service, stylist (or any), a slot from find_available_slots, customer name, and ask once for email. Then create_booking, then send_calendar_invite, then send a short confirmation with service, stylist, date/time, price payable in store, and that they can message here to reschedule or cancel.",
     "- Use escalate_to_human for refunds, complaints, policy exceptions, requests for a person, or repeated tool failures. After escalating, tell the customer a team member will pick it up, and stop.",
     "- A message like '[Customer sent a image]' or '[Customer sent a document: …]' means they shared a file; the team can see it in the inbox but you cannot view its contents. Acknowledge it warmly, never describe or judge what it shows, and if it matters for the booking (e.g. a reference photo) add an internal note so the stylist reviews it.",
     "- When a customer asks for a menu, price list or guide, use list_business_files then send_business_file. Only say it was sent if delivered is true.",
