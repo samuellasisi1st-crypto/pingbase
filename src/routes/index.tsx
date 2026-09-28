@@ -8,6 +8,7 @@ import { Badge, Button, Card } from "@/design-system";
 import { supabase } from "@/integrations/supabase/client";
 import { getGoogleCalendarStatus } from "@/lib/channels.functions";
 import { formatSalonTime, money } from "@/lib/time";
+import logo from "@/assets/workspace-logo.jpg.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -94,69 +95,85 @@ function Dashboard() {
     { done: (d?.members ?? 0) > 1, label: "Add team members", body: "Let your team reply from the same inbox.", section: "team" },
   ].filter((s) => !s.done);
 
+  const focus = unpaid[0] ?? next;
+  const focusNeeds = focus && focus.deposit_status === "REQUIRED" ? "Deposit still unpaid" : focus ? "Your next booking" : null;
+  const bookedWeek = past(7).length;
+
   return (
     <AppShell>
-      <div className="mx-auto max-w-6xl space-y-5 px-4 pb-24 pt-5 md:px-8 md:pb-10 md:pt-8">
-        <header className="flex flex-wrap items-end justify-between gap-3">
+      <div className="w-full space-y-6 px-4 pb-24 pt-5 md:px-8 md:pb-10 md:pt-8">
+        <header className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <p className="text-[12px] text-tertiary">{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })}</p>
-            <h1 className="mt-1 text-2xl text-foreground">{hello}</h1>
+            <h1 className="text-2xl text-foreground">{hello}</h1>
+            <p className="mt-1 text-[13px] text-secondary">{new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" })} · here's what needs you today.</p>
           </div>
-          <Link to="/inbox"><Button size="sm" variant="secondary">Open inbox<ArrowRight className="size-3.5" /></Button></Link>
+          <Link to="/inbox"><Button size="sm">Open inbox<ArrowRight className="size-3.5" /></Button></Link>
         </header>
 
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Stat icon={CalendarDays} label="Bookings today" value={String(today.length)} />
-          <Stat icon={MessageCircle} label="Waiting on you" value={String(waiting)} />
-          <Stat icon={CreditCard} label="Today's revenue" value={money(rev(today))} />
-          <Stat icon={Bot} label="Replies by Nia" value={`${aiShare}%`} />
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+          <section className="relative overflow-hidden rounded-2xl border border-border bg-panel-subtle">
+            <img src={logo.url} alt="" aria-hidden className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-[45%] object-cover opacity-90 md:block [mask-image:linear-gradient(to_right,transparent,black_40%)]" />
+            <div className="relative flex min-h-[260px] flex-col justify-center gap-4 p-6 md:max-w-[55%] md:p-8">
+              {focus ? (
+                <>
+                  <Badge variant={focus.deposit_status === "REQUIRED" ? "yellow" : "cyan"} className="w-fit">{focusNeeds}</Badge>
+                  <div>
+                    <p className="text-2xl text-foreground">{focus.contact?.full_name ?? "Customer"}</p>
+                    <p className="mt-1 text-[14px] text-secondary">{focus.service?.name ?? "Service"} with {focus.staff?.name ?? "team"} · {money(focus.price_pence)}</p>
+                    <p className="mt-2 text-[13px] text-tertiary">{new Date(focus.starts_at).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" })} at {formatSalonTime(focus.starts_at)} · {until(+new Date(focus.starts_at) - now)}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2"><Link to="/appointments"><Button size="sm" variant="secondary">View booking</Button></Link><Link to="/inbox"><Button size="sm" variant="ghost">Message customer</Button></Link></div>
+                </>
+              ) : (
+                <>
+                  <p className="text-xl text-foreground">No upcoming bookings yet</p>
+                  <p className="text-[14px] text-secondary">When Nia books someone, the booking that needs you most will show here.</p>
+                  <Link to="/inbox"><Button size="sm" variant="secondary">Go to inbox</Button></Link>
+                </>
+              )}
+            </div>
+          </section>
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+            <Meter label="Bookings today" hint={`${soon.length} in the next 24 hours`} value={today.length} max={Math.max(today.length, 8)} />
+            <Meter label="Replies by Nia" hint="Share of replies in the last 30 days" value={aiShare} max={100} suffix="%" />
+          </div>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-          <Card className="p-5">
-            <p className="text-[11px] uppercase tracking-wide text-tertiary">Next booking</p>
-            {next ? (
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="text-xl text-foreground">{next.contact?.full_name ?? "Customer"}</p>
-                  <p className="mt-1 text-[13px] text-secondary">{next.service?.name ?? "Service"} with {next.staff?.name ?? "team"}</p>
-                  <p className="mt-2 text-[12px] text-tertiary">{new Date(next.starts_at).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })} · {formatSalonTime(next.starts_at)} · {until(+new Date(next.starts_at) - now)}</p>
-                </div>
-                <Link to="/appointments"><Button size="sm">View booking</Button></Link>
-              </div>
-            ) : <p className="mt-3 text-[13px] text-secondary">No upcoming bookings yet. When Nia books someone, they'll show here.</p>}
-          </Card>
-          <Card className="p-5">
-            <p className="text-[11px] uppercase tracking-wide text-tertiary">Needs your attention</p>
-            <div className="mt-3 space-y-1.5">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <Stat icon={MessageCircle} label="Waiting on you" value={String(waiting)} />
+          <Stat icon={CreditCard} label="Today's revenue" value={money(rev(today))} />
+          <Stat icon={CalendarDays} label="Bookings last 7 days" value={String(bookedWeek)} />
+          <Stat icon={Bot} label="Revenue last 30 days" value={money(rev(past(30)))} />
+        </div>
+
+        <section>
+          <div className="mb-3 flex items-center justify-between"><h2 className="text-[15px] text-foreground">Upcoming bookings</h2><Link to="/appointments" className="text-[12px] text-secondary hover:text-foreground">View all</Link></div>
+          <div className="overflow-hidden rounded-xl border border-border bg-panel">
+            <div className="hidden grid-cols-[10rem_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_6rem_7rem] bg-panel-subtle px-5 py-3 text-[12px] text-secondary md:grid"><span>When</span><span>Customer</span><span>Service</span><span>With</span><span>Price</span><span>Status</span></div>
+            {upcoming.length === 0 && <p className="px-5 py-8 text-[13px] text-secondary">Nothing booked in the next two weeks.</p>}
+            {upcoming.slice(0, 8).map((a) => (
+              <Link to="/appointments" key={a.id} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 border-t border-border-subtle px-5 py-3 text-[13px] hover:bg-hover md:grid-cols-[10rem_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_6rem_7rem]">
+                <span className="text-secondary md:text-foreground">{isToday(a.starts_at) ? "Today" : new Date(a.starts_at).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" })}, {formatSalonTime(a.starts_at)}</span>
+                <span className="order-first col-span-2 truncate text-foreground md:order-none md:col-span-1">{a.contact?.full_name ?? "Customer"}</span>
+                <span className="hidden truncate text-secondary md:block">{a.service?.name}</span>
+                <span className="hidden truncate text-secondary md:block">{a.staff?.name}</span>
+                <span className="hidden text-foreground md:block">{money(a.price_pence)}</span>
+                <span><Badge variant={a.deposit_status === "REQUIRED" ? "yellow" : "green"}>{a.deposit_status === "REQUIRED" ? "Deposit due" : "Confirmed"}</Badge></span>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <div className="grid gap-4 lg:grid-cols-3">
+          <Panel title="Needs your attention">
+            <div className="space-y-1.5">
               {todos.length === 0 && <p className="flex items-center gap-2 text-[13px] text-secondary"><CheckCircle2 className="size-4 text-green-strong" />You're all caught up.</p>}
               {todos.map((t) => (
                 <Link key={t.label} to={t.to} className="flex items-center gap-3 rounded-lg border border-border px-3 py-2 text-[12px] text-foreground hover:bg-hover">
                   <Badge variant={t.tone}><t.icon className="size-3" /></Badge><span className="flex-1">{t.label}</span><ArrowRight className="size-3.5 text-tertiary" />
                 </Link>
               ))}
-            </div>
-          </Card>
-        </div>
-
-        {steps.length > 0 && (
-          <section>
-            <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-tertiary"><Sparkles className="size-3" />Next best steps</p>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {steps.map((s) => (
-                <Link key={s.label} to="/settings" search={{ section: s.section } as never} className="rounded-xl border border-border bg-panel p-4 shadow-xs hover:border-border-strong hover:bg-panel-subtle">
-                  <p className="text-[13px] text-foreground">{s.label}</p><p className="mt-1 text-[12px] text-secondary">{s.body}</p>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-
-        <div className="grid gap-4 lg:grid-cols-3">
-          <Panel title="Bookings & revenue">
-            <div className="grid grid-cols-2 gap-3">
-              <Mini label="Last 7 days" a={`${past(7).length} bookings`} b={money(rev(past(7)))} />
-              <Mini label="Last 30 days" a={`${past(30).length} bookings`} b={money(rev(past(30)))} />
             </div>
           </Panel>
           <Panel title="Messages by channel (30 days)">
@@ -176,21 +193,29 @@ function Dashboard() {
           </Panel>
         </div>
 
-        <Panel title="Coming up">
-          {upcoming.length === 0 && <p className="text-[12px] text-secondary">Nothing booked in the next two weeks.</p>}
-          <div className="divide-y divide-border-subtle">
-            {upcoming.slice(0, 6).map((a) => (
-              <div key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-[12px]">
-                <span className="w-24 shrink-0 text-tertiary">{isToday(a.starts_at) ? "Today" : new Date(a.starts_at).toLocaleDateString("en-GB", { weekday: "short", day: "numeric" })} {formatSalonTime(a.starts_at)}</span>
-                <span className="min-w-0 flex-1 truncate text-foreground">{a.contact?.full_name ?? "Customer"} · {a.service?.name}</span>
-                <span className="hidden text-secondary sm:inline">{a.staff?.name}</span>
-                <Badge variant={a.deposit_status === "REQUIRED" ? "yellow" : "green"}>{a.deposit_status === "REQUIRED" ? "Deposit due" : "Confirmed"}</Badge>
-              </div>
-            ))}
-          </div>
-        </Panel>
+        {steps.length > 0 && (
+          <section>
+            <p className="mb-2 flex items-center gap-1.5 text-[11px] uppercase tracking-wide text-tertiary"><Sparkles className="size-3" />Next best steps</p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {steps.map((s) => (
+                <Link key={s.label} to="/settings" search={{ section: s.section } as never} className="rounded-xl border border-border bg-panel p-4 shadow-xs hover:border-border-strong hover:bg-panel-subtle">
+                  <p className="text-[13px] text-foreground">{s.label}</p><p className="mt-1 text-[12px] text-secondary">{s.body}</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </AppShell>
+  );
+}
+
+function Meter({ label, hint, value, max, suffix = "" }: { label: string; hint: string; value: number; max: number; suffix?: string }) {
+  return (
+    <Card className="flex flex-col justify-between p-5">
+      <div><p className="text-[11px] uppercase tracking-wide text-foreground">{label}</p><p className="mt-1 text-[12px] text-secondary">{hint}</p></div>
+      <div className="mt-6"><div className="mb-2 flex justify-between text-[13px]"><span className="text-foreground">{value}{suffix}</span><span className="text-tertiary">{value}{suffix} / {max}{suffix}</span></div><div className="h-1.5 rounded-full bg-hover"><div className="h-full rounded-full bg-primary" style={{ width: `${Math.min(100, (value / Math.max(1, max)) * 100)}%` }} /></div></div>
+    </Card>
   );
 }
 
