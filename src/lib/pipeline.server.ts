@@ -15,6 +15,7 @@ export type InboundMessage = {
   threadId?: string | null;
   subject?: string | null;
   metadata?: Record<string, unknown>;
+  attachments?: Array<{ path: string; filename: string; mime: string; kind: string }>;
 };
 
 async function resolveContact(msg: InboundMessage) {
@@ -136,6 +137,8 @@ export async function processInboundMessage(msg: InboundMessage) {
     direction: "inbound",
     sender_type: "CUSTOMER",
     body: msg.body,
+    content_type: msg.attachments?.length ? (msg.attachments[0]!.kind === "image" ? "image" : "file") : "text",
+    attachments: (msg.attachments ?? []) as never,
     metadata: (msg.metadata ?? {}) as never,
   });
 

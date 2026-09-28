@@ -13,6 +13,11 @@ type WaMessage = {
   type?: string;
   text?: { body?: string };
   button?: { text?: string };
+  image?: { id?: string; mime_type?: string; caption?: string };
+  document?: { id?: string; mime_type?: string; caption?: string; filename?: string };
+  video?: { id?: string; mime_type?: string; caption?: string };
+  audio?: { id?: string; mime_type?: string };
+  sticker?: { id?: string; mime_type?: string };
   interactive?: { button_reply?: { id?: string; title?: string }; list_reply?: { id?: string; title?: string } };
 };
 type WaChange = {
@@ -42,7 +47,7 @@ export const Route = createFileRoute("/api/public/webhooks/meta")({
       POST: async ({ request }) => {
         const raw = await request.text();
         const appSecret = process.env["META_APP_SECRET"];
-        const { verifyMetaSignature, findWorkspaceForMetaId, findWorkspaceForWhatsAppPhoneId, logIntegration, fetchMetaProfileName } =
+        const { verifyMetaSignature, findWorkspaceForMetaId, findWorkspaceForWhatsAppPhoneId, logIntegration, fetchMetaProfileName, storeWhatsAppMedia, storeMetaMedia } =
           await import("@/lib/channels.server");
         if (!appSecret || !verifyMetaSignature(raw, request.headers.get("x-hub-signature-256"), appSecret)) {
           return new Response("Invalid signature", { status: 401 });
@@ -73,12 +78,17 @@ export const Route = createFileRoute("/api/public/webhooks/meta")({
               for (const m of value.messages) {
                 const from = m.from;
                 if (!from) continue;
+                const media = m.image ?? m.document ?? m.video ?? m.audio ?? m.sticker;
+                const stored = media?.id
+                  ? await storeWhatsAppMedia(workspaceId, media.id, { mime: media.mime_type, filename: (m.document?.filename) ?? null })
+                  : null;
+                const caption = (media as { caption?: string } | undefined)?.caption;
                 const text =
                   m.text?.body ??
                   m.button?.text ??
                   m.interactive?.button_reply?.title ??
                   m.interactive?.list_reply?.title ??
-                  (m.type && m.type !== "text" ? `[Sent ${m.type}]` : null);
+                  (media ? `${caption ? caption + "\n" : ""}[Customer sent ${m.type === "document" ? `a document: ${stored?.filename ?? "file"}` : `a ${m.type}`}]` : m.type && m.type !== "text" ? `[Sent ${m.type}]` : null);
                 if (!text) continue;
                 const profileName = value.contacts?.find((c) => c.wa_id === from)?.profile?.name ?? null;
                 try {
@@ -90,6 +100,7 @@ export const Route = createFileRoute("/api/public/webhooks/meta")({
                     displayName: profileName,
                     phone: `+${from}`,
                     body: text,
+                    attachments: stored ? [stored] : [],
                     metadata: {
                       wa_type: m.type ?? null,
                       wa_timestamp: m.timestamp ?? null,
@@ -118,6 +129,14 @@ export const Route = createFileRoute("/api/public/webhooks/meta")({
               ev.postback?.title ??
               (ev.message?.attachments?.length ? `[Sent ${ev.message.attachments.map((a) => a.type ?? "file").join(", ")}]` : null);
             if (!text) continue;
+            const stored = [];
+            for (const a of ev.message?.attachments ?? []) {
+              if (!a.payload?.url) continue;
+              const s = await storeMetaMedia(workspaceId, a.payload.url, a.type);
+              if (s) stored.push(s);
+            }
+            const body = ev.message?.text ?? ev.postback?.title ??
+              `[Customer sent ${(ev.message?.attachments ?? []).map((a) => (a.type === "file" ? "a document" : `a ${a.type ?? "file"}`)).join(", ")}]`;
             try {
               const displayName = await fetchMetaProfileName(workspaceId, channel, senderId);
               await processInboundMessage({
@@ -126,7 +145,8 @@ export const Route = createFileRoute("/api/public/webhooks/meta")({
                 externalId: senderId,
                 externalMessageId: ev.message?.mid ?? ev.postback?.mid ?? `${senderId}:${ev.timestamp ?? Date.now()}`,
                 displayName,
-                body: text,
+                body,
+                attachments: stored,
                 metadata: { attachments: ev.message?.attachments ?? [], meta_timestamp: ev.timestamp ?? null },
               });
             } catch (e) {
