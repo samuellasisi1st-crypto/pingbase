@@ -680,6 +680,40 @@ export function buildTools(ctx: Ctx) {
       }),
     }),
 
+    list_business_files: tool({
+      description: "List files the business uploaded (menus, price lists, aftercare guides) that can be sent to the customer.",
+      inputSchema: z.object({}),
+      execute: wrap(ctx, "list_business_files", async () => {
+        const { data } = await db.from("workspace_files").select("id,name,mime,folder").eq("workspace_id", ctx.workspaceId).not("path", "is", null).limit(50);
+        return { files: data ?? [] };
+      }),
+    }),
+
+    send_business_file: tool({
+      description: "Send one of the business's uploaded files to the customer. Only use an id returned by list_business_files. Never claim a file was sent unless this returns delivered: true.",
+      inputSchema: z.object({ file_id: z.string(), caption: z.string().nullable() }),
+      execute: wrap(ctx, "send_business_file", async ({ file_id, caption }) => {
+        const { data: f } = await db.from("workspace_files").select("name,path,mime").eq("id", file_id).eq("workspace_id", ctx.workspaceId).maybeSingle();
+        if (!f?.path) return { delivered: false, error: "File not found" };
+        const to = await recipientFor(ctx);
+        if (!to) return { delivered: false, error: "No channel address for this customer" };
+        const { data: signed } = await supabaseAdmin.storage.from("attachments").createSignedUrl(f.path, 60 * 60 * 24 * 7);
+        if (!signed) return { delivered: false, error: "Could not prepare the file" };
+        const { deliverAttachment } = await import("./channels.server");
+        const kind = f.mime?.startsWith("image/") ? "image" : "file";
+        const r = await deliverAttachment({ workspaceId: ctx.workspaceId, channel: ctx.channel, recipientId: to, url: signed.signedUrl, kind, filename: f.name, caption });
+        await db.from("messages").insert({
+          workspace_id: ctx.workspaceId, conversation_id: ctx.conversationId, contact_id: ctx.contactId, channel: ctx.channel,
+          direction: "outbound", sender_type: "AI", sender_name: "AI", content_type: kind,
+          body: caption ? `${caption}\n📎 ${f.name}` : `📎 ${f.name}`,
+          attachments: [{ path: f.path, filename: f.name, mime: f.mime ?? "application/octet-stream", kind }] as never,
+          external_message_id: r.externalMessageId ?? null,
+          metadata: { delivered: r.delivered, delivery_error: r.error ?? null } as never,
+        });
+        return { delivered: r.delivered, error: r.error ?? null };
+      }),
+    }),
+
     send_slot_options: tool({
       description:
         "On WhatsApp, send the customer tappable buttons so they can pick a time with one tap. Only use slots returned by find_available_slots. Send at most 3 for buttons, up to 10 for a list. After calling this, keep your own reply very short (or empty) because the customer already sees the options.",
