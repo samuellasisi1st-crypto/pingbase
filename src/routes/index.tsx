@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
-  AlertTriangle, Bot, Search, Plus, Filter, SlidersHorizontal, Inbox as InboxIcon, UserCheck,
+  AlertTriangle, Bot, Search, Plus, Filter, SlidersHorizontal, Inbox as InboxIcon, UserCheck, ChevronLeft,
   MailOpen, CalendarClock, CreditCard, CheckCircle2, Paperclip, Smile, CalendarDays, Sparkles as Wand, Send, Clock, Users, PanelRightOpen, PanelLeftClose, PanelLeftOpen, X,
 } from "lucide-react";
 
@@ -247,7 +247,7 @@ function InboxPage() {
         </div>
 
         {activeId ? <ConversationPane conversationId={activeId} onBack={() => setActiveId(null)} /> : (
-          <div className="flex items-center justify-center text-tertiary">Select a conversation</div>
+          <div className="hidden items-center justify-center text-tertiary lg:flex">Select a conversation</div>
         )}
       </div>
     </AppShell>
