@@ -169,7 +169,7 @@ export function TeamMembersSection() {
     return (data ?? []) as unknown as { user_id: string; role: string; email: string | null; full_name: string | null; avatar_url: string | null; joined_at: string }[];
   } });
   return (
-    <SettingsFrame title="Team members" actions={<Button size="sm" variant="secondary" onClick={() => toast.info("Inviting teammates is coming soon.")}><Plus className="size-3.5" />Invite</Button>}>
+    <SettingsFrame title="Team & hours" actions={<Button size="sm" variant="secondary" onClick={() => toast.info("Inviting teammates is coming soon.")}><Plus className="size-3.5" />Invite</Button>}>
       <p className="mb-4 text-[12px] text-secondary">People who can sign in to this workspace and reply to customers.</p>
       <div className="overflow-hidden rounded-xl border border-border">
         <div className="grid grid-cols-[minmax(0,1fr)_7rem] bg-panel-subtle px-4 py-2.5 text-[11px] text-secondary sm:grid-cols-[minmax(0,1fr)_8rem_8rem]"><span>Name</span><span>Role</span><span className="hidden sm:block">Joined</span></div>
