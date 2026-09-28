@@ -282,7 +282,7 @@ export const completeEmbeddedSignup = createServerFn({ method: "POST" })
 
 // ---------- WhatsApp test console (App Review proof) ----------
 
-async function waContext() {
+async function waContext(WORKSPACE: string) {
   const { GRAPH, getWhatsAppSecrets, getWhatsAppConfig, logIntegration } = await import("@/lib/channels.server");
   const secrets = await getWhatsAppSecrets(WORKSPACE);
   if (!secrets) throw new Error("Connect WhatsApp first.");
@@ -310,7 +310,7 @@ export const sendWhatsAppTest = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const WORKSPACE = await assertMember(context.supabase as never);
-    const { GRAPH, secrets, logIntegration } = await waContext();
+    const { GRAPH, secrets, logIntegration } = await waContext(WORKSPACE);
     const to = data.to.replace(/^\+/, "");
     const body =
       data.mode === "text"
@@ -336,7 +336,7 @@ export const listWhatsAppTemplates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const WORKSPACE = await assertMember(context.supabase as never);
-    const { GRAPH, secrets, wabaId } = await waContext();
+    const { GRAPH, secrets, wabaId } = await waContext(WORKSPACE);
     if (!wabaId) return { ok: false as const, error: "No WhatsApp Business Account ID saved.", templates: [] };
     const res = await fetch(`${GRAPH}/${wabaId}/message_templates?fields=name,status,category,language&limit=50`, {
       headers: { Authorization: `Bearer ${secrets.access_token}` },
@@ -367,7 +367,7 @@ export const createWhatsAppTemplate = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const WORKSPACE = await assertMember(context.supabase as never);
-    const { GRAPH, secrets, wabaId, logIntegration } = await waContext();
+    const { GRAPH, secrets, wabaId, logIntegration } = await waContext(WORKSPACE);
     if (!wabaId) return { ok: false as const, error: "No WhatsApp Business Account ID saved." };
     const res = await fetch(`${GRAPH}/${wabaId}/message_templates`, {
       method: "POST",
@@ -395,6 +395,7 @@ export const listWhatsAppInbox = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const sb = context.supabase as any;
+    const WORKSPACE = await assertMember(sb);
     const { data, error } = await sb
       .from("messages")
       .select("id, channel, direction, sender_type, sender_name, body, created_at, contact_id, contacts(full_name, phone)")
@@ -441,7 +442,7 @@ export const subscribeWhatsAppWebhook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const WORKSPACE = await assertMember(context.supabase as never);
-    const { GRAPH, secrets, wabaId, logIntegration } = await waContext();
+    const { GRAPH, secrets, wabaId, logIntegration } = await waContext(WORKSPACE);
     if (!wabaId) return { ok: false as const, error: "No WhatsApp Business Account ID saved." };
     const res = await fetch(`${GRAPH}/${wabaId}/subscribed_apps`, {
       method: "POST",
