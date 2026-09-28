@@ -54,8 +54,7 @@ export const completeOnboarding = createServerFn({ method: "POST" })
     if (!m) throw new Error("No workspace found.");
     const w = m.workspace_id as string;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
-    const opening = Object.fromEntries(days.map((d, i) => [d, data.hours.days.includes(i) ? [{ open: data.hours.open, close: data.hours.close }] : []]));
+    const opening = Object.fromEntries([0, 1, 2, 3, 4, 5, 6].map((i) => [String(i), data.hours.days.includes(i) ? [data.hours.open, data.hours.close] : null]));
     await supabaseAdmin.from("workspaces").update({ name: data.name, timezone: data.timezone, onboarded_at: new Date().toISOString() }).eq("id", w);
     await supabaseAdmin.from("business_settings").upsert({ workspace_id: w, legal_name: data.name, phone: data.phone || null, address: data.address || null, opening_hours: opening }, { onConflict: "workspace_id" });
     const { data: svc } = await supabaseAdmin.from("services").insert({ workspace_id: w, name: data.service.name, duration_minutes: data.service.minutes, price_pence: data.service.pricePence }).select("id").single();
