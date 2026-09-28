@@ -128,3 +128,9 @@
   }
 }
 
+@utility automation-grid {
+  background-color: var(--bg-panel-subtle);
+  background-image: radial-gradient(var(--border-default) 0.7px, transparent 0.7px);
+  background-size: 16px 16px;
+}
+

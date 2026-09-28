@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Search, Users, Filter, Columns3, Settings2, Plus, BookUser, Link2, Star, X } from "lucide-react";
+import { Search, Users, Filter, Columns3, Settings2, Plus, BookUser, Link2, Star, X, ChevronLeft, ChevronRight, Check, Instagram, MessageCircle, Mail } from "lucide-react";
 
 import { AppShell, Page, PageHeader, SideItem, SideLabel, EmptyState } from "@/components/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,6 +35,7 @@ function ContactsPage() {
   const [q, setQ] = useState("");
   const [view, setView] = useState<"all" | "multi" | "vip">("all");
   const [selected, setSelected] = useState<Contact | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const contacts = useQuery({
     queryKey: ["contacts"],
@@ -71,42 +72,46 @@ function ContactsPage() {
         <PageHeader
           title={view === "all" ? "All contacts" : view === "multi" ? "Linked across channels" : "Regulars & VIPs"}
           count={list.length}
-          subtitle={`${list.length} people · one profile per person across every channel`}
-          actions={<><Button variant="secondary" disabled>Export all</Button><Button disabled title="Contacts are created automatically when customers message you"><Plus className="mr-1.5 size-4" />New contact</Button></>}
+          actions={<><Button variant="secondary" size="sm">Export all</Button><Button variant="secondary" size="sm">Import</Button><Button size="sm" disabled title="Contacts are created automatically when customers message you"><Plus className="size-3.5" />New contact</Button></>}
         />
-        <div className="flex flex-wrap items-center justify-between gap-3 border-y border-border-subtle py-4">
-          <div className="relative w-full max-w-lg">
-            <Search className="absolute left-2.5 top-2.5 size-4 text-tertiary" />
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle pt-4">
+          <div className="flex w-full max-w-xl items-center gap-2">
+            <div className="relative min-w-0 flex-1">
+            <Search className="absolute left-2.5 top-2.5 size-3.5 text-tertiary" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search for contact…"
-               className="h-10 w-full rounded-lg border border-border bg-panel pl-9 pr-3 text-[13px] shadow-xs placeholder:text-tertiary focus:border-primary focus:outline-none" />
+               className="h-9 w-full rounded-lg border border-border bg-panel pl-8 pr-3 text-[12px] shadow-xs placeholder:text-tertiary focus:border-primary focus:outline-none" />
+            </div>
+            <Button variant="secondary" size="sm"><Filter className="size-3.5" />Filter</Button>
+            <Button variant="secondary" size="sm"><Columns3 className="size-3.5" />View</Button>
           </div>
-          <div className="flex items-center gap-2"><Button variant="secondary" size="sm"><Filter className="mr-1.5 size-3.5" />Filter</Button>
-          <Button variant="secondary" size="sm"><Columns3 className="mr-1.5 size-3.5" />View</Button></div>
+          <div className="flex items-center gap-2 text-[11px] text-tertiary"><span>Page size: 100</span><Button variant="tertiary" size="sm" disabled><ChevronLeft className="size-3.5" /></Button><span>1 / 1</span><Button variant="tertiary" size="sm" disabled><ChevronRight className="size-3.5" /></Button></div>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-border bg-panel shadow-xs">
-          <table className="w-full whitespace-nowrap text-left text-[13px]">
+        <div className="overflow-x-auto rounded-lg border border-border bg-panel shadow-xs">
+          <table className="w-full min-w-[940px] whitespace-nowrap text-left text-[12px]">
             <thead className="border-b border-border bg-panel-subtle text-secondary">
               <tr>
-                <th className="px-4 py-3 font-semibold">Name</th>
-                <th className="px-4 py-3 font-medium">Conversations</th>
-                <th className="px-4 py-3 font-medium">Email</th>
-                <th className="px-4 py-3 font-medium">Phone</th>
-                <th className="px-4 py-3 font-medium">Channels</th>
-                <th className="px-4 py-3 font-medium">Labels</th>
-                <th className="px-4 py-3 font-medium">Last active</th>
+                <th className="w-10 px-3 py-2.5 font-normal"><button type="button" aria-label="Select all contacts" onClick={() => setSelectedIds(selectedIds.length === list.length ? [] : list.map((c) => c.id))} className="grid size-4 place-items-center rounded border border-border-strong bg-panel">{selectedIds.length === list.length && list.length > 0 ? <Check className="size-3" /> : null}</button></th>
+                <th className="px-2 py-2.5 font-normal">Name</th>
+                <th className="px-3 py-2.5 font-normal">Email</th>
+                <th className="px-3 py-2.5 font-normal">Phone number</th>
+                <th className="px-3 py-2.5 font-normal">Conversations</th>
+                <th className="px-3 py-2.5 font-normal">Channels</th>
+                <th className="px-3 py-2.5 font-normal">Labels</th>
+                <th className="px-3 py-2.5 font-normal">Last active</th>
               </tr>
             </thead>
             <tbody>
               {list.map((c) => (
-                 <tr key={c.id} onClick={() => setSelected(c)} className="cursor-pointer border-b border-border-subtle last:border-0 hover:bg-panel-subtle">
-                   <td className="px-4 py-3.5"><span className="flex items-center gap-2.5"><Avatar name={c.full_name ?? "?"} size="sm" /><span className="font-semibold text-foreground">{c.full_name ?? "Unnamed"}</span></span></td>
-                  <td className="px-4 py-3 text-secondary">{c.conversations.length}</td>
-                  <td className="px-4 py-3 text-secondary">{c.email ?? "—"}</td>
-                  <td className="px-4 py-3 text-secondary">{c.phone ?? "—"}</td>
-                  <td className="px-4 py-3"><span className="flex flex-wrap gap-1">{[...new Set(c.channels.map((x) => x.channel))].map((ch) => <Badge key={ch} variant="cyan" className="capitalize">{ch}</Badge>)}</span></td>
-                  <td className="px-4 py-3"><span className="flex flex-wrap gap-1">{(c.tags ?? []).map((t) => <Badge key={t}>{t}</Badge>)}</span></td>
-                  <td className="px-4 py-3 text-tertiary">{c.last_interaction_at ? formatSalonDateTime(c.last_interaction_at) : "—"}</td>
+                 <tr key={c.id} onClick={() => setSelected(c)} className="h-11 cursor-pointer border-b border-border-subtle last:border-0 hover:bg-panel-subtle">
+                   <td className="px-3" onClick={(e) => e.stopPropagation()}><button type="button" aria-label={`Select ${c.full_name ?? "contact"}`} onClick={() => setSelectedIds((ids) => ids.includes(c.id) ? ids.filter((id) => id !== c.id) : [...ids, c.id])} className="grid size-4 place-items-center rounded border border-border-strong bg-panel">{selectedIds.includes(c.id) ? <Check className="size-3" /> : null}</button></td>
+                   <td className="px-2"><span className="flex items-center gap-2"><Avatar name={c.full_name ?? "?"} size="sm" /><span className="font-normal text-foreground">{c.full_name ?? "Unnamed"}</span></span></td>
+                   <td className="max-w-52 truncate px-3 text-secondary">{c.email ?? "—"}</td>
+                   <td className="px-3 text-secondary">{c.phone ? <span className="rounded-md border border-border-subtle bg-panel-subtle px-2 py-1">{c.phone}</span> : "—"}</td>
+                   <td className="px-3 text-secondary">{c.conversations.length}</td>
+                   <td className="px-3"><span className="flex items-center gap-1">{[...new Set(c.channels.map((x) => x.channel))].map((ch) => <ChannelIcon key={ch} channel={ch} />)}</span></td>
+                   <td className="px-3"><span className="flex max-w-48 flex-wrap gap-1">{(c.tags ?? []).slice(0, 2).map((t, i) => <Badge key={t} variant={i % 2 ? "purple" : "cyan"}>{t}</Badge>)}{(c.tags?.length ?? 0) > 2 && <Badge>+{(c.tags?.length ?? 0) - 2}</Badge>}</span></td>
+                   <td className="px-3 text-tertiary">{c.last_interaction_at ? formatSalonDateTime(c.last_interaction_at) : "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -143,4 +148,13 @@ function ContactsPage() {
       )}
     </AppShell>
   );
+}
+
+function ChannelIcon({ channel }: { channel: string }) {
+  const cls = "size-4";
+  const shell = "grid size-6 place-items-center rounded-full border border-panel text-panel shadow-xs";
+  if (channel === "instagram") return <span title="Instagram" className={`${shell} bg-instagram`}><Instagram className={cls} /></span>;
+  if (channel === "messenger") return <span title="Messenger" className={`${shell} bg-facebook`}><MessageCircle className={cls} /></span>;
+  if (channel === "gmail" || channel === "outlook") return <span title="Email" className={`${shell} bg-email`}><Mail className={cls} /></span>;
+  return <span title={channel} className={`${shell} bg-whatsapp`}><MessageCircle className={cls} /></span>;
 }
