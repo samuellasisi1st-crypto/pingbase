@@ -7,7 +7,7 @@ import { AppShell, EmptyState, SideItem, SideLabel } from "@/components/AppShell
 import { GoogleCalendarConnectForm } from "@/components/GoogleCalendarConnectForm";
 import { MetaConnectForm } from "@/components/MetaConnectForm";
 import { WhatsAppConnectForm } from "@/components/WhatsAppConnectForm";
-import { Badge, Button, Card, Input, Switch, Textarea } from "@/design-system";
+import { Badge, Button, Card, Input, Select, Switch, Textarea } from "@/design-system";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/settings")({ head: () => ({ meta: [
@@ -25,7 +25,7 @@ const sections=[{v:"business" as const,l:"Business details",i:Building2},{v:"tea
 function SettingsPage(){
  const [section,setSection]=useState<Section>("channels");
  const secondary=<><div className="mb-3 px-2"><p className="text-[13px] text-foreground">Settings</p><p className="mt-0.5 text-[10px] text-tertiary">Studio Nine Hair</p></div><div className="relative mb-3"><Search className="absolute left-2.5 top-2.5 size-3.5 text-tertiary"/><Input size="sm" placeholder="Search settings" className="pl-8"/></div><SideLabel>Business</SideLabel>{sections.slice(0,4).map(s=><SideItem key={s.v} icon={s.i} label={s.l} active={section===s.v} onClick={()=>setSection(s.v)}/>) }<SideLabel>Connections</SideLabel>{sections.slice(4).map(s=><SideItem key={s.v} icon={s.i} label={s.l} active={section===s.v} onClick={()=>setSection(s.v)}/>) }<div className="mt-auto border-t border-border-subtle pt-3"><SideItem icon={CircleHelp} label="Help"/></div></>;
- return <AppShell secondary={secondary}><div className="min-h-full bg-panel"><div className="border-b border-border-subtle p-4 lg:hidden"><label className="grid gap-1.5 text-[11px] text-secondary"><span>Settings section</span><select value={section} onChange={(event)=>setSection(event.target.value as Section)} className="h-10 w-full rounded-lg border border-border bg-panel px-3 text-[13px] text-foreground focus:border-primary focus:outline-none">{sections.map((item)=><option key={item.v} value={item.v}>{item.l}</option>)}</select></label></div><SettingsContent section={section}/></div></AppShell>;
+ return <AppShell secondary={secondary}><div className="min-h-full bg-panel"><div className="border-b border-border-subtle p-4 lg:hidden"><label className="grid gap-1.5 text-[11px] text-secondary"><span>Settings section</span><Select value={section} onChange={(event)=>setSection(event.target.value as Section)}>{sections.map((item)=><option key={item.v} value={item.v}>{item.l}</option>)}</Select></label></div><SettingsContent section={section}/></div></AppShell>;
 }
 
 function SettingsContent({section}:{section:Section}){

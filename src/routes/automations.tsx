@@ -32,6 +32,7 @@ const FLOWS = [
 
 function AutomationsPage() {
   const [selected, setSelected] = useState<string>(FLOWS[0].kind);
+  const [mobileFlowOpen, setMobileFlowOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [zoom, setZoom] = useState(100);
   const [q, setQ] = useState("");
@@ -50,19 +51,19 @@ function AutomationsPage() {
 
   return (
     <AppShell>
-      <div className="grid h-full min-h-0 grid-cols-[13rem_minmax(0,1fr)] overflow-hidden bg-panel-subtle">
-        <aside className="flex min-h-0 flex-col border-r border-border-subtle bg-panel p-3">
+      <div className="grid h-full min-h-0 grid-cols-1 overflow-hidden bg-panel-subtle md:grid-cols-[13rem_minmax(0,1fr)]">
+        <aside className={`${mobileFlowOpen ? "hidden md:flex" : "flex"} min-h-0 flex-col border-r border-border-subtle bg-panel p-3`}>
           <div className="mb-3 flex items-center justify-between px-1"><p className="text-[13px] font-normal text-foreground">Automations</p><Button size="sm" className="px-2" title="New automation" disabled><Plus className="size-3.5" /></Button></div>
           <div className="relative mb-3"><Search className="absolute left-2.5 top-2.5 size-3.5 text-tertiary"/><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="h-8 w-full rounded-lg border border-border bg-panel pl-8 pr-2 text-[12px] focus:border-primary focus:outline-none" /></div>
           <div className="min-h-0 flex-1 space-y-1 overflow-y-auto">
-            {filtered.map((item) => { const Icon = item.icon; const active = item.kind === selected; return <button key={item.kind} type="button" onClick={() => setSelected(item.kind)} className={`flex w-full items-center gap-2 rounded-lg border px-2 py-2 text-left text-[12px] font-normal ${active ? "border-border bg-panel-subtle shadow-xs" : "border-transparent text-secondary hover:bg-hover"}`}><span className="grid size-7 shrink-0 place-items-center rounded-md bg-cyan-soft text-primary-dark"><Icon className="size-3.5"/></span><span className="min-w-0 flex-1"><span className="block truncate text-foreground">{item.name}</span><span className="block truncate text-[10px] text-tertiary">Active · {(events.data ?? []).filter((e) => e.kind === item.kind && e.status === "SENT").length} sent</span></span></button>; })}
+            {filtered.map((item) => { const Icon = item.icon; const active = item.kind === selected; return <button key={item.kind} type="button" onClick={() => { setSelected(item.kind); setMobileFlowOpen(true); }} className={`flex w-full items-center gap-2 rounded-lg border px-2 py-2 text-left text-[12px] font-normal ${active ? "border-border bg-panel-subtle shadow-xs" : "border-transparent text-secondary hover:bg-hover"}`}><span className="grid size-7 shrink-0 place-items-center rounded-md bg-cyan-soft text-primary-dark"><Icon className="size-3.5"/></span><span className="min-w-0 flex-1"><span className="block truncate text-foreground">{item.name}</span><span className="block truncate text-[10px] text-tertiary">Active · {(events.data ?? []).filter((e) => e.kind === item.kind && e.status === "SENT").length} sent</span></span><ChevronRight className="size-3.5 text-tertiary md:hidden"/></button>; })}
           </div>
           <button type="button" onClick={() => setActivityOpen(true)} className="mt-3 flex items-center justify-between rounded-lg border border-border px-3 py-2 text-[12px] text-secondary hover:bg-hover"><span>Activity log</span><ChevronRight className="size-3.5"/></button>
         </aside>
 
-        <section className="relative min-h-0 min-w-0 overflow-hidden">
+        <section className={`${mobileFlowOpen ? "block" : "hidden md:block"} relative min-h-0 min-w-0 overflow-hidden`}>
           <header className="absolute inset-x-3 top-3 z-20 flex h-11 items-center justify-between rounded-xl border border-border bg-panel px-2.5 shadow-sm">
-            <div className="flex min-w-0 items-center gap-2"><Button variant="tertiary" size="sm" title="Back"><ArrowLeft className="size-4"/></Button><span className="h-5 w-px bg-border-subtle"/><p className="truncate text-[13px] font-normal text-foreground">{flow.name}</p><Badge variant="green"><Check className="size-3"/>Active</Badge></div>
+             <div className="flex min-w-0 items-center gap-2"><Button variant="tertiary" size="sm" title="Back" onClick={() => setMobileFlowOpen(false)}><ArrowLeft className="size-4"/></Button><span className="h-5 w-px bg-border-subtle"/><p className="truncate text-[13px] font-normal text-foreground">{flow.name}</p><Badge variant="green"><Check className="size-3"/>Active</Badge></div>
             <div className="flex items-center gap-1"><Button variant="tertiary" size="sm" title="More options"><MoreHorizontal className="size-4"/></Button><Button size="sm" disabled>Publish</Button></div>
           </header>
 
@@ -97,7 +98,7 @@ function AutomationsPage() {
         </section>
       </div>
 
-      {activityOpen && <div className="fixed inset-0 z-40 flex justify-end bg-foreground/20" onClick={() => setActivityOpen(false)}><aside className="m-2 h-[calc(100%-1rem)] w-full max-w-lg overflow-y-auto rounded-xl border border-border bg-panel shadow-lg" onClick={(e) => e.stopPropagation()}><div className="flex items-center justify-between border-b border-border-subtle px-5 py-4"><div><p className="text-[14px] font-normal text-foreground">Activity log</p><p className="mt-0.5 text-[11px] text-tertiary">Every scheduled and delivered automation</p></div><Button variant="tertiary" size="sm" onClick={() => setActivityOpen(false)}>Close</Button></div><div className="divide-y divide-border-subtle">{(events.data ?? []).map((event) => <div key={event.id} className="grid grid-cols-[1fr_auto] gap-3 px-5 py-3 text-[12px]"><div><p className="text-foreground">{FLOWS.find((item) => item.kind === event.kind)?.name ?? event.kind}</p><p className="mt-1 capitalize text-tertiary">{event.channel ?? "Channel unavailable"} · {formatSalonDateTime(event.scheduled_for)}</p></div><Badge variant={event.status === "SENT" ? "green" : event.status === "FAILED" ? "red" : "cyan"}>{event.status.toLowerCase()}</Badge></div>)}{!events.isLoading && (events.data ?? []).length === 0 && <p className="px-5 py-12 text-center text-[12px] text-tertiary">No automation activity yet.</p>}</div></aside></div>}
+      {activityOpen && <div className="fixed inset-0 z-40 flex justify-end bg-foreground/20" onClick={() => setActivityOpen(false)}><aside className="h-full w-full overflow-y-auto bg-panel pb-20 shadow-lg sm:m-2 sm:h-[calc(100%-1rem)] sm:max-w-lg sm:rounded-xl sm:border sm:border-border sm:pb-0" onClick={(e) => e.stopPropagation()}><div className="sticky top-0 z-10 flex items-center justify-between border-b border-border-subtle bg-panel px-4 py-4 sm:px-5"><div><p className="text-[14px] font-normal text-foreground">Activity log</p><p className="mt-0.5 text-[11px] text-tertiary">Every scheduled and delivered automation</p></div><Button variant="tertiary" size="sm" onClick={() => setActivityOpen(false)}>Close</Button></div><div className="divide-y divide-border-subtle">{(events.data ?? []).map((event) => <div key={event.id} className="grid grid-cols-[1fr_auto] gap-3 px-5 py-3 text-[12px]"><div><p className="text-foreground">{FLOWS.find((item) => item.kind === event.kind)?.name ?? event.kind}</p><p className="mt-1 capitalize text-tertiary">{event.channel ?? "Channel unavailable"} · {formatSalonDateTime(event.scheduled_for)}</p></div><Badge variant={event.status === "SENT" ? "green" : event.status === "FAILED" ? "red" : "cyan"}>{event.status.toLowerCase()}</Badge></div>)}{!events.isLoading && (events.data ?? []).length === 0 && <p className="px-5 py-12 text-center text-[12px] text-tertiary">No automation activity yet.</p>}</div></aside></div>}
     </AppShell>
   );
 }
