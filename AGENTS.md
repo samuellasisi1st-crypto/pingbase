@@ -45,3 +45,6 @@
 
 ## Media
 - Inbound customer media is downloaded from Meta/WhatsApp into the private `attachments` bucket under `<workspace_id>/inbound/` and stored on `messages.attachments`, because Meta media URLs expire within minutes.
+
+## Multi-tenancy
+- Each account gets its own workspace via `joinWorkspace` (creates an empty workspace on first sign-in) and must finish `/onboarding` before using the app; server functions resolve the caller's workspace from membership, never a hard-coded ID, so no business sees another's or demo data.
