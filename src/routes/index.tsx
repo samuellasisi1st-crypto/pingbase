@@ -149,6 +149,10 @@ function InboxPage() {
     return true;
   }), [all, channel, view, tab, q, previews.data]);
 
+  useEffect(() => {
+    if (!activeId && list[0] && window.matchMedia("(min-width: 1024px)").matches) setActiveId(list[0].id);
+  }, [activeId, list]);
+
   const secondary = (
     <>
       {VIEWS.map((x) => (
@@ -330,7 +334,7 @@ function ConversationPane({ conversationId, onBack }: { conversationId: string; 
   let lastDay = "";
 
   return (
-    <div className={`grid min-h-0 min-w-0 grid-cols-1 overflow-x-hidden bg-panel-subtle ${customerOpen ? "xl:grid-cols-[minmax(0,1fr)_18rem]" : ""}`}>
+    <div className={`relative grid min-h-0 min-w-0 grid-cols-1 overflow-x-hidden bg-panel-subtle ${customerOpen ? "xl:grid-cols-[minmax(0,1fr)_18rem]" : ""}`}>
       <div className="flex min-h-0 min-w-0 flex-col">
         <div className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-border-subtle bg-panel px-4 py-2">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3">
