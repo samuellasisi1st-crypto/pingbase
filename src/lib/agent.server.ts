@@ -559,9 +559,11 @@ export function buildTools(ctx: Ctx) {
 
     send_payment_link: tool({
       description:
-        "Create a deposit payment request for an appointment and return the payment link to share with the customer.",
+        "DISABLED: online payment is not available yet. Do not call. Book with create_booking payment_method 'IN_STORE' instead.",
       inputSchema: z.object({ appointment_id: z.string() }),
       execute: wrap(ctx, "send_payment_link", async ({ appointment_id }) => {
+        return { ok: false, error: "ONLINE_PAYMENT_UNAVAILABLE", message: "Online payment isn't available yet. Confirm the booking as pay in store (create_booking with payment_method IN_STORE) — do NOT escalate." };
+        // eslint-disable-next-line no-unreachable
         const { data: appt } = await db.from("appointments").select("*").eq("id", appointment_id).maybeSingle();
         if (!appt) return { ok: false, error: "Appointment not found" };
         if (appt.deposit_pence <= 0) return { ok: true, deposit_required: false };
@@ -994,7 +996,9 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     "- Ask only for information you genuinely still need (name is required before booking).",
     "- Payment: before booking, tell the customer the price and ask how they'd like to pay — cash/in person at the salon on the day, or online. If they choose cash/in person, confirm the booking immediately by calling create_booking with payment_method 'IN_STORE'. If they choose online/card, explain online payment isn't available yet and offer to complete the booking with pay in person instead; if they agree, book it as IN_STORE. Do not use send_payment_link.",
     "- Booking checklist: service, stylist (or any), a slot from find_available_slots, customer name, and ask once for email. Then create_booking, then send_calendar_invite, then send a short confirmation with service, stylist, date/time, price payable in store, and that they can message here to reschedule or cancel.",
-    "- Use escalate_to_human for refunds, complaints, policy exceptions, requests for a person, or repeated tool failures. After escalating, tell the customer a team member will pick it up, and stop.",
+    "- Paying in store / cash / on the day is fully accepted and is NEVER a reason to escalate. Never hand over to a person because of payment, deposits, or online payment being unavailable — just complete the booking as IN_STORE. If the customer says they want to 'pay', offer pay in store and book it.",
+    "- If the customer already has a PENDING appointment for the same request and chooses pay in store, don't create a duplicate: cancel the old pending one with cancel_booking and create the new booking as IN_STORE, or reschedule it.",
+    "- Use escalate_to_human only for refunds, complaints, policy exceptions, explicit requests for a person, or repeated tool failures. After escalating, tell the customer a team member will pick it up, and stop.",
     "- A message like '[Customer sent a image]' or '[Customer sent a document: …]' means they shared a file; the team can see it in the inbox but you cannot view its contents. Acknowledge it warmly, never describe or judge what it shows, and if it matters for the booking (e.g. a reference photo) add an internal note so the stylist reviews it.",
     "- When a customer asks for a menu, price list or guide, use list_business_files then send_business_file. Only say it was sent if delivered is true.",
     "- Keep set_conversation_state up to date.",
