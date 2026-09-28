@@ -3,11 +3,12 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const WORKSPACE = "11111111-1111-1111-1111-111111111111";
-
-async function assertMember(supabase: { from: (t: string) => any }) {
-  const { data } = await supabase.from("channel_connections").select("id").eq("workspace_id", WORKSPACE).limit(1);
-  if (!data?.length) throw new Error("You don't have access to this workspace.");
+/** Resolve the caller's own workspace (RLS-scoped). Every channel action runs against it. */
+async function assertMember(supabase: { from: (t: string) => any }): Promise<string> {
+  const { data } = await supabase.from("workspace_members").select("workspace_id").order("created_at", { ascending: true }).limit(1);
+  const id = data?.[0]?.workspace_id as string | undefined;
+  if (!id) throw new Error("You don't have access to this workspace.");
+  return id;
 }
 
 /** What the business sees: connected Page / Instagram and any Pages waiting to be picked. No secrets. */
