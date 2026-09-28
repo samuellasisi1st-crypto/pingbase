@@ -1,207 +1,64 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-
-import { AppShell } from "@/components/AppShell";
-import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { money } from "@/lib/time";
+import { useState, type ReactNode } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { BookOpen, Building2, CalendarClock, ChevronRight, CircleHelp, Clock3, ExternalLink, Globe2, Instagram, MessageCircle, Pencil, Plus, Search, Settings2, Trash2, UsersRound, X } from "lucide-react";
+import { toast } from "sonner";
+import { AppShell, EmptyState, SideItem, SideLabel } from "@/components/AppShell";
+import { GoogleCalendarConnectForm } from "@/components/GoogleCalendarConnectForm";
 import { MetaConnectForm } from "@/components/MetaConnectForm";
 import { WhatsAppConnectForm } from "@/components/WhatsAppConnectForm";
-import { WhatsAppTestConsole } from "@/components/WhatsAppTestConsole";
-import { GoogleCalendarConnectForm } from "@/components/GoogleCalendarConnectForm";
+import { Badge, Button, Card, Input, Switch, Textarea } from "@/design-system";
+import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/settings")({
-  head: () => ({
-    meta: [
-      { title: "Settings — Pingbase" },
-      { name: "description", content: "Services, staff, policies, knowledge and channel connections for the concierge." },
-      { property: "og:title", content: "Settings — Pingbase" },
-      { property: "og:description", content: "Services, staff, policies, knowledge and channel connections for the concierge." },
-    ],
-  }),
-  component: SettingsPage,
-});
+export const Route = createFileRoute("/settings")({ head: () => ({ meta: [
+  { title: "Settings — Pingbase" }, { name: "description", content: "Manage your business, team, booking rules, knowledge and connected channels." },
+  { property: "og:title", content: "Settings — Pingbase" }, { property: "og:description", content: "Manage your business, team, booking rules, knowledge and connected channels." },
+  { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+] }), component: SettingsPage });
 
-const CHANNEL_LABEL: Record<string, string> = {
-  NOT_CONNECTED: "Not connected",
-  CONNECTING: "Connecting",
-  CONNECTED: "Connected",
-  ERROR: "Error",
-  NEEDS_REAUTH: "Needs reauthorisation",
-};
+type Section="business"|"team"|"rules"|"knowledge"|"channels"|"workspace";
+type Knowledge={id:string;workspace_id:string;kind:string;title:string;body:string;tags:string[];active:boolean;updated_at:string};
+type KnowledgeForm={title:string;body:string;kind:string;tags:string;active:boolean};
+const emptyKnowledge:KnowledgeForm={title:"",body:"",kind:"manual",tags:"",active:true};
+const sections=[{v:"business" as const,l:"Business details",i:Building2},{v:"team" as const,l:"Staff & hours",i:UsersRound},{v:"rules" as const,l:"Booking rules",i:CalendarClock},{v:"knowledge" as const,l:"Knowledge",i:BookOpen},{v:"channels" as const,l:"Channels & integrations",i:Globe2},{v:"workspace" as const,l:"Workspace",i:Settings2}];
 
-function SettingsPage() {
-  const data = useQuery({
-    queryKey: ["settings"],
-    queryFn: async () => {
-      const [business, services, staff, hours, policies, knowledge, agent, channels] = await Promise.all([
-        supabase.from("business_settings").select("*").maybeSingle(),
-        supabase.from("services").select("*").order("name"),
-        supabase.from("staff").select("*").order("name"),
-        supabase.from("staff_working_hours").select("*, staff:staff_id(name)").order("weekday"),
-        supabase.from("business_policies").select("*").order("policy_type"),
-        supabase.from("knowledge_sources").select("*").order("title"),
-        supabase.from("ai_agent_settings").select("*").maybeSingle(),
-        supabase.from("channel_connections").select("*").order("channel"),
-      ]);
-      return {
-        business: business.data,
-        services: services.data ?? [],
-        staff: staff.data ?? [],
-        hours: hours.data ?? [],
-        policies: policies.data ?? [],
-        knowledge: knowledge.data ?? [],
-        agent: agent.data,
-        channels: channels.data ?? [],
-      };
-    },
-  });
-
-  if (data.isLoading || !data.data) {
-    return (
-      <AppShell title="Settings">
-        <p className="p-6 text-sm text-muted-foreground">Loading…</p>
-      </AppShell>
-    );
-  }
-
-  const d = data.data;
-  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-  return (
-    <AppShell title="Settings">
-      <div className="p-6">
-        <Tabs defaultValue="services">
-          <TabsList className="flex-wrap">
-            <TabsTrigger value="services">Services</TabsTrigger>
-            <TabsTrigger value="staff">Staff &amp; hours</TabsTrigger>
-            <TabsTrigger value="rules">Booking rules</TabsTrigger>
-            <TabsTrigger value="knowledge">Knowledge</TabsTrigger>
-            <TabsTrigger value="agent">AI agent</TabsTrigger>
-            <TabsTrigger value="channels">Channels</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="services" className="mt-4 grid gap-3">
-            {(d.services as unknown as Array<{ id: string; name: string; description: string | null; duration_minutes: number; price_pence: number; deposit_pence: number; active: boolean }>).map((s) => (
-              <div key={s.id} className="rounded-xl border bg-surface p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-display text-lg">{s.name}</p>
-                    <p className="text-sm text-muted-foreground">{s.description}</p>
-                  </div>
-                  <div className="flex flex-wrap justify-end gap-1">
-                    <Badge variant="outline">{money(s.price_pence)}</Badge>
-                    <Badge variant="outline">{s.duration_minutes} min</Badge>
-                    <Badge variant={s.deposit_pence ? "default" : "secondary"}>
-                      {s.deposit_pence ? `${money(s.deposit_pence)} deposit` : "No deposit"}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="staff" className="mt-4 grid gap-3">
-            {(d.staff as unknown as Array<{ id: string; name: string; role: string | null }>).map((s) => (
-              <div key={s.id} className="rounded-xl border bg-surface p-4">
-                <p className="font-display text-lg">{s.name}</p>
-                <p className="text-sm text-muted-foreground">{s.role}</p>
-                <ul className="mt-2 text-sm text-muted-foreground">
-                  {(d.hours as unknown as Array<{ id: string; staff_id: string; weekday: number; start_time: string; end_time: string }>)
-                    .filter((h) => h.staff_id === s.id)
-                    .map((h) => (
-                      <li key={h.id}>
-                        {days[h.weekday]} · {h.start_time.slice(0, 5)}–{h.end_time.slice(0, 5)}
-                      </li>
-                    ))}
-                </ul>
-              </div>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="rules" className="mt-4 space-y-3">
-            {d.business && (
-              <div className="rounded-xl border bg-surface p-4 text-sm">
-                <p className="font-display text-lg">Booking rules</p>
-                <p className="mt-2 text-muted-foreground">
-                  Buffer between appointments: {(d.business as { buffer_minutes: number }).buffer_minutes} min ·
-                  Minimum notice: {(d.business as { min_notice_minutes: number }).min_notice_minutes} min ·
-                  Bookable up to {(d.business as { max_days_ahead: number }).max_days_ahead} days ahead
-                </p>
-              </div>
-            )}
-            {(d.policies as unknown as Array<{ id: string; policy_type: string; title: string; body: string }>).map((p) => (
-              <div key={p.id} className="rounded-xl border bg-surface p-4">
-                <p className="font-medium">{p.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{p.body}</p>
-              </div>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="knowledge" className="mt-4 grid gap-3">
-            {(d.knowledge as unknown as Array<{ id: string; title: string; body: string; source_type: string }>).map((k) => (
-              <div key={k.id} className="rounded-xl border bg-surface p-4">
-                <p className="font-medium">{k.title}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{k.body}</p>
-                <Badge variant="outline" className="mt-2">{k.source_type}</Badge>
-              </div>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="agent" className="mt-4">
-            {d.agent && (
-              <div className="space-y-3 rounded-xl border bg-surface p-5 text-sm">
-                <p className="font-display text-lg">{(d.agent as { agent_name: string }).agent_name}</p>
-                <p className="text-muted-foreground">Tone: {(d.agent as { tone: string }).tone}</p>
-                <p className="text-muted-foreground">Autonomy: {(d.agent as { autonomy_level: string }).autonomy_level}</p>
-                <div>
-                  <p className="font-medium">Instructions</p>
-                  <p className="whitespace-pre-wrap text-muted-foreground">
-                    {(d.agent as { instructions: string }).instructions}
-                  </p>
-                </div>
-                <div>
-                  <p className="font-medium">Escalates when</p>
-                  <p className="whitespace-pre-wrap text-muted-foreground">
-                    {(d.agent as { escalation_rules: string }).escalation_rules}
-                  </p>
-                </div>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="channels" className="mt-4 grid gap-3">
-            <MetaConnectForm
-              connected={(d.channels as unknown as Array<{ channel: string; status: string }>).some(
-                (c) => c.channel === "messenger" && c.status === "CONNECTED",
-              )}
-            />
-            <WhatsAppConnectForm />
-            <GoogleCalendarConnectForm />
-            {(d.channels as unknown as Array<{ channel: string; status: string }>).some(
-              (c) => c.channel === "whatsapp" && c.status === "CONNECTED",
-            ) && <WhatsAppTestConsole />}
-            {(d.channels as unknown as Array<{ id: string; channel: string; status: string; last_error: string | null }>)
-              .filter((c) => c.channel !== "whatsapp")
-              .map((c) => (
-              <div key={c.id} className="flex items-center justify-between rounded-xl border bg-surface p-4">
-                <div>
-                  <p className="font-medium capitalize">{c.channel === "test" ? "Internal test chat" : c.channel}</p>
-                  {c.last_error && <p className="text-xs text-destructive">{c.last_error}</p>}
-                </div>
-                <Badge variant={c.status === "CONNECTED" ? "default" : c.status === "ERROR" ? "destructive" : "secondary"}>
-                  {CHANNEL_LABEL[c.status] ?? c.status}
-                </Badge>
-              </div>
-            ))}
-            <p className="text-xs text-muted-foreground">
-              Instagram, Messenger and WhatsApp go live once connected above. Telegram, Gmail and Outlook still need their
-              credentials before they can receive messages.
-            </p>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </AppShell>
-  );
+function SettingsPage(){
+ const [section,setSection]=useState<Section>("channels");
+ const secondary=<><div className="mb-3 px-2"><p className="text-[13px] text-foreground">Settings</p><p className="mt-0.5 text-[10px] text-tertiary">Studio Nine Hair</p></div><div className="relative mb-3"><Search className="absolute left-2.5 top-2.5 size-3.5 text-tertiary"/><Input size="sm" placeholder="Search settings" className="pl-8"/></div><SideLabel>Business</SideLabel>{sections.slice(0,4).map(s=><SideItem key={s.v} icon={s.i} label={s.l} active={section===s.v} onClick={()=>setSection(s.v)}/>) }<SideLabel>Connections</SideLabel>{sections.slice(4).map(s=><SideItem key={s.v} icon={s.i} label={s.l} active={section===s.v} onClick={()=>setSection(s.v)}/>) }<div className="mt-auto border-t border-border-subtle pt-3"><SideItem icon={CircleHelp} label="Help"/></div></>;
+ return <AppShell secondary={secondary}><div className="min-h-full bg-panel"><SettingsContent section={section}/></div></AppShell>;
 }
+
+function SettingsContent({section}:{section:Section}){
+ const data=useQuery({queryKey:["settings"],queryFn:async()=>{const [business,staff,hours,policies,knowledge,channels,members]=await Promise.all([supabase.from("business_settings").select("*").maybeSingle(),supabase.from("staff").select("*").order("name"),supabase.from("staff_working_hours").select("*, staff:staff_id(name)").order("weekday"),supabase.from("business_policies").select("*").order("title"),supabase.from("knowledge_sources").select("*").order("updated_at",{ascending:false}),supabase.from("channel_connections").select("*").order("channel"),supabase.from("workspace_members").select("*")]);for(const result of [business,staff,hours,policies,knowledge,channels,members])if(result.error)throw result.error;return{business:business.data,staff:staff.data??[],hours:hours.data??[],policies:policies.data??[],knowledge:(knowledge.data??[]) as Knowledge[],channels:channels.data??[],members:members.data??[]};}});
+ if(data.isError)return <div className="p-8 text-[12px] text-red-strong">Settings could not be loaded. Refresh and try again.</div>;
+ if(data.isLoading||!data.data)return <div className="p-8 text-[12px] text-secondary">Loading settings…</div>; const d=data.data;
+ if(section==="channels")return <ChannelsSection channels={d.channels as Array<{channel:string;status:string}>}/>;
+ if(section==="knowledge")return <KnowledgeSection entries={d.knowledge}/>;
+ const copy: [string, string] = section === "business" ? ["Business details","The information Nia uses when speaking for your business."] : section === "team" ? ["Staff & hours","Your team and the working hours used for availability."] : section === "rules" ? ["Booking rules","The limits and policies Nia applies to every booking."] : ["Workspace","The people who can access Studio Nine Hair in Pingbase."];
+ return <SettingsPageFrame title={copy[0]} subtitle={copy[1]}>
+  {section==="business"&&<BusinessSection business={d.business}/>} {section==="team"&&<TeamSection staff={d.staff} hours={d.hours}/>} {section==="rules"&&<RulesSection business={d.business} policies={d.policies}/>} {section==="workspace"&&<WorkspaceSection members={d.members}/>} 
+ </SettingsPageFrame>;
+}
+
+function SettingsPageFrame({title,subtitle,actions,children}:{title:string;subtitle:string;actions?:ReactNode;children:ReactNode}){return <div className="mx-auto max-w-5xl px-8 pb-12 pt-7"><header className="flex items-start justify-between gap-4 border-b border-border-subtle pb-5"><div><h1 className="text-xl text-foreground">{title}</h1><p className="mt-1 text-[12px] text-secondary">{subtitle}</p></div>{actions}</header><div className="pt-5">{children}</div></div>}
+function Row({label,value,detail}:{label:string;value:string;detail?:string}){return <div className="grid gap-2 border-b border-border-subtle px-4 py-3 last:border-0 md:grid-cols-[12rem_minmax(0,1fr)]"><span className="text-[11px] text-secondary">{label}</span><span className="text-[12px] text-foreground">{value}{detail&&<span className="ml-2 text-[10px] text-tertiary">{detail}</span>}</span></div>}
+function BusinessSection({business}:{business:any}){return <Card className="overflow-hidden p-0"><Row label="Business name" value={business?.legal_name??"Studio Nine Hair"}/><Row label="Address" value={business?.address??"Not added"}/><Row label="Email" value={business?.email??"Not added"}/><Row label="Phone" value={business?.phone??"Not added"}/><Row label="Currency" value={(business?.currency??"GBP").toUpperCase()}/></Card>}
+function TeamSection({staff,hours}:{staff:any[];hours:any[]}){const days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];return <div className="grid gap-3">{staff.map(s=><Card key={s.id}><div className="flex items-center justify-between"><div><p className="text-[13px] text-foreground">{s.name}</p><p className="text-[11px] text-tertiary">{s.role_title??"Team member"}</p></div><Badge variant={s.active?"green":"neutral"}>{s.active?"Active":"Inactive"}</Badge></div><div className="mt-3 flex flex-wrap gap-1.5">{hours.filter(h=>h.staff_id===s.id).map(h=><Badge key={h.id}>{days[h.weekday]} {String(h.start_time).slice(0,5)}–{String(h.end_time).slice(0,5)}</Badge>)}</div></Card>)}</div>}
+function RulesSection({business,policies}:{business:any;policies:any[]}){return <div className="space-y-4"><div className="grid gap-3 md:grid-cols-3"><Metric icon={Clock3} label="Buffer" value={`${business?.buffer_minutes??0} min`}/><Metric icon={CalendarClock} label="Minimum notice" value={`${business?.min_notice_minutes??0} min`}/><Metric icon={CalendarClock} label="Booking window" value={`${business?.max_days_ahead??0} days`}/></div><div className="grid gap-3">{policies.map(p=><Card key={p.id}><p className="text-[13px] text-foreground">{p.title}</p><p className="mt-1 text-[12px] text-secondary">{p.body}</p><Badge className="mt-3">{p.kind}</Badge></Card>)}</div></div>}
+function Metric({icon:Icon,label,value}:{icon:React.ComponentType<{className?:string}>;label:string;value:string}){return <Card><Icon className="size-4 text-primary"/><p className="mt-3 text-[10px] text-tertiary">{label}</p><p className="mt-1 text-lg text-foreground">{value}</p></Card>}
+function WorkspaceSection({members}:{members:any[]}){return <Card className="overflow-hidden p-0"><div className="grid grid-cols-[minmax(0,1fr)_10rem] border-b border-border-subtle bg-panel-subtle px-4 py-2.5 text-[11px] text-secondary"><span>Member</span><span>Role</span></div>{members.map(m=><div key={m.id} className="grid grid-cols-[minmax(0,1fr)_10rem] border-b border-border-subtle px-4 py-3 text-[12px] last:border-0"><span>Workspace member</span><span className="capitalize text-secondary">{m.role}</span></div>)}</Card>}
+
+function KnowledgeSection({entries}:{entries:Knowledge[]}){
+ const qc=useQueryClient();const [query,setQuery]=useState("");const [editing,setEditing]=useState<Knowledge|null|"new">(null);const [form,setForm]=useState<KnowledgeForm>(emptyKnowledge);const [saving,setSaving]=useState(false);
+ const open=(item?:Knowledge)=>{setEditing(item??"new");setForm(item?{title:item.title,body:item.body,kind:item.kind,tags:item.tags.join(", "),active:item.active}:emptyKnowledge)};
+ const save=async()=>{if(!form.title.trim()||!form.body.trim()){toast.error("Add a title and useful information.");return;}setSaving(true);try{const values={title:form.title.trim(),body:form.body.trim(),kind:form.kind.trim()||"manual",tags:form.tags.split(",").map(t=>t.trim()).filter(Boolean),active:form.active,updated_at:new Date().toISOString()};if(editing==="new"){const {data:m,error:me}=await supabase.from("workspace_members").select("workspace_id").limit(1).single();if(me||!m)throw me??new Error("No workspace found");const {error}=await supabase.from("knowledge_sources").insert({...values,workspace_id:m.workspace_id});if(error)throw error;}else if(editing){const {error}=await supabase.from("knowledge_sources").update(values).eq("id",editing.id);if(error)throw error;}toast.success("Knowledge saved");setEditing(null);await qc.invalidateQueries({queryKey:["settings"]});}catch(e){toast.error(e instanceof Error?e.message:"Couldn't save this knowledge.")}finally{setSaving(false)}};
+ const remove=async(item:Knowledge)=>{if(!window.confirm(`Delete “${item.title}”?`))return;const {error}=await supabase.from("knowledge_sources").delete().eq("id",item.id);if(error){toast.error(error.message);return;}toast.success("Knowledge deleted");setEditing(null);await qc.invalidateQueries({queryKey:["settings"]});};
+ const filtered=entries.filter(e=>`${e.title} ${e.body} ${e.tags.join(" ")}`.toLowerCase().includes(query.toLowerCase()));
+ return <SettingsPageFrame title="Knowledge" subtitle="Keep the information Nia relies on accurate, useful and up to date." actions={<Button size="sm" onClick={()=>open()}><Plus className="size-3.5"/>Add knowledge</Button>}><div className="relative mb-4 max-w-md"><Search className="absolute left-2.5 top-2.5 size-3.5 text-tertiary"/><Input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search knowledge…" className="pl-8"/></div><div className="grid gap-3">{filtered.map(item=><button type="button" key={item.id} onClick={()=>open(item)} className="rounded-lg border border-border bg-panel p-4 text-left shadow-xs hover:bg-panel-subtle"><div className="flex items-start justify-between gap-4"><div className="min-w-0"><div className="flex items-center gap-2"><p className="truncate text-[13px] text-foreground">{item.title}</p><Badge variant={item.active?"green":"neutral"}>{item.active?"Live":"Paused"}</Badge></div><p className="mt-1 line-clamp-2 text-[12px] text-secondary">{item.body}</p><div className="mt-3 flex gap-1">{item.tags.map(tag=><Badge key={tag} variant="cyan">{tag}</Badge>)}<Badge>{item.kind}</Badge></div></div><Pencil className="size-4 shrink-0 text-tertiary"/></div></button>)}{filtered.length===0&&<EmptyState icon={BookOpen} title="No knowledge found" body="Add policies, answers and business information for Nia to use."/>}</div>
+ {editing&&<div className="fixed inset-0 z-50 flex justify-end bg-foreground/20" onClick={()=>setEditing(null)}><aside className="m-2 h-[calc(100%-1rem)] w-full max-w-lg overflow-y-auto rounded-xl border border-border bg-panel shadow-lg" onClick={e=>e.stopPropagation()}><header className="flex items-center justify-between border-b border-border-subtle px-5 py-4"><div><p className="text-[15px] text-foreground">{editing==="new"?"Add knowledge":"Enrich knowledge"}</p><p className="text-[11px] text-tertiary">Nia can use every active entry when answering.</p></div><Button variant="tertiary" size="sm" onClick={()=>setEditing(null)} title="Close"><X className="size-4"/></Button></header><div className="space-y-4 p-5"><Field label="Title"><Input value={form.title} onChange={e=>setForm({...form,title:e.target.value})}/></Field><Field label="Knowledge"><Textarea className="min-h-52" value={form.body} onChange={e=>setForm({...form,body:e.target.value})} placeholder="Add a clear answer, policy, instruction or business fact…"/></Field><div className="grid grid-cols-2 gap-3"><Field label="Type"><Input value={form.kind} onChange={e=>setForm({...form,kind:e.target.value})}/></Field><Field label="Tags"><Input value={form.tags} onChange={e=>setForm({...form,tags:e.target.value})} placeholder="booking, aftercare"/></Field></div><div className="flex items-center justify-between rounded-lg border border-border bg-panel-subtle p-3"><div><p className="text-[12px] text-foreground">Available to Nia</p><p className="text-[11px] text-tertiary">Pause outdated information without deleting it.</p></div><Switch label="Available to Nia" checked={form.active} onCheckedChange={active=>setForm({...form,active})}/></div><div className="flex gap-2">{editing!=="new"&&<Button variant="destructive" size="sm" onClick={()=>void remove(editing)}><Trash2 className="size-3.5"/>Delete</Button>}<Button className="ml-auto" disabled={saving} onClick={()=>void save()}>{saving?"Saving…":"Save knowledge"}</Button></div></div></aside></div>}</SettingsPageFrame>;
+}
+
+function ChannelsSection({channels}:{channels:Array<{channel:string;status:string}>}){const [focus,setFocus]=useState<"whatsapp"|"meta"|"google"|null>(null);const connected=(ch:string)=>channels.some(c=>c.channel===ch&&c.status==="CONNECTED");const cards=[{id:"whatsapp" as const,name:"WhatsApp Business",detail:"Messages, booking choices and reminders",icon:MessageCircle,on:connected("whatsapp")},{id:"meta" as const,name:"Instagram & Messenger",detail:"Facebook Page and Instagram direct messages",icon:Instagram,on:connected("messenger")||connected("instagram")},{id:"google" as const,name:"Google Calendar",detail:"Busy-time checks and customer invitations",icon:CalendarClock,on:false}];return <SettingsPageFrame title="Channels & integrations" subtitle="Connect the places customers message you and the calendar that protects availability."><div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{cards.map(c=><button key={c.id} type="button" onClick={()=>setFocus(c.id)} className="group flex min-h-28 items-start gap-3 rounded-lg border border-border bg-panel p-4 text-left shadow-xs hover:border-border-strong hover:bg-panel-subtle"><span className="grid size-9 shrink-0 place-items-center rounded-lg bg-hover text-primary"><c.icon className="size-4"/></span><span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><span className="text-[13px] text-foreground">{c.name}</span><ChevronRight className="size-3.5 text-tertiary"/></span><span className="mt-1 block text-[11px] text-secondary">{c.detail}</span><Badge className="mt-3" variant={c.on?"green":"neutral"}>{c.on?"Connected":"Manage"}</Badge></span></button>)}</div><div className="grid gap-3 md:grid-cols-2"><Card variant="subtle"><p className="text-[10px] text-tertiary">CONNECTED CHANNELS</p><p className="mt-2 text-[15px] text-foreground">One inbox, one customer record</p><p className="mt-1 text-[12px] text-secondary">Messages remain tied to their original channel while Nia can recognise the same customer across verified email and phone details.</p></Card><Card variant="subtle"><p className="text-[10px] text-tertiary">AVAILABILITY</p><p className="mt-2 text-[15px] text-foreground">Calendar-aware booking</p><p className="mt-1 text-[12px] text-secondary">Connected calendar events block appointment times before Nia offers them.</p></Card></div>
+ {focus&&<div className="fixed inset-0 z-50 flex justify-end bg-foreground/20" onClick={()=>setFocus(null)}><aside className="m-2 h-[calc(100%-1rem)] w-full max-w-xl overflow-y-auto rounded-xl border border-border bg-panel shadow-lg" onClick={e=>e.stopPropagation()}><header className="flex items-center justify-between border-b border-border-subtle px-5 py-4"><div><p className="text-[15px] text-foreground">{cards.find(c=>c.id===focus)?.name}</p><p className="text-[11px] text-tertiary">Connection details and controls</p></div><Button variant="tertiary" size="sm" onClick={()=>setFocus(null)} title="Close"><X className="size-4"/></Button></header><div className="p-5">{focus==="whatsapp"&&<WhatsAppConnectForm/>}{focus==="meta"&&<MetaConnectForm connected={connected("messenger")}/>} {focus==="google"&&<GoogleCalendarConnectForm/>}</div></aside></div>}
+ </SettingsPageFrame>}
+function Field({label,children}:{label:string;children:ReactNode}){return <label className="grid gap-1.5 text-[11px] text-secondary"><span>{label}</span>{children}</label>}

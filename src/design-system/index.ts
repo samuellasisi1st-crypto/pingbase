@@ -13,3 +13,5 @@ export * from "./components/BookingContextCard";
 export * from "./components/AvailabilityOptions";
 export * from "./components/HandoverCard";
 export * from "./components/ContactInspector";
+export * from "./components/Select";
+export * from "./components/Switch";

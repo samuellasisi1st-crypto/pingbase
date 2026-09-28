@@ -1,108 +1,31 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-
-import { AppShell } from "@/components/AppShell";
+import { CalendarDays, ChevronLeft, ChevronRight, Clock3, CreditCard, Search, UserRound, X } from "lucide-react";
+import { AppShell, EmptyState, Page, PageHeader } from "@/components/AppShell";
+import { Avatar, Badge, Button, Input, Tabs } from "@/design-system";
 import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { formatSalonDateTime, money } from "@/lib/time";
+import { formatSalonDateTime, formatSalonTime, money } from "@/lib/time";
 
-export const Route = createFileRoute("/appointments")({
-  head: () => ({
-    meta: [
-      { title: "Appointments — Pingbase" },
-      { name: "description", content: "Every booking the concierge has made, with deposits and staff assignment." },
-      { property: "og:title", content: "Appointments — Pingbase" },
-      { property: "og:description", content: "Every booking the concierge has made, with deposits and staff assignment." },
-    ],
-  }),
-  component: AppointmentsPage,
-});
+export const Route = createFileRoute("/appointments")({ head: () => ({ meta: [
+  { title: "Appointments — Pingbase" }, { name: "description", content: "Manage customer bookings, deposits, staff and appointment status." },
+  { property: "og:title", content: "Appointments — Pingbase" }, { property: "og:description", content: "Manage customer bookings, deposits, staff and appointment status." },
+  { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
+] }), component: AppointmentsPage });
 
-const STATUSES = ["ALL", "PENDING", "CONFIRMED", "COMPLETED", "CANCELLED", "NO_SHOW"];
+type Appointment = { id:string; starts_at:string; ends_at:string; status:string; deposit_status:string; price_pence:number; deposit_pence:number; notes:string|null; sync_status:string; created_at:string; service:{name:string}|null; staff:{name:string}|null; contact:{full_name:string|null;email:string|null;phone:string|null}|null; conversation:{channel:string}|null };
+const filters = [{value:"upcoming",label:"Upcoming"},{value:"all",label:"All"},{value:"pending",label:"Pending"},{value:"completed",label:"Completed"},{value:"cancelled",label:"Cancelled"}];
+function badge(status:string){if(status==="CONFIRMED"||status==="COMPLETED")return "green";if(status==="CANCELLED"||status==="NO_SHOW")return "red";if(status==="PENDING")return "yellow";return "neutral";}
 
-function AppointmentsPage() {
-  const [status, setStatus] = useState("ALL");
-
-  const appointments = useQuery({
-    queryKey: ["appointments"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("appointments")
-        .select("*, service:service_id(name), staff:staff_id(name), contact:contact_id(full_name,email,phone)")
-        .order("starts_at", { ascending: true });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  const rows = (appointments.data ?? []).filter((a) => status === "ALL" || a.status === status);
-
-  return (
-    <AppShell title="Appointments">
-      <div className="space-y-4 p-6">
-        <div className="flex flex-wrap gap-1">
-          {STATUSES.map((s) => (
-            <button
-              key={s}
-              onClick={() => setStatus(s)}
-              className={`rounded-full px-3 py-1 text-xs ${
-                status === s ? "bg-primary text-primary-foreground" : "bg-surface-muted text-muted-foreground"
-              }`}
-            >
-              {s.replaceAll("_", " ")}
-            </button>
-          ))}
-        </div>
-
-        {appointments.isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
-        {!appointments.isLoading && rows.length === 0 && (
-          <p className="text-sm text-muted-foreground">No appointments in this view yet.</p>
-        )}
-
-        <div className="grid gap-3">
-          {(rows as unknown as Array<{
-            id: string;
-            starts_at: string;
-            ends_at: string;
-            status: string;
-            deposit_status: string;
-            price_pence: number;
-            deposit_pence: number;
-            service: { name: string } | null;
-            staff: { name: string } | null;
-            contact: { full_name: string | null; email: string | null; phone: string | null } | null;
-          }>).map((a) => (
-            <div key={a.id} className="rounded-xl border bg-surface p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <p className="font-display text-lg">{a.service?.name ?? "Service"}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatSalonDateTime(a.starts_at)} – {formatSalonDateTime(a.ends_at).split(", ").pop()} · with{" "}
-                    {a.staff?.name}
-                  </p>
-                  <p className="mt-1 text-sm">
-                    {a.contact?.full_name ?? "Customer"}
-                    {a.contact?.email ? ` · ${a.contact.email}` : ""}
-                    {a.contact?.phone ? ` · ${a.contact.phone}` : ""}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant={a.status === "CONFIRMED" ? "default" : a.status === "CANCELLED" ? "destructive" : "secondary"}>
-                    {a.status}
-                  </Badge>
-                  <Badge variant="outline">{money(a.price_pence)}</Badge>
-                  {a.deposit_pence > 0 && (
-                    <Badge variant="outline">
-                      deposit {money(a.deposit_pence)} · {a.deposit_status.toLowerCase()}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </AppShell>
-  );
+function AppointmentsPage(){
+ const [filter,setFilter]=useState("upcoming"); const [query,setQuery]=useState(""); const [selected,setSelected]=useState<Appointment|null>(null);
+ const appointments=useQuery({queryKey:["appointments"],queryFn:async()=>{const {data,error}=await supabase.from("appointments").select("*, service:service_id(name), staff:staff_id(name), contact:contact_id(full_name,email,phone), conversation:conversation_id(channel)").order("starts_at",{ascending:true});if(error)throw error;return (data??[]) as unknown as Appointment[];}});
+ const now=Date.now(); const list=useMemo(()=>(appointments.data??[]).filter((a)=>{if(filter==="upcoming"&&new Date(a.ends_at).getTime()<now)return false;if(filter!=="all"&&filter!=="upcoming"&&a.status!==filter.toUpperCase())return false;return !query||`${a.contact?.full_name} ${a.service?.name} ${a.staff?.name}`.toLowerCase().includes(query.toLowerCase());}),[appointments.data,filter,query,now]);
+ const grouped=useMemo(()=>list.reduce<Record<string,Appointment[]>>((acc,a)=>{const key=new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/London",weekday:"long",day:"numeric",month:"long",year:"numeric"}).format(new Date(a.starts_at));(acc[key]??=[]).push(a);return acc;},{}),[list]);
+ return <AppShell><Page><PageHeader title="Appointments" subtitle="Bookings made by Nia and your team, in one schedule." count={list.length} actions={<Button size="sm" disabled title="Manual booking is coming next">New appointment</Button>}/>
+ <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle pt-4"><Tabs items={filters} value={filter} onChange={setFilter} variant="segmented" size="sm"/><div className="flex items-center gap-2"><div className="relative"><Search className="absolute left-2.5 top-2.5 size-3.5 text-tertiary"/><Input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search bookings…" className="w-56 pl-8"/></div><Button variant="secondary" size="sm" title="Previous period"><ChevronLeft className="size-3.5"/></Button><Button variant="secondary" size="sm" title="Next period"><ChevronRight className="size-3.5"/></Button></div></div>
+ <div className="space-y-5">{Object.entries(grouped).map(([date,rows])=><section key={date}><h2 className="mb-2 text-[11px] text-secondary">{date}</h2><div className="overflow-hidden rounded-lg border border-border bg-panel shadow-xs">{rows.map(a=><button key={a.id} type="button" onClick={()=>setSelected(a)} className="grid w-full gap-3 border-b border-border-subtle px-4 py-3 text-left last:border-0 hover:bg-panel-subtle md:grid-cols-[6rem_minmax(0,1.2fr)_minmax(0,1fr)_8rem_7rem] md:items-center"><span><span className="block text-[13px] text-foreground">{formatSalonTime(a.starts_at)}</span><span className="text-[10px] text-tertiary">to {formatSalonTime(a.ends_at)}</span></span><span className="flex min-w-0 items-center gap-2"><Avatar name={a.contact?.full_name??"Customer"} size="sm"/><span className="min-w-0"><span className="block truncate text-[13px] text-foreground">{a.contact?.full_name??"Customer"}</span><span className="block truncate text-[11px] capitalize text-tertiary">{a.conversation?.channel??"Direct booking"}</span></span></span><span className="min-w-0"><span className="block truncate text-[12px] text-foreground">{a.service?.name??"Service"}</span><span className="block truncate text-[11px] text-tertiary">with {a.staff?.name??"Unassigned"}</span></span><span className="text-[12px] text-secondary">{money(a.price_pence)}</span><Badge variant={badge(a.status)}>{a.status.replaceAll("_"," ").toLowerCase()}</Badge></button>)}</div></section>)}{!appointments.isLoading&&list.length===0&&<EmptyState icon={CalendarDays} title="No appointments here" body="Bookings will appear here as soon as Nia or your team confirms them."/>}</div></Page>
+ {selected&&<div className="fixed inset-0 z-50 flex justify-end bg-foreground/20" onClick={()=>setSelected(null)}><aside className="m-2 h-[calc(100%-1rem)] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-panel shadow-lg" onClick={(e)=>e.stopPropagation()}><header className="flex items-center justify-between border-b border-border-subtle px-5 py-4"><div><p className="text-[15px] text-foreground">Appointment details</p><p className="text-[11px] text-tertiary">Created {formatSalonDateTime(selected.created_at)}</p></div><Button variant="tertiary" size="sm" onClick={()=>setSelected(null)} title="Close"><X className="size-4"/></Button></header><div className="space-y-5 p-5"><div className="flex items-center gap-3"><Avatar name={selected.contact?.full_name??"Customer"} size="lg"/><div><p className="text-[15px] text-foreground">{selected.contact?.full_name??"Customer"}</p><p className="text-[12px] text-secondary">{selected.contact?.email??selected.contact?.phone??"No contact details"}</p></div></div><Detail icon={CalendarDays} label="Service" value={selected.service?.name??"Service"}/><Detail icon={Clock3} label="Time" value={`${formatSalonDateTime(selected.starts_at)} – ${formatSalonTime(selected.ends_at)}`}/><Detail icon={UserRound} label="Staff" value={selected.staff?.name??"Unassigned"}/><Detail icon={CreditCard} label="Payment" value={`${money(selected.price_pence)} · ${selected.deposit_pence?`${money(selected.deposit_pence)} deposit ${selected.deposit_status.toLowerCase()}`:"No deposit"}`}/><div className="flex items-center justify-between rounded-lg border border-border bg-panel-subtle p-3"><span className="text-[12px] text-secondary">Booking status</span><Badge variant={badge(selected.status)}>{selected.status.toLowerCase()}</Badge></div>{selected.notes&&<div><p className="mb-1 text-[11px] text-secondary">Notes</p><p className="rounded-lg border border-border bg-panel-subtle p-3 text-[12px] text-foreground">{selected.notes}</p></div>}</div></aside></div>}
+ </AppShell>;
 }
+function Detail({icon:Icon,label,value}:{icon:React.ComponentType<{className?:string}>;label:string;value:string}){return <div className="flex gap-3"><span className="grid size-8 place-items-center rounded-md bg-hover text-secondary"><Icon className="size-4"/></span><div><p className="text-[10px] text-tertiary">{label}</p><p className="text-[12px] text-foreground">{value}</p></div></div>}

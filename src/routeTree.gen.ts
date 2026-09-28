@@ -24,6 +24,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ReviewsRouteImport } from './routes/reviews'
 import { Route as SearchRouteImport } from './routes/search'
+import { Route as ServicesRouteImport } from './routes/services'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TeamChatRouteImport } from './routes/team-chat'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -109,6 +110,11 @@ const SearchRoute = SearchRouteImport.update({
   path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ServicesRoute = ServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/reviews': typeof ReviewsRoute
   '/search': typeof SearchRoute
+  '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
   '/team-chat': typeof TeamChatRoute
   '/terms': typeof TermsRoute
@@ -199,6 +206,7 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/reviews': typeof ReviewsRoute
   '/search': typeof SearchRoute
+  '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
   '/team-chat': typeof TeamChatRoute
   '/terms': typeof TermsRoute
@@ -226,6 +234,7 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/reviews': typeof ReviewsRoute
   '/search': typeof SearchRoute
+  '/services': typeof ServicesRoute
   '/settings': typeof SettingsRoute
   '/team-chat': typeof TeamChatRoute
   '/terms': typeof TermsRoute
@@ -254,6 +263,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reviews'
     | '/search'
+    | '/services'
     | '/settings'
     | '/team-chat'
     | '/terms'
@@ -280,6 +290,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reviews'
     | '/search'
+    | '/services'
     | '/settings'
     | '/team-chat'
     | '/terms'
@@ -306,6 +317,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/reviews'
     | '/search'
+    | '/services'
     | '/settings'
     | '/team-chat'
     | '/terms'
@@ -333,6 +345,7 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   ReviewsRoute: typeof ReviewsRoute
   SearchRoute: typeof SearchRoute
+  ServicesRoute: typeof ServicesRoute
   SettingsRoute: typeof SettingsRoute
   TeamChatRoute: typeof TeamChatRoute
   TermsRoute: typeof TermsRoute
@@ -451,6 +464,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/services': {
+      id: '/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof ServicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -533,6 +553,7 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   ReviewsRoute: ReviewsRoute,
   SearchRoute: SearchRoute,
+  ServicesRoute: ServicesRoute,
   SettingsRoute: SettingsRoute,
   TeamChatRoute: TeamChatRoute,
   TermsRoute: TermsRoute,

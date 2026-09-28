@@ -2,7 +2,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import {
-  Inbox, Users, CalendarDays, Bot, Search, Settings, ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, Zap,
+  Inbox, Users, CalendarDays, Bot, Search, Settings, ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, Zap, Scissors,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +14,7 @@ const NAV = [
   { to: "/", label: "Inbox", icon: Inbox },
   { to: "/contacts", label: "Contacts", icon: Users },
   { to: "/appointments", label: "Appointments", icon: CalendarDays },
+  { to: "/services", label: "Services", icon: Scissors },
   { to: "/automations", label: "Automations", icon: Zap },
   { to: "/ai-agents", label: "AI Agents", icon: Bot },
 ] as const;
