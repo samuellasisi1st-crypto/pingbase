@@ -8,7 +8,7 @@ import { Badge, Button, Card } from "@/design-system";
 import { supabase } from "@/integrations/supabase/client";
 import { getGoogleCalendarStatus } from "@/lib/channels.functions";
 import { formatSalonTime, money } from "@/lib/time";
-import logo from "@/assets/workspace-logo.jpg.asset.json";
+import dashboardSculpture from "@/assets/dashboard-sculpture.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -98,6 +98,14 @@ function Dashboard() {
   const focus = unpaid[0] ?? next;
   const focusNeeds = focus && focus.deposit_status === "REQUIRED" ? "Deposit still unpaid" : focus ? "Your next booking" : null;
   const bookedWeek = past(7).length;
+  const weekAppointments = past(7);
+  const weekRevenue = rev(weekAppointments);
+  const revenueByService = Object.entries(weekAppointments.reduce<Record<string, number>>((totals, appointment) => {
+    const service = appointment.service?.name ?? "Other services";
+    totals[service] = (totals[service] ?? 0) + appointment.price_pence;
+    return totals;
+  }, {})).sort((a, b) => b[1] - a[1]);
+  const topRevenue = revenueByService.slice(0, 4);
 
   return (
     <AppShell>
@@ -110,15 +118,15 @@ function Dashboard() {
           <Link to="/inbox"><Button size="sm">Open inbox<ArrowRight className="size-3.5" /></Button></Link>
         </header>
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
-          <section className="relative overflow-hidden rounded-2xl border border-border bg-panel-subtle">
-            <img src={logo.url} alt="" aria-hidden className="pointer-events-none absolute inset-y-0 right-0 hidden h-full w-[45%] object-cover opacity-90 md:block [mask-image:linear-gradient(to_right,transparent,black_40%)]" />
-            <div className="relative flex min-h-[260px] flex-col justify-center gap-4 p-6 md:max-w-[55%] md:p-8">
+        <div className="grid auto-rows-min gap-4 lg:grid-cols-12">
+          <section className="relative overflow-hidden rounded-xl border border-border bg-panel-subtle lg:col-span-8 lg:row-span-2">
+            <img src={dashboardSculpture} width={1024} height={768} alt="" aria-hidden className="pointer-events-none absolute -bottom-8 -right-12 hidden h-[115%] w-[52%] object-contain object-bottom opacity-95 md:block dark:brightness-[.72] dark:saturate-[.7]" />
+            <div className="relative flex min-h-[310px] flex-col justify-center gap-4 p-6 md:max-w-[58%] md:p-9">
               {focus ? (
                 <>
                   <Badge variant={focus.deposit_status === "REQUIRED" ? "yellow" : "cyan"} className="w-fit">{focusNeeds}</Badge>
                   <div>
-                    <p className="text-2xl text-foreground">{focus.contact?.full_name ?? "Customer"}</p>
+                    <p className="max-w-md text-3xl leading-tight text-foreground">{focus.contact?.full_name ?? "Customer"} is your next booking.</p>
                     <p className="mt-1 text-[14px] text-secondary">{focus.service?.name ?? "Service"} with {focus.staff?.name ?? "team"} · {money(focus.price_pence)}</p>
                     <p className="mt-2 text-[13px] text-tertiary">{new Date(focus.starts_at).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "short" })} at {formatSalonTime(focus.starts_at)} · {until(+new Date(focus.starts_at) - now)}</p>
                   </div>
@@ -134,17 +142,34 @@ function Dashboard() {
             </div>
           </section>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
-            <Meter label="Bookings today" hint={`${soon.length} in the next 24 hours`} value={today.length} max={Math.max(today.length, 8)} />
-            <Meter label="Replies by Nia" hint="Share of replies in the last 30 days" value={aiShare} max={100} suffix="%" />
-          </div>
-        </div>
+          <Card className="p-5 lg:col-span-4 lg:row-span-3">
+            <div className="flex items-start justify-between gap-3">
+              <div><p className="text-[11px] uppercase tracking-wide text-tertiary">Revenue this week</p><p className="mt-2 text-3xl text-foreground">{money(weekRevenue)}</p></div>
+              <div className="grid size-9 place-items-center rounded-lg bg-berry-soft text-primary"><CreditCard className="size-4" /></div>
+            </div>
+            <p className="mt-1 text-[12px] text-secondary">From {bookedWeek} completed or active booking{bookedWeek === 1 ? "" : "s"}</p>
+            <div className="mt-6 flex h-2 overflow-hidden rounded-full bg-hover">
+              {topRevenue.map(([service, amount], index) => <span key={service} className={index === 0 ? "bg-primary" : index === 1 ? "bg-berry-mid" : index === 2 ? "bg-yellow-strong" : "bg-green-strong"} style={{ width: `${weekRevenue ? (amount / weekRevenue) * 100 : 0}%` }} />)}
+            </div>
+            <div className="mt-5 divide-y divide-border-subtle">
+              {topRevenue.length === 0 && <p className="py-5 text-[12px] text-secondary">Revenue from this week's appointments will appear here.</p>}
+              {topRevenue.map(([service, amount], index) => (
+                <div key={service} className="flex items-center gap-2 py-2.5 text-[12px]"><span className={`size-2 rounded-full ${index === 0 ? "bg-primary" : index === 1 ? "bg-berry-mid" : index === 2 ? "bg-yellow-strong" : "bg-green-strong"}`} /><span className="min-w-0 flex-1 truncate text-secondary">{service}</span><span className="text-foreground">{money(amount)}</span><span className="w-9 text-right text-tertiary">{weekRevenue ? Math.round((amount / weekRevenue) * 100) : 0}%</span></div>
+              ))}
+            </div>
+          </Card>
 
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <Stat icon={MessageCircle} label="Waiting on you" value={String(waiting)} />
-          <Stat icon={CreditCard} label="Today's revenue" value={money(rev(today))} />
-          <Stat icon={CalendarDays} label="Bookings last 7 days" value={String(bookedWeek)} />
-          <Stat icon={Bot} label="Revenue last 30 days" value={money(rev(past(30)))} />
+          <div className="grid grid-cols-2 gap-3 lg:col-span-8 lg:grid-cols-4">
+            <Stat icon={CalendarDays} label="Bookings today" value={String(today.length)} />
+            <Stat icon={MessageCircle} label="Waiting on you" value={String(waiting)} />
+            <Stat icon={Bot} label="Replies by Nia" value={`${aiShare}%`} />
+            <Stat icon={CreditCard} label="Revenue, 30 days" value={money(rev(past(30)))} />
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:col-span-8">
+            <Meter label="Today's pace" hint={`${soon.length} booking${soon.length === 1 ? "" : "s"} in the next 24 hours`} value={today.length} max={Math.max(today.length, 8)} />
+            <Meter label="Nia handling" hint="Share of replies in the last 30 days" value={aiShare} max={100} suffix="%" />
+          </div>
         </div>
 
         <section>
@@ -225,9 +250,6 @@ function Stat({ icon: Icon, label, value }: { icon: ComponentType<{ className?: 
 }
 function Panel({ title, children }: { title: string; children: ReactNode }) {
   return <Card className="p-5"><p className="mb-3 text-[11px] uppercase tracking-wide text-tertiary">{title}</p>{children}</Card>;
-}
-function Mini({ label, a, b }: { label: string; a: string; b: string }) {
-  return <div className="rounded-lg bg-panel-subtle p-3"><p className="text-[10px] text-tertiary">{label}</p><p className="mt-1 text-[13px] text-foreground">{a}</p><p className="text-[12px] text-secondary">{b}</p></div>;
 }
 function Bar({ label, icon: Icon, n, pct }: { label: string; icon: ComponentType<{ className?: string }>; n: number; pct: number }) {
   return <div className="mb-2.5"><div className="mb-1 flex items-center justify-between text-[12px]"><span className="flex items-center gap-1.5 text-secondary"><Icon className="size-3.5" />{label}</span><span className="text-foreground">{n}</span></div><div className="h-1.5 rounded-full bg-hover"><div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} /></div></div>;

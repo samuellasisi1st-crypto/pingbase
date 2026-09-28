@@ -98,12 +98,12 @@
   --chart-5: var(--red-500);
   --sidebar: var(--gray-900);
   --sidebar-foreground: var(--gray-100);
-  --sidebar-primary: var(--cyan-400);
+  --sidebar-primary: var(--berry-400);
   --sidebar-primary-foreground: var(--gray-950);
   --sidebar-accent: var(--gray-800);
   --sidebar-accent-foreground: var(--gray-50);
   --sidebar-border: var(--gray-800);
-  --sidebar-ring: var(--cyan-400);
+  --sidebar-ring: var(--berry-400);
 }
 
 
