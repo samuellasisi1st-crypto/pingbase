@@ -5,19 +5,65 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const DEMO_WORKSPACE = "11111111-1111-1111-1111-111111111111";
 
-/** Attach the signed-in user to the demo workspace so they can run the inbox. */
+/**
+ * Return the signed-in user's workspace, creating a fresh empty one for brand-new accounts.
+ * New businesses never join the demo workspace.
+ */
 export const joinWorkspace = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const userId = context.userId;
-    await supabaseAdmin
-      .from("profiles")
-      .upsert({ id: userId, email: (context.claims.email as string) ?? null }, { onConflict: "id" });
-    await supabaseAdmin
-      .from("workspace_members")
-      .upsert({ workspace_id: DEMO_WORKSPACE, user_id: userId, role: "owner" }, { onConflict: "workspace_id,user_id" });
-    return { workspaceId: DEMO_WORKSPACE };
+    const email = (context.claims.email as string) ?? null;
+    await supabaseAdmin.from("profiles").upsert({ id: userId, email }, { onConflict: "id" });
+    const { data: existing } = await supabaseAdmin
+      .from("workspace_members").select("workspace_id").eq("user_id", userId)
+      .order("created_at", { ascending: true }).limit(1).maybeSingle();
+    let workspaceId = existing?.workspace_id as string | undefined;
+    if (!workspaceId) {
+      const slug = `ws-${userId.slice(0, 8)}-${Date.now().toString(36)}`;
+      const { data: ws, error } = await supabaseAdmin
+        .from("workspaces").insert({ name: "My business", slug }).select("id").single();
+      if (error || !ws) throw new Error("Couldn't create your workspace.");
+      workspaceId = ws.id;
+      await supabaseAdmin.from("workspace_members").insert({ workspace_id: workspaceId, user_id: userId, role: "owner" });
+      await supabaseAdmin.from("business_settings").insert({ workspace_id: workspaceId, email });
+      await supabaseAdmin.from("ai_agents").insert({ workspace_id: workspaceId, name: "Nia", is_default: true });
+    }
+    const { data: ws } = await supabaseAdmin
+      .from("workspaces").select("id,name,logo_url,onboarded_at").eq("id", workspaceId).single();
+    return { workspaceId, name: ws?.name ?? "My business", logoUrl: ws?.logo_url ?? null, onboarded: Boolean(ws?.onboarded_at) };
+  });
+
+const Hours = z.object({ open: z.string().regex(/^\d{2}:\d{2}$/), close: z.string().regex(/^\d{2}:\d{2}$/), days: z.array(z.number().int().min(0).max(6)).min(1) });
+
+/** Finish first-run setup: business details, hours, first service and first staff member. */
+export const completeOnboarding = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({
+    name: z.string().trim().min(2).max(80),
+    phone: z.string().trim().max(30).optional().default(""),
+    address: z.string().trim().max(200).optional().default(""),
+    timezone: z.string().trim().min(3).max(60).default("Europe/London"),
+    hours: Hours,
+    service: z.object({ name: z.string().trim().min(2).max(80), minutes: z.number().int().min(5).max(600), pricePence: z.number().int().min(0).max(10_000_000) }),
+    staffName: z.string().trim().min(1).max(80),
+  }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: m } = await context.supabase.from("workspace_members").select("workspace_id,role").eq("user_id", context.userId).limit(1).maybeSingle();
+    if (!m) throw new Error("No workspace found.");
+    const w = m.workspace_id as string;
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const opening = Object.fromEntries([0, 1, 2, 3, 4, 5, 6].map((i) => [String(i), data.hours.days.includes(i) ? [data.hours.open, data.hours.close] : null]));
+    await supabaseAdmin.from("workspaces").update({ name: data.name, timezone: data.timezone, onboarded_at: new Date().toISOString() }).eq("id", w);
+    await supabaseAdmin.from("business_settings").upsert({ workspace_id: w, legal_name: data.name, phone: data.phone || null, address: data.address || null, opening_hours: opening }, { onConflict: "workspace_id" });
+    const { data: svc } = await supabaseAdmin.from("services").insert({ workspace_id: w, name: data.service.name, duration_minutes: data.service.minutes, price_pence: data.service.pricePence }).select("id").single();
+    const { data: st } = await supabaseAdmin.from("staff").insert({ workspace_id: w, name: data.staffName }).select("id").single();
+    if (svc && st) {
+      await supabaseAdmin.from("staff_services").insert({ workspace_id: w, staff_id: st.id, service_id: svc.id });
+      await supabaseAdmin.from("staff_working_hours").insert(data.hours.days.map((weekday) => ({ workspace_id: w, staff_id: st.id, weekday, start_time: data.hours.open, end_time: data.hours.close })));
+    }
+    return { ok: true };
   });
 
 /** Customer-side inbound message on the internal test channel. */

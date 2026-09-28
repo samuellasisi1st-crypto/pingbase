@@ -3,18 +3,19 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const WORKSPACE = "11111111-1111-1111-1111-111111111111";
-
-async function assertMember(supabase: { from: (t: string) => any }) {
-  const { data } = await supabase.from("channel_connections").select("id").eq("workspace_id", WORKSPACE).limit(1);
-  if (!data?.length) throw new Error("You don't have access to this workspace.");
+/** Resolve the caller's own workspace (RLS-scoped). Every channel action runs against it. */
+async function assertMember(supabase: { from: (t: string) => any }): Promise<string> {
+  const { data } = await supabase.from("workspace_members").select("workspace_id").order("created_at", { ascending: true }).limit(1);
+  const id = data?.[0]?.workspace_id as string | undefined;
+  if (!id) throw new Error("You don't have access to this workspace.");
+  return id;
 }
 
 /** What the business sees: connected Page / Instagram and any Pages waiting to be picked. No secrets. */
 export const getMetaStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertMember(context.supabase as never);
+    const WORKSPACE = await assertMember(context.supabase as never);
     const { getMetaConfig, getMetaSecrets, getPendingPages } = await import("@/lib/channels.server");
     const config = await getMetaConfig(WORKSPACE);
     const connected = Boolean(await getMetaSecrets(WORKSPACE));
@@ -32,7 +33,7 @@ export const startMetaConnect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ origin: z.string().url() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertMember(context.supabase as never);
+    const WORKSPACE = await assertMember(context.supabase as never);
     const { metaPlatform, signState, META_SCOPES } = await import("@/lib/channels.server");
     const { appId } = metaPlatform();
     // Must match exactly one of the redirect URIs whitelisted in the Meta app.
@@ -52,7 +53,7 @@ export const selectMetaPage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ pageId: z.string().regex(/^\d{5,25}$/) }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertMember(context.supabase as never);
+    const WORKSPACE = await assertMember(context.supabase as never);
     const { getPendingPages, connectMetaPage } = await import("@/lib/channels.server");
     const page = (await getPendingPages(WORKSPACE)).find((p) => p.id === data.pageId);
     if (!page) return { ok: false as const, error: "That choice expired. Please connect again." };
@@ -62,7 +63,7 @@ export const selectMetaPage = createServerFn({ method: "POST" })
 export const disconnectMeta = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertMember(context.supabase as never);
+    const WORKSPACE = await assertMember(context.supabase as never);
     const { GRAPH, getMetaConfig, getMetaSecrets, deleteMetaSecrets, logIntegration } = await import("@/lib/channels.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [config, secrets] = [await getMetaConfig(WORKSPACE), await getMetaSecrets(WORKSPACE)];
@@ -85,7 +86,7 @@ export const disconnectMeta = createServerFn({ method: "POST" })
 export const getWhatsAppStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertMember(context.supabase as never);
+    const WORKSPACE = await assertMember(context.supabase as never);
     const { getWhatsAppConfig, getWhatsAppSecrets } = await import("@/lib/channels.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const config = await getWhatsAppConfig(WORKSPACE);
@@ -117,7 +118,7 @@ export const saveWhatsAppCredentials = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertMember(context.supabase as never);
+    const WORKSPACE = await assertMember(context.supabase as never);
     const { connectWhatsApp } = await import("@/lib/channels.server");
     return connectWhatsApp(WORKSPACE, {
       access_token: data.accessToken.trim(),
@@ -129,7 +130,7 @@ export const saveWhatsAppCredentials = createServerFn({ method: "POST" })
 export const disconnectWhatsApp = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertMember(context.supabase as never);
+    const WORKSPACE = await assertMember(context.supabase as never);
     const { deleteWhatsAppSecrets, logIntegration } = await import("@/lib/channels.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await deleteWhatsAppSecrets(WORKSPACE);
@@ -167,7 +168,7 @@ export const completeEmbeddedSignup = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertMember(context.supabase as never);
+    const WORKSPACE = await assertMember(context.supabase as never);
     const { connectWhatsApp, logIntegration } = await import("@/lib/channels.server");
     const GRAPH = "https://graph.facebook.com/v21.0";
     const appId = process.env['META_APP_ID'];
@@ -281,7 +282,7 @@ export const completeEmbeddedSignup = createServerFn({ method: "POST" })
 
 // ---------- WhatsApp test console (App Review proof) ----------
 
-async function waContext() {
+async function waContext(WORKSPACE: string) {
   const { GRAPH, getWhatsAppSecrets, getWhatsAppConfig, logIntegration } = await import("@/lib/channels.server");
   const secrets = await getWhatsAppSecrets(WORKSPACE);
   if (!secrets) throw new Error("Connect WhatsApp first.");
@@ -308,8 +309,8 @@ export const sendWhatsAppTest = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertMember(context.supabase as never);
-    const { GRAPH, secrets, logIntegration } = await waContext();
+    const WORKSPACE = await assertMember(context.supabase as never);
+    const { GRAPH, secrets, logIntegration } = await waContext(WORKSPACE);
     const to = data.to.replace(/^\+/, "");
     const body =
       data.mode === "text"
@@ -334,8 +335,8 @@ export const sendWhatsAppTest = createServerFn({ method: "POST" })
 export const listWhatsAppTemplates = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertMember(context.supabase as never);
-    const { GRAPH, secrets, wabaId } = await waContext();
+    const WORKSPACE = await assertMember(context.supabase as never);
+    const { GRAPH, secrets, wabaId } = await waContext(WORKSPACE);
     if (!wabaId) return { ok: false as const, error: "No WhatsApp Business Account ID saved.", templates: [] };
     const res = await fetch(`${GRAPH}/${wabaId}/message_templates?fields=name,status,category,language&limit=50`, {
       headers: { Authorization: `Bearer ${secrets.access_token}` },
@@ -365,8 +366,8 @@ export const createWhatsAppTemplate = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertMember(context.supabase as never);
-    const { GRAPH, secrets, wabaId, logIntegration } = await waContext();
+    const WORKSPACE = await assertMember(context.supabase as never);
+    const { GRAPH, secrets, wabaId, logIntegration } = await waContext(WORKSPACE);
     if (!wabaId) return { ok: false as const, error: "No WhatsApp Business Account ID saved." };
     const res = await fetch(`${GRAPH}/${wabaId}/message_templates`, {
       method: "POST",
@@ -394,6 +395,7 @@ export const listWhatsAppInbox = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const sb = context.supabase as any;
+    const WORKSPACE = await assertMember(sb);
     const { data, error } = await sb
       .from("messages")
       .select("id, channel, direction, sender_type, sender_name, body, created_at, contact_id, contacts(full_name, phone)")
@@ -439,8 +441,8 @@ export const listWhatsAppInbox = createServerFn({ method: "GET" })
 export const subscribeWhatsAppWebhook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertMember(context.supabase as never);
-    const { GRAPH, secrets, wabaId, logIntegration } = await waContext();
+    const WORKSPACE = await assertMember(context.supabase as never);
+    const { GRAPH, secrets, wabaId, logIntegration } = await waContext(WORKSPACE);
     if (!wabaId) return { ok: false as const, error: "No WhatsApp Business Account ID saved." };
     const res = await fetch(`${GRAPH}/${wabaId}/subscribed_apps`, {
       method: "POST",
@@ -460,7 +462,7 @@ export const subscribeWhatsAppWebhook = createServerFn({ method: "POST" })
 export const getGoogleCalendarStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertMember(context.supabase as never);
+    const WORKSPACE = await assertMember(context.supabase as never);
     const { getGoogleStatus } = await import("@/lib/gcal.server");
     const configured = Boolean(process.env["GOOGLE_OAUTH_CLIENT_ID"] && process.env["GOOGLE_OAUTH_CLIENT_SECRET"]);
     return { configured, ...(await getGoogleStatus(WORKSPACE)) };
@@ -471,7 +473,7 @@ export const startGoogleCalendarConnect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ origin: z.string().url() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertMember(context.supabase as never);
+    const WORKSPACE = await assertMember(context.supabase as never);
     const { googlePlatform, GOOGLE_SCOPES } = await import("@/lib/gcal.server");
     const { signState } = await import("@/lib/channels.server");
     const { getRequest } = await import("@tanstack/react-start/server");
@@ -493,7 +495,7 @@ export const startGoogleCalendarConnect = createServerFn({ method: "POST" })
 export const disconnectGoogleCalendar = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertMember(context.supabase as never);
+    const WORKSPACE = await assertMember(context.supabase as never);
     const { disconnectGoogle } = await import("@/lib/gcal.server");
     await disconnectGoogle(WORKSPACE);
     return { ok: true };

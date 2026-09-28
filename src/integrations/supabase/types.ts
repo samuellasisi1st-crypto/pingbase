@@ -1453,6 +1453,7 @@ export type Database = {
           id: string
           logo_url: string | null
           name: string
+          onboarded_at: string | null
           slug: string
           timezone: string
         }
@@ -1461,6 +1462,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name: string
+          onboarded_at?: string | null
           slug: string
           timezone?: string
         }
@@ -1469,6 +1471,7 @@ export type Database = {
           id?: string
           logo_url?: string | null
           name?: string
+          onboarded_at?: string | null
           slug?: string
           timezone?: string
         }
