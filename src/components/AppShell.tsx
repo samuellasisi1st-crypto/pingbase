@@ -1,8 +1,10 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import defaultLogo from "@/assets/workspace-logo.jpg.asset.json";
 import {
-  Inbox, Users, CalendarDays, Bot, Search, Settings, ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, Zap, Scissors, MoreHorizontal, X,
+  Inbox, Users, CalendarDays, Bot, Search, Settings, ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, Zap, Scissors, LayoutDashboard, MoreHorizontal, X,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -13,7 +15,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const NAV = [
-  { to: "/", label: "Inbox", icon: Inbox },
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/inbox", label: "Inbox", icon: Inbox },
   { to: "/contacts", label: "Contacts", icon: Users },
   { to: "/appointments", label: "Appointments", icon: CalendarDays },
   { to: "/services", label: "Services", icon: Scissors },
@@ -27,12 +30,13 @@ const FOOT = [
 ] as const;
 
 const MOBILE_NAV = [
-  { to: "/", label: "Inbox", icon: Inbox },
+  { to: "/", label: "Home", icon: LayoutDashboard },
+  { to: "/inbox", label: "Inbox", icon: Inbox },
   { to: "/contacts", label: "Contacts", icon: Users },
   { to: "/appointments", label: "Bookings", icon: CalendarDays },
-  { to: "/services", label: "Services", icon: Scissors },
 ] as const;
 const MOBILE_MORE = [
+  { to: "/services", label: "Services", icon: Scissors },
   { to: "/automations", label: "Automations", icon: Zap },
   { to: "/ai-agents", label: "AI Agents", icon: Bot },
   { to: "/search", label: "Search", icon: Search },
@@ -60,6 +64,12 @@ export function AppShell({
   const [navOpen, setNavOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const secondaryOpen = controlledSecondaryOpen ?? true;
+  const workspace = useQuery({ queryKey: ["workspace"], enabled: !!session, queryFn: async () => {
+    const { data } = await supabase.from("workspaces").select("id,name,logo_url").limit(1).maybeSingle();
+    return data;
+  } });
+  const wsName = workspace.data?.name ?? "Studio Nine Hair";
+  const wsLogo = workspace.data?.logo_url || defaultLogo.url;
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth" });
@@ -77,14 +87,14 @@ export function AppShell({
       <TooltipProvider delayDuration={120}>
       <aside className={`hidden shrink-0 flex-col rounded-l-xl border border-border-strong bg-panel py-3 shadow-xs transition-[width] md:flex ${navOpen ? "w-52 px-2.5" : "w-12 px-1.5"}`}>
         <div className={`mb-3 flex items-center ${navOpen ? "gap-1" : "justify-center"}`}>
-          <button title="Switch workspace" className={`flex min-w-0 items-center rounded-lg border border-border bg-panel text-left shadow-xs hover:bg-hover ${navOpen ? "flex-1 gap-2 p-1.5" : "p-1"}`}>
-          <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-foreground text-[12px] font-bold text-panel">P</span>
+          <Link to="/settings" search={{ section: "workspace" } as never} title="Workspace settings" className={`flex min-w-0 items-center rounded-lg border border-border bg-panel text-left shadow-xs hover:bg-hover ${navOpen ? "flex-1 gap-2 p-1.5" : "p-1"}`}>
+          <img src={wsLogo} alt="" className="size-7 shrink-0 rounded-lg object-cover" />
           {navOpen && <span className="min-w-0 flex-1">
             <span className="block text-micro font-semibold uppercase text-tertiary">Workspace</span>
-            <span className="block truncate text-[12px] font-normal text-foreground">Studio Nine Hair</span>
+            <span className="block truncate text-[12px] font-normal text-foreground">{wsName}</span>
           </span>}
           {navOpen && <ChevronDown className="size-3 text-tertiary" />}
-          </button>
+          </Link>
         </div>
         {navOpen && <p className="mb-1.5 px-2.5 text-micro font-semibold uppercase text-tertiary">Workspace</p>}
         <nav aria-label="Main" className="flex flex-1 flex-col gap-0.5">

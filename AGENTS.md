@@ -36,3 +36,9 @@
 - Automations are stored as React Flow graphs in `automation_flows`; `scheduleAutomations` walks each enabled flow (trigger → wait → message) so the board is what actually gets scheduled.
 - Chat attachments live in the private `attachments` bucket under `<workspace_id>/…`; outbound delivery uses short-lived signed URLs via `deliverAttachment`.
 - Dark mode is a `.dark` class on <html> overriding Veya semantic tokens in `theme.css`; choice persisted in localStorage `pingbase-theme`.
+
+## Navigation & settings
+- `/` is the Dashboard and the inbox lives at `/inbox`, so the first screen is an overview rather than a single channel view.
+- Settings sections are selected by the `?section=` search param (profile, workspace, team, staff, rules, files, templates, channels), so other pages can link directly to a section.
+- Workspace settings merge business details; the workspace logo and name live on `workspaces` and are shown at the top of the side nav.
+- Uploaded files live in `workspace_files` + the `attachments` bucket under `<workspace_id>/files/`, and appear in one list alongside knowledge entries.

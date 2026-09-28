@@ -1137,22 +1137,28 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           email: string | null
           full_name: string | null
           id: string
+          phone: string | null
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id: string
+          phone?: string | null
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           email?: string | null
           full_name?: string | null
           id?: string
+          phone?: string | null
         }
         Relationships: []
       }
@@ -1362,6 +1368,53 @@ export type Database = {
           },
         ]
       }
+      workspace_files: {
+        Row: {
+          created_at: string
+          folder: string | null
+          id: string
+          kind: string
+          mime: string | null
+          name: string
+          path: string | null
+          size_bytes: number
+          uploaded_by: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          folder?: string | null
+          id?: string
+          kind?: string
+          mime?: string | null
+          name: string
+          path?: string | null
+          size_bytes?: number
+          uploaded_by?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          folder?: string | null
+          id?: string
+          kind?: string
+          mime?: string | null
+          name?: string
+          path?: string | null
+          size_bytes?: number
+          uploaded_by?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_files_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_members: {
         Row: {
           created_at: string
@@ -1398,6 +1451,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          logo_url: string | null
           name: string
           slug: string
           timezone: string
@@ -1405,6 +1459,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          logo_url?: string | null
           name: string
           slug: string
           timezone?: string
@@ -1412,6 +1467,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          logo_url?: string | null
           name?: string
           slug?: string
           timezone?: string
@@ -1424,6 +1480,17 @@ export type Database = {
     }
     Functions: {
       is_workspace_member: { Args: { _workspace_id: string }; Returns: boolean }
+      workspace_team: {
+        Args: { _workspace_id: string }
+        Returns: {
+          avatar_url: string
+          email: string
+          full_name: string
+          joined_at: string
+          role: string
+          user_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

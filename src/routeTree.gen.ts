@@ -19,6 +19,7 @@ import { Route as CampaignsRouteImport } from './routes/campaigns'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as ContactsRouteImport } from './routes/contacts'
 import { Route as HelpRouteImport } from './routes/help'
+import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -84,6 +85,11 @@ const ContactsRoute = ContactsRouteImport.update({
 const HelpRoute = HelpRouteImport.update({
   id: '/help',
   path: '/help',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InboxRoute = InboxRouteImport.update({
+  id: '/inbox',
+  path: '/inbox',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NotificationsRoute = NotificationsRouteImport.update({
@@ -180,6 +186,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
   '/help': typeof HelpRoute
+  '/inbox': typeof InboxRoute
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -208,6 +215,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
   '/help': typeof HelpRoute
+  '/inbox': typeof InboxRoute
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -237,6 +245,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
   '/help': typeof HelpRoute
+  '/inbox': typeof InboxRoute
   '/notifications': typeof NotificationsRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contacts'
     | '/help'
+    | '/inbox'
     | '/notifications'
     | '/privacy'
     | '/profile'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contacts'
     | '/help'
+    | '/inbox'
     | '/notifications'
     | '/privacy'
     | '/profile'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/contacts'
     | '/help'
+    | '/inbox'
     | '/notifications'
     | '/privacy'
     | '/profile'
@@ -352,6 +364,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   ContactsRoute: typeof ContactsRoute
   HelpRoute: typeof HelpRoute
+  InboxRoute: typeof InboxRoute
   NotificationsRoute: typeof NotificationsRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
@@ -440,6 +453,13 @@ declare module '@tanstack/react-router' {
       path: '/help'
       fullPath: '/help'
       preLoaderRoute: typeof HelpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inbox': {
+      id: '/inbox'
+      path: '/inbox'
+      fullPath: '/inbox'
+      preLoaderRoute: typeof InboxRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/notifications': {
@@ -568,6 +588,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   ContactsRoute: ContactsRoute,
   HelpRoute: HelpRoute,
+  InboxRoute: InboxRoute,
   NotificationsRoute: NotificationsRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
