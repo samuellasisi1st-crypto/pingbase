@@ -26,7 +26,7 @@ type KnowledgeForm={title:string;body:string;kind:string;tags:string;active:bool
 const emptyKnowledge:KnowledgeForm={title:"",body:"",kind:"manual",tags:"",active:true};
 const groups:{label:string;items:{v:Section;l:string;i:React.ComponentType<{className?:string}>}[]}[]=[
  {label:"Profile",items:[{v:"profile",l:"General",i:UserRound},{v:"notifications",l:"Notifications",i:Bell},{v:"security",l:"Security",i:Lock}]},
- {label:"Workspace",items:[{v:"workspace",l:"Workspace",i:Settings2},{v:"team",l:"Team members",i:UsersRound},{v:"staff",l:"Staff & hours",i:Clock3},{v:"rules",l:"Booking rules",i:CalendarClock},{v:"files",l:"Files & knowledge",i:BookOpen}]},
+ {label:"Workspace",items:[{v:"workspace",l:"Workspace",i:Settings2},{v:"team",l:"Team & hours",i:UsersRound},{v:"rules",l:"Booking rules",i:CalendarClock},{v:"files",l:"Files & knowledge",i:BookOpen}]},
  {label:"Connections",items:[{v:"channels",l:"Channels & integrations",i:Globe2},{v:"templates",l:"WhatsApp templates",i:MessageSquareText}]},
 ];
 const sections=groups.flatMap(g=>g.items);
@@ -44,7 +44,7 @@ function SettingsContent({section,go}:{section:Section;go:(s:Section)=>void}){
  if(section==="notifications")return <NotificationsSection/>;
  if(section==="security")return <SecuritySection/>;
  if(section==="workspace")return <WorkspaceSettings/>;
- if(section==="team")return <TeamMembersSection/>;
+ if(section==="team"||section==="staff")return <><TeamMembersSection/><LegacyContent section="staff" go={go}/></>;
  if(section==="templates")return <TemplatesSection onConnect={()=>go("channels")}/>;
  return <LegacyContent section={section} go={go}/>;
 }
@@ -54,7 +54,7 @@ function LegacyContent({section,go}:{section:Section;go:(s:Section)=>void}){
  if(data.isLoading||!data.data)return <div className="p-8 text-[12px] text-secondary">Loading settings…</div>; const d=data.data;
  if(section==="channels")return <ChannelsSection channels={d.channels as Array<{channel:string;status:string}>} onTemplates={()=>go("templates")}/>;
  if(section==="files")return <KnowledgeSection entries={d.knowledge}/>;
- const copy: [string, string] = section === "staff" ? ["Staff & hours","Your team and the working hours used for availability."] : section === "rules" ? ["Booking rules","The limits and policies Nia applies to every booking."] : ["",""];
+ const copy: [string, string] = section === "staff" ? ["Working hours","Each team member's hours, used by Nia to offer bookable slots."] : section === "rules" ? ["Booking rules","The limits and policies Nia applies to every booking."] : ["",""];
  return <SettingsPageFrame title={copy[0]} subtitle={copy[1]}>
   {section==="staff"&&<TeamSection staff={d.staff} hours={d.hours}/>} {section==="rules"&&<RulesSection business={d.business} policies={d.policies}/>}
  </SettingsPageFrame>;
