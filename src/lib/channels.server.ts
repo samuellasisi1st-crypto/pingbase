@@ -373,7 +373,8 @@ async function deliverWhatsApp(
     .eq("channel", "whatsapp")
     .maybeSingle();
   const secrets = await getWhatsAppSecrets(workspaceId);
-  if (!conn || conn.status !== "CONNECTED" || !secrets) {
+  // Only a disconnected or re-auth-needed channel blocks sending; a single bad message must not.
+  if (!conn || conn.status === "DISCONNECTED" || conn.status === "NEEDS_REAUTH" || !secrets) {
     const error = "WhatsApp is not connected.";
     await logIntegration(workspaceId, "whatsapp", "warn", `Reply could not be delivered: ${error}`);
     return { delivered: false, error };
@@ -394,7 +395,7 @@ async function deliverWhatsApp(
     if (!res.ok) {
       const error = json.error?.message ?? `WhatsApp returned ${res.status}`;
       await logIntegration(workspaceId, "whatsapp", "error", `Send failed: ${error}`, { status: res.status });
-      await setChannelError(workspaceId, "whatsapp", error);
+      if (res.status === 401 || /OAuth|token|#190/i.test(error)) await setChannelError(workspaceId, "whatsapp", error);
       return { delivered: false, error };
     }
     return { delivered: true, externalMessageId: json.messages?.[0]?.id };
@@ -425,7 +426,7 @@ async function postWhatsApp(workspaceId: string, payload: Record<string, unknown
     if (!res.ok) {
       const error = json.error?.message ?? `WhatsApp returned ${res.status}`;
       await logIntegration(workspaceId, "whatsapp", "error", `Send failed: ${error}`, { status: res.status });
-      await setChannelError(workspaceId, "whatsapp", error);
+      if (res.status === 401 || /OAuth|token|#190/i.test(error)) await setChannelError(workspaceId, "whatsapp", error);
       return { delivered: false, error };
     }
     return { delivered: true, externalMessageId: json.messages?.[0]?.id };
@@ -447,7 +448,13 @@ export async function sendWhatsAppChoices(
   to: string,
   opts: { body: string; footer?: string | null; buttonLabel?: string; choices: WaChoice[] },
 ): Promise<SendResult> {
-  const choices = opts.choices.slice(0, 10);
+  // WhatsApp rejects duplicate ids or titles (#131009), so make both unique after truncation.
+  const seenIds = new Set<string>(), seenTitles = new Set<string>();
+  const choices = opts.choices.filter((c) => {
+    const id = c.id.slice(0, 200), t = c.title.slice(0, 20);
+    if (seenIds.has(id) || seenTitles.has(t)) return false;
+    seenIds.add(id); seenTitles.add(t); return true;
+  }).slice(0, 10);
   if (!choices.length) return { delivered: false, error: "No options to send." };
 
   if (choices.length <= 3) {
