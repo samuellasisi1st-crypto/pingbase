@@ -30,6 +30,7 @@ import { Route as TeamChatRouteImport } from './routes/team-chat'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TesterRouteImport } from './routes/tester'
 import { Route as WhatsNewRouteImport } from './routes/whats-new'
+import { Route as AiAgentsAgentIdRouteImport } from './routes/ai-agents_.$agentId'
 import { Route as PayPaymentIdRouteImport } from './routes/pay.$paymentId'
 import { Route as ApiPublicWebhooksMetaRouteImport } from './routes/api/public/webhooks/meta'
 import { Route as ApiPublicOauthGoogleCallbackRouteImport } from './routes/api/public/oauth/google/callback'
@@ -140,6 +141,11 @@ const WhatsNewRoute = WhatsNewRouteImport.update({
   path: '/whats-new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiAgentsAgentIdRoute = AiAgentsAgentIdRouteImport.update({
+  id: '/ai-agents_/$agentId',
+  path: '/ai-agents/$agentId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PayPaymentIdRoute = PayPaymentIdRouteImport.update({
   id: '/pay/$paymentId',
   path: '/pay/$paymentId',
@@ -185,6 +191,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/tester': typeof TesterRoute
   '/whats-new': typeof WhatsNewRoute
+  '/ai-agents/$agentId': typeof AiAgentsAgentIdRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/oauth/google/callback': typeof ApiPublicOauthGoogleCallbackRoute
@@ -212,6 +219,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/tester': typeof TesterRoute
   '/whats-new': typeof WhatsNewRoute
+  '/ai-agents/$agentId': typeof AiAgentsAgentIdRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/oauth/google/callback': typeof ApiPublicOauthGoogleCallbackRoute
@@ -240,6 +248,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/tester': typeof TesterRoute
   '/whats-new': typeof WhatsNewRoute
+  '/ai-agents_/$agentId': typeof AiAgentsAgentIdRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/oauth/google/callback': typeof ApiPublicOauthGoogleCallbackRoute
@@ -269,6 +278,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/tester'
     | '/whats-new'
+    | '/ai-agents/$agentId'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
     | '/api/public/oauth/google/callback'
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/tester'
     | '/whats-new'
+    | '/ai-agents/$agentId'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
     | '/api/public/oauth/google/callback'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/tester'
     | '/whats-new'
+    | '/ai-agents_/$agentId'
     | '/pay/$paymentId'
     | '/api/public/webhooks/meta'
     | '/api/public/oauth/google/callback'
@@ -351,6 +363,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   TesterRoute: typeof TesterRoute
   WhatsNewRoute: typeof WhatsNewRoute
+  AiAgentsAgentIdRoute: typeof AiAgentsAgentIdRoute
   PayPaymentIdRoute: typeof PayPaymentIdRoute
   ApiPublicWebhooksMetaRoute: typeof ApiPublicWebhooksMetaRoute
   ApiPublicOauthGoogleCallbackRoute: typeof ApiPublicOauthGoogleCallbackRoute
@@ -506,6 +519,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WhatsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-agents_/$agentId': {
+      id: '/ai-agents_/$agentId'
+      path: '/ai-agents/$agentId'
+      fullPath: '/ai-agents/$agentId'
+      preLoaderRoute: typeof AiAgentsAgentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pay/$paymentId': {
       id: '/pay/$paymentId'
       path: '/pay/$paymentId'
@@ -559,6 +579,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   TesterRoute: TesterRoute,
   WhatsNewRoute: WhatsNewRoute,
+  AiAgentsAgentIdRoute: AiAgentsAgentIdRoute,
   PayPaymentIdRoute: PayPaymentIdRoute,
   ApiPublicWebhooksMetaRoute: ApiPublicWebhooksMetaRoute,
   ApiPublicOauthGoogleCallbackRoute: ApiPublicOauthGoogleCallbackRoute,
