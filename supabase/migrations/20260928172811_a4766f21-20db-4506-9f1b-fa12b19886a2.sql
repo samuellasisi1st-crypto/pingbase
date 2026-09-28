@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.workspace_team(uuid) FROM PUBLIC, anon;
