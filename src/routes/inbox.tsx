@@ -97,7 +97,7 @@ function InboxPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("conversations")
-        .select("id,channel,state,handling_mode,intent,unread,needs_attention,assigned_to,last_message_at,contact:contact_id(id,full_name,email,phone)")
+        .select("id,channel,state,status,handling_mode,intent,unread,needs_attention,assigned_to,last_message_at,contact:contact_id(id,full_name,email,phone)")
         .order("last_message_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as unknown as Conversation[];
@@ -149,9 +149,9 @@ function InboxPage() {
   const list = useMemo(() => all.filter((c) => {
     if (channel && c.channel !== channel) return false;
     if (!matches(c, view)) return false;
-    if (tab === "open" && DONE.includes(c.state)) return false;
+    if (tab === "open" && (c as { status?: string }).status !== "OPEN") return false;
     if (tab === "snoozed" && c.handling_mode !== "PAUSED") return false;
-    if (tab === "done" && !DONE.includes(c.state)) return false;
+    if (tab === "done" && (c as { status?: string }).status === "OPEN") return false;
     if (q && !`${c.contact?.full_name ?? ""} ${previews.data?.[c.id] ?? ""}`.toLowerCase().includes(q.toLowerCase())) return false;
     return true;
   }), [all, channel, view, tab, q, previews.data]);
