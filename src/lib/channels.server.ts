@@ -550,3 +550,52 @@ export async function sendWhatsAppCalendarFile(
     return { delivered: false, error };
   }
 }
+
+/** Send an image or file (by public/signed URL) through the conversation's channel. */
+export async function deliverAttachment(opts: {
+  workspaceId: string;
+  channel: string;
+  recipientId: string;
+  url: string;
+  kind: "image" | "file";
+  filename: string;
+  caption?: string | null;
+}): Promise<{ delivered: boolean; externalMessageId?: string | undefined; error?: string | undefined }> {
+  const { workspaceId, channel, recipientId, url, kind, filename, caption } = opts;
+  if (channel === "test") return { delivered: true };
+  try {
+    if (channel === "whatsapp") {
+      const r = await postWhatsApp(workspaceId, {
+        to: recipientId,
+        type: kind === "image" ? "image" : "document",
+        ...(kind === "image"
+          ? { image: { link: url, ...(caption ? { caption } : {}) } }
+          : { document: { link: url, filename, ...(caption ? { caption } : {}) } }),
+      });
+      return r as never;
+    }
+    if (!(META_CHANNELS as readonly string[]).includes(channel)) return { delivered: false, error: `${channel} is not connected yet.` };
+    const { data: conn } = await supabaseAdmin.from("channel_connections").select("config").eq("workspace_id", workspaceId).eq("channel", channel).maybeSingle();
+    const secrets = await getMetaSecrets(workspaceId);
+    const config = (conn?.config ?? {}) as MetaConfig;
+    if (!secrets || !config.page_id) return { delivered: false, error: `${channel} is not connected.` };
+    const res = await fetch(`${GRAPH}/${config.page_id}/messages?access_token=${encodeURIComponent(secrets.page_access_token)}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recipient: { id: recipientId },
+        messaging_type: "RESPONSE",
+        message: { attachment: { type: kind === "image" ? "image" : "file", payload: { url, is_reusable: false } } },
+      }),
+    });
+    const json = (await res.json().catch(() => ({}))) as { message_id?: string; error?: { message?: string } };
+    if (!res.ok) {
+      const error = json.error?.message ?? `Meta returned ${res.status}`;
+      await logIntegration(workspaceId, channel, "error", `Attachment send failed: ${error}`);
+      return { delivered: false, error };
+    }
+    return { delivered: true, externalMessageId: json.message_id };
+  } catch (e) {
+    return { delivered: false, error: e instanceof Error ? e.message : String(e) };
+  }
+}
