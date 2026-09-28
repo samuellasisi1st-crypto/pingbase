@@ -126,11 +126,21 @@ export function AppShell({
             {navOpen ? <PanelLeftClose className="size-3.5" /> : <PanelLeftOpen className="size-3.5" />}
             {navOpen && <span>Collapse</span>}
           </Button>
-          <div className={`mt-2 flex items-center border-t border-border-subtle pt-2 ${navOpen ? "gap-2 px-1" : "flex-col gap-1"}`}>
+          <div className={`group/profile relative mt-2 flex items-center border-t border-border-subtle pt-2 ${navOpen ? "gap-2 px-1" : "flex-col gap-1"}`}>
             <Link to="/profile" title="My profile" className={`flex min-w-0 items-center rounded-lg p-1 hover:bg-hover ${navOpen ? "flex-1 gap-2" : "justify-center"}`}>
               <Avatar name={email} size="sm" />
               {navOpen && <span className="truncate text-[12px] font-normal text-secondary">My profile</span>}
             </Link>
+            <div className="invisible absolute bottom-0 left-full z-50 ml-2 w-48 rounded-lg border border-border bg-panel p-1 opacity-0 shadow-md transition-opacity duration-150 group-hover/profile:pointer-events-auto group-hover/profile:visible group-hover/profile:opacity-100 group-focus-within/profile:pointer-events-auto group-focus-within/profile:visible group-focus-within/profile:opacity-100">
+              {PROFILE_MENU.map((item) => (
+                <Link key={item.to} to={item.to} className="flex h-8 items-center gap-2 rounded-lg px-2.5 text-[12px] font-normal text-secondary transition-colors duration-150 hover:bg-hover hover:text-foreground">
+                  <item.icon className="size-3.5 shrink-0" aria-hidden="true" /> {item.label}
+                </Link>
+              ))}
+              <Link to="/profile" className="flex h-8 items-center gap-2 rounded-lg px-2.5 text-[12px] font-normal text-secondary transition-colors duration-150 hover:bg-hover hover:text-foreground">
+                <Avatar name={email} size="sm" /> My profile
+              </Link>
+            </div>
             {navOpen && <button
               aria-label="Sign out"
               title="Sign out"
