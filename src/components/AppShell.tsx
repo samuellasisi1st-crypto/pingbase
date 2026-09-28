@@ -1,8 +1,8 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import {
-  Inbox, Users, CalendarDays, Bot, Search, Settings, ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, Zap, Scissors,
+  Inbox, Users, CalendarDays, Bot, Search, Settings, ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, Zap, Scissors, MoreHorizontal, X,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +24,19 @@ const FOOT = [
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
+const MOBILE_NAV = [
+  { to: "/", label: "Inbox", icon: Inbox },
+  { to: "/contacts", label: "Contacts", icon: Users },
+  { to: "/appointments", label: "Bookings", icon: CalendarDays },
+  { to: "/services", label: "Services", icon: Scissors },
+] as const;
+const MOBILE_MORE = [
+  { to: "/automations", label: "Automations", icon: Zap },
+  { to: "/ai-agents", label: "AI Agents", icon: Bot },
+  { to: "/search", label: "Search", icon: Search },
+  { to: "/settings", label: "Settings", icon: Settings },
+] as const;
+
 const itemCls =
   "flex h-8 items-center gap-2 rounded-lg border border-transparent px-2.5 text-[12px] font-normal text-secondary transition-colors hover:bg-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 const activeCls = "border-border bg-panel font-normal text-foreground shadow-xs";
@@ -41,7 +54,9 @@ export function AppShell({
 }) {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
   const [navOpen, setNavOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
   const secondaryOpen = controlledSecondaryOpen ?? true;
 
   useEffect(() => {
@@ -55,7 +70,7 @@ export function AppShell({
   const email = session.user.email ?? "You";
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-app p-2">
+    <div className="flex h-dvh min-w-0 overflow-hidden bg-app md:p-2">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-panel focus:px-3 focus:py-2 focus:text-sm">Skip to content</a>
       <aside className={`hidden shrink-0 flex-col rounded-l-xl border border-border-subtle bg-panel py-3 transition-[width] md:flex ${navOpen ? "w-52 px-2.5" : "w-12 px-1.5"}`}>
         <div className={`mb-3 flex items-center ${navOpen ? "gap-1" : "justify-center"}`}>
@@ -68,10 +83,6 @@ export function AppShell({
           {navOpen && <ChevronDown className="size-3 text-tertiary" />}
           </button>
         </div>
-        {navOpen ? <div className="relative mb-4">
-          <Search className="absolute left-2.5 top-2 size-3.5 text-tertiary" />
-          <input aria-label="Search Pingbase" placeholder="Search" className="h-8 w-full rounded-lg border border-transparent bg-hover pl-8 pr-2 text-[12px] text-foreground placeholder:text-tertiary focus:border-border-strong focus:bg-panel focus:outline-none" />
-        </div> : <Link to="/search" title="Search" aria-label="Search" className={`${itemCls} mb-3 justify-center px-0`}><Search className="size-3.5" /></Link>}
         {navOpen && <p className="mb-1.5 px-2.5 text-micro font-semibold uppercase text-tertiary">Workspace</p>}
         <nav aria-label="Main" className="flex flex-1 flex-col gap-0.5">
           {NAV.map((i) => (
@@ -117,7 +128,7 @@ export function AppShell({
         </aside>
       )}
 
-      <main id="main" className="min-w-0 flex-1 overflow-y-auto rounded-r-xl border-y border-r border-border-subtle bg-panel shadow-xs">
+      <main id="main" className="min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-panel pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:rounded-r-xl md:border-y md:border-r md:border-border-subtle md:pb-0 md:shadow-xs">
         {title ? (
           <div className="px-8 pb-8 pt-5">
             <h1 className="flex h-10 items-center text-2xl font-semibold text-foreground">{title}</h1>
@@ -127,13 +138,15 @@ export function AppShell({
           children
         )}
       </main>
+      <nav aria-label="Mobile navigation" className="fixed inset-x-0 bottom-0 z-40 border-t border-border-subtle bg-panel/95 px-2 pt-1.5 backdrop-blur md:hidden" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 8px)" }}><ul className="grid grid-cols-5 gap-1">{MOBILE_NAV.map((item) => { const active = item.to === "/" ? pathname === "/" : pathname.startsWith(item.to); return <li key={item.to}><Link to={item.to} aria-current={active ? "page" : undefined} className={`flex min-h-12 flex-col items-center justify-center gap-1 rounded-lg px-1 text-[10px] ${active ? "bg-hover text-foreground" : "text-tertiary"}`}><item.icon className="size-4"/><span className="max-w-full truncate">{item.label}</span></Link></li>; })}<li><button type="button" aria-expanded={moreOpen} onClick={() => setMoreOpen(true)} className={`flex min-h-12 w-full flex-col items-center justify-center gap-1 rounded-lg px-1 text-[10px] ${MOBILE_MORE.some((item) => pathname.startsWith(item.to)) ? "bg-hover text-foreground" : "text-tertiary"}`}><MoreHorizontal className="size-4"/><span>More</span></button></li></ul></nav>
+      {moreOpen && <div className="fixed inset-0 z-50 flex items-end bg-foreground/20 md:hidden" onClick={() => setMoreOpen(false)}><div className="w-full rounded-t-xl border border-border bg-panel px-4 pb-[max(env(safe-area-inset-bottom),16px)] pt-3 shadow-lg" onClick={(event) => event.stopPropagation()}><div className="mb-3 grid grid-cols-[minmax(0,1fr)_auto] items-center"><div><p className="text-[15px] text-foreground">More</p><p className="text-[11px] text-tertiary">Studio Nine Hair</p></div><Button variant="tertiary" size="sm" title="Close" onClick={() => setMoreOpen(false)}><X className="size-4"/></Button></div><div className="grid grid-cols-2 gap-2">{MOBILE_MORE.map((item) => <Link key={item.to} to={item.to} onClick={() => setMoreOpen(false)} className="flex min-h-14 items-center gap-3 rounded-lg border border-border bg-panel-subtle px-3 text-[12px] text-foreground"><item.icon className="size-4 text-secondary"/>{item.label}</Link>)}</div><Link to="/profile" onClick={() => setMoreOpen(false)} className="mt-2 flex min-h-12 items-center gap-3 rounded-lg border border-border px-3 text-[12px] text-foreground"><Avatar name={email} size="sm"/>My profile</Link></div></div>}
     </div>
   );
 }
 
 export function PageHeader({ title, subtitle, actions, count }: { title: string; subtitle?: string; actions?: ReactNode; count?: number }) {
   return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+    <div className="grid min-w-0 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-start sm:gap-4">
       <div className="min-w-0">
         <h1 className="flex h-10 items-center gap-2 text-2xl font-semibold text-foreground">
           <span className="truncate">{title}</span>
@@ -141,13 +154,13 @@ export function PageHeader({ title, subtitle, actions, count }: { title: string;
         </h1>
         {subtitle && <p className="mt-1 text-sm text-secondary">{subtitle}</p>}
       </div>
-      {actions && <div className="flex items-center gap-2">{actions}</div>}
+      {actions && <div className="flex min-w-0 flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
 
 export function Page({ children }: { children: ReactNode }) {
-  return <div className="mx-auto max-w-[1400px] space-y-6 px-8 pb-10 pt-7">{children}</div>;
+  return <div className="mx-auto max-w-[1400px] space-y-5 px-4 pb-8 pt-5 sm:space-y-6 md:px-8 md:pb-10 md:pt-7">{children}</div>;
 }
 
 export function SideLabel({ children }: { children: ReactNode }) {
