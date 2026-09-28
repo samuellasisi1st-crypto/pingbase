@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AiAgentsRouteImport } from './routes/ai-agents'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as AppointmentsRouteImport } from './routes/appointments'
@@ -36,6 +37,11 @@ import { Route as ApiPublicWebhooksMetaRouteImport } from './routes/api/public/w
 import { Route as ApiPublicOauthGoogleCallbackRouteImport } from './routes/api/public/oauth/google/callback'
 import { Route as ApiPublicOauthMetaCallbackRouteImport } from './routes/api/public/oauth/meta/callback'
 
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AiAgentsRoute = AiAgentsRouteImport.update({
   id: '/ai-agents',
   path: '/ai-agents',
@@ -170,6 +176,7 @@ const ApiPublicOauthMetaCallbackRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof IndexRoute
   '/ai-agents': typeof AiAgentsRoute
   '/analytics': typeof AnalyticsRoute
   '/appointments': typeof AppointmentsRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/api/public/oauth/meta/callback': typeof ApiPublicOauthMetaCallbackRoute
 }
 export interface FileRoutesByTo {
+  '/': typeof IndexRoute
   '/ai-agents': typeof AiAgentsRoute
   '/analytics': typeof AnalyticsRoute
   '/appointments': typeof AppointmentsRoute
@@ -227,6 +235,7 @@ export interface FileRoutesByTo {
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
   '/ai-agents': typeof AiAgentsRoute
   '/analytics': typeof AnalyticsRoute
   '/appointments': typeof AppointmentsRoute
@@ -257,6 +266,7 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/ai-agents'
     | '/analytics'
     | '/appointments'
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
     | '/api/public/oauth/meta/callback'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/'
     | '/ai-agents'
     | '/analytics'
     | '/appointments'
@@ -313,6 +324,7 @@ export interface FileRouteTypes {
     | '/api/public/oauth/meta/callback'
   id:
     | '__root__'
+    | '/'
     | '/ai-agents'
     | '/analytics'
     | '/appointments'
@@ -342,6 +354,7 @@ export interface FileRouteTypes {
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
+  IndexRoute: typeof IndexRoute
   AiAgentsRoute: typeof AiAgentsRoute
   AnalyticsRoute: typeof AnalyticsRoute
   AppointmentsRoute: typeof AppointmentsRoute
@@ -372,6 +385,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ai-agents': {
       id: '/ai-agents'
       path: '/ai-agents'
@@ -558,6 +578,7 @@ declare module '@tanstack/react-router' {
 }
 
 const rootRouteChildren: RootRouteChildren = {
+  IndexRoute: IndexRoute,
   AiAgentsRoute: AiAgentsRoute,
   AnalyticsRoute: AnalyticsRoute,
   AppointmentsRoute: AppointmentsRoute,
