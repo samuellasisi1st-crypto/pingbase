@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import {
   Inbox, MessagesSquare, Send, Zap, Users, CalendarDays, Star, BarChart3, Bot,
-  Search, Bell, HelpCircle, Megaphone, Settings, ChevronDown, LogOut,
+  Search, Bell, HelpCircle, Megaphone, Settings, ChevronDown, LogOut, Sparkles,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -31,7 +31,7 @@ const FOOT = [
 ] as const;
 
 const itemCls =
-  "flex min-h-9 items-center gap-2.5 rounded-md border border-transparent px-2.5 text-sm text-secondary transition-colors hover:bg-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+  "flex min-h-9 items-center gap-2.5 rounded-lg border border-transparent px-3 text-[13px] font-medium text-secondary transition-colors hover:bg-hover hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 const activeCls = "border-border bg-panel font-semibold text-foreground shadow-xs";
 
 export function AppShell({
@@ -57,17 +57,22 @@ export function AppShell({
   const email = session.user.email ?? "You";
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-app">
+    <div className="flex h-dvh overflow-hidden bg-app p-2">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded-md focus:bg-panel focus:px-3 focus:py-2 focus:text-sm">Skip to content</a>
-      <aside className="hidden w-56 shrink-0 flex-col border-r border-border-subtle bg-panel px-3 py-4 md:flex">
-        <button className="mb-5 flex items-center gap-2 rounded-md px-1.5 py-1 text-left hover:bg-hover">
+      <aside className="hidden w-60 shrink-0 flex-col rounded-l-xl border border-border-subtle bg-panel px-3 py-3 md:flex">
+        <button className="mb-3 flex items-center gap-2 rounded-lg border border-border bg-panel p-2 text-left shadow-xs hover:bg-hover">
           <span className="grid size-8 place-items-center rounded-lg bg-foreground text-[13px] font-bold text-panel">P</span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[13px] font-semibold text-foreground">Studio Nine Hair</span>
-            <span className="block text-[11px] text-tertiary">Pingbase</span>
+            <span className="block text-micro font-semibold uppercase text-tertiary">Workspace</span>
+            <span className="block truncate text-body font-semibold text-foreground">Studio Nine Hair</span>
           </span>
           <ChevronDown className="size-3.5 text-tertiary" />
         </button>
+        <div className="relative mb-5">
+          <Search className="absolute left-3 top-2.5 size-4 text-tertiary" />
+          <input aria-label="Search Pingbase" placeholder="Search" className="h-9 w-full rounded-lg border border-transparent bg-hover pl-9 pr-3 text-body text-foreground placeholder:text-tertiary focus:border-border-strong focus:bg-panel focus:outline-none" />
+        </div>
+        <p className="mb-2 px-3 text-micro font-semibold uppercase text-tertiary">Workspace</p>
         <nav aria-label="Main" className="flex flex-1 flex-col gap-0.5">
           {NAV.map((i) => (
             <Link key={i.to} to={i.to} activeOptions={{ exact: i.to === "/" }} className={itemCls} activeProps={{ className: activeCls }}>
@@ -75,14 +80,15 @@ export function AppShell({
             </Link>
           ))}
         </nav>
+        <p className="mb-2 mt-4 px-3 text-micro font-semibold uppercase text-tertiary">Manage</p>
         <nav aria-label="Account" className="flex flex-col gap-0.5">
           {FOOT.map((i) => (
             <Link key={i.to} to={i.to} className={itemCls} activeProps={{ className: activeCls }}>
               <i.icon className="size-4 shrink-0" aria-hidden="true" /> {i.label}
             </Link>
           ))}
-          <div className="mt-1 flex items-center gap-2 px-1.5 py-1">
-            <Link to="/profile" className="flex min-w-0 flex-1 items-center gap-2 rounded-md hover:bg-hover">
+          <div className="mt-3 flex items-center gap-2 border-t border-border-subtle px-2 pt-3">
+            <Link to="/profile" className="flex min-w-0 flex-1 items-center gap-2 rounded-lg p-1 hover:bg-hover">
               <Avatar name={email} size="sm" />
               <span className="truncate text-[13px] text-secondary">My profile</span>
             </Link>
@@ -102,12 +108,12 @@ export function AppShell({
       </aside>
 
       {secondary && (
-        <aside aria-label="Views" className="hidden w-60 shrink-0 flex-col overflow-y-auto border-r border-border-subtle bg-panel px-3 py-4 lg:flex">
+        <aside aria-label="Views" className="hidden w-60 shrink-0 flex-col overflow-y-auto border-y border-r border-border-subtle bg-panel-subtle px-3 py-4 lg:flex">
           {secondary}
         </aside>
       )}
 
-      <main id="main" className="min-w-0 flex-1 overflow-y-auto bg-panel">
+      <main id="main" className="min-w-0 flex-1 overflow-y-auto rounded-r-xl border-y border-r border-border-subtle bg-panel shadow-xs">
         {title ? (
           <div className="px-8 pb-8 pt-5">
             <h1 className="flex h-10 items-center text-2xl font-semibold text-foreground">{title}</h1>
@@ -137,11 +143,11 @@ export function PageHeader({ title, subtitle, actions, count }: { title: string;
 }
 
 export function Page({ children }: { children: ReactNode }) {
-  return <div className="mx-auto max-w-[1400px] space-y-6 px-8 pb-8 pt-5">{children}</div>;
+  return <div className="mx-auto max-w-[1400px] space-y-6 px-8 pb-10 pt-7">{children}</div>;
 }
 
 export function SideLabel({ children }: { children: ReactNode }) {
-  return <p className="mb-1 mt-5 px-2 text-xs font-medium text-secondary">{children}</p>;
+  return <p className="mb-2 mt-6 px-3 text-micro font-semibold uppercase text-tertiary">{children}</p>;
 }
 
 export function SideItem({ active, icon: Icon, label, count, onClick }: {
