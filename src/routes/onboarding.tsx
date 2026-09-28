@@ -64,7 +64,7 @@ function Onboarding() {
         <p className="text-[12px] text-tertiary">They'll be bookable during your opening hours. Add your team later in Settings.</p>
       </div>) },
   ];
-  const cur = steps[step];
+  const cur = steps[step]!;
 
   const submit = async () => {
     setSaving(true);
