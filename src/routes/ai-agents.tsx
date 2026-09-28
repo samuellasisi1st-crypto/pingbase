@@ -1,81 +1,17 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Bot, Headset, CalendarHeart, Wand2 } from "lucide-react";
-
+import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Bot, CalendarCheck, Check, Handshake, Save, ShieldCheck } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell, Page, PageHeader, StatCard } from "@/components/AppShell";
+import { Badge, Button, Card, Input, Select, Switch, Textarea } from "@/design-system";
 import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/design-system/components/Badge";
-import { Button } from "@/design-system/components/Button";
 
-export const Route = createFileRoute("/ai-agents")({
-  head: () => ({
-    meta: [
-      { title: "AI Agents — Pingbase" },
-      { name: "description", content: "Your AI concierge answers questions and books appointments 24/7." },
-      { property: "og:title", content: "AI Agents — Pingbase" },
-      { property: "og:description", content: "Your AI concierge answers questions and books appointments 24/7." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
-  component: AgentsPage,
-});
+export const Route = createFileRoute("/ai-agents")({ head: () => ({ meta: [
+ { title: "AI Agent — Pingbase" },{ name:"description",content:"Configure Nia's voice, autonomy, guardrails and handover rules."},{ property:"og:title",content:"AI Agent — Pingbase"},{ property:"og:description",content:"Configure Nia's voice, autonomy, guardrails and handover rules."},{property:"og:type",content:"website"},{name:"twitter:card",content:"summary"}
+] }), component: AgentsPage });
 
-function AgentsPage() {
-  const data = useQuery({
-    queryKey: ["agent-overview"],
-    queryFn: async () => {
-      const [settings, actions, handoffs, booked] = await Promise.all([
-        supabase.from("ai_agent_settings").select("*").maybeSingle(),
-        supabase.from("ai_action_logs").select("id", { count: "exact", head: true }),
-        supabase.from("handoffs").select("id", { count: "exact", head: true }),
-        supabase.from("booking_events").select("id", { count: "exact", head: true }),
-      ]);
-      return { s: settings.data, actions: actions.count ?? 0, handoffs: handoffs.count ?? 0, booked: booked.count ?? 0 };
-    },
-  });
-  const s = data.data?.s;
-
-  return (
-    <AppShell>
-      <Page>
-        <PageHeader title="AI Agents" subtitle="Your team of smart AI agents, working for you 24/7." />
-        <div className="rounded-xl border border-border p-6 shadow-xs">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <span className="grid size-14 place-items-center rounded-2xl bg-cyan-soft"><Bot className="size-7 text-primary" /></span>
-              <div>
-                <p className="flex items-center gap-2 text-lg font-semibold text-foreground">{s?.agent_name ?? "Nia"} <Badge variant={s?.enabled === false ? "neutral" : "green"}>{s?.enabled === false ? "Off" : "Live"}</Badge></p>
-                <p className="text-[13px] text-secondary">Booking concierge · {s?.tone ?? "Warm, concise, professional"}</p>
-              </div>
-            </div>
-            <Link to="/settings"><Button variant="secondary">Edit agent</Button></Link>
-          </div>
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
-            <StatCard label="Actions taken" value={data.data?.actions ?? "—"} hint="Tool calls checked against real data" />
-            <StatCard label="Booking events" value={data.data?.booked ?? "—"} hint="Created, moved or cancelled" />
-            <StatCard label="Handed to team" value={data.data?.handoffs ?? "—"} hint="Refunds, complaints, requests for a person" />
-          </div>
-        </div>
-
-        <p className="pt-4 text-center text-[15px] font-medium text-foreground">Add another agent</p>
-        <div className="mx-auto grid max-w-4xl gap-4 md:grid-cols-3">
-          {[
-            { icon: Headset, t: "Support Agent", d: "Answers customer questions instantly and around the clock." },
-            { icon: CalendarHeart, t: "Rebooking Agent", d: "Reaches out to lapsed regulars and fills quiet days." },
-            { icon: Wand2, t: "Custom Agent", d: "You describe what it should do, and we build it for you." },
-          ].map((a) => (
-            <div key={a.t} className="rounded-xl border border-dashed border-border p-2">
-              <div className="grid h-36 place-items-center rounded-lg bg-hover"><a.icon className="size-10 text-tertiary" /></div>
-              <div className="p-3">
-                <p className="text-[14px] font-semibold text-foreground">{a.t}</p>
-                <p className="mt-1 text-[12px] text-secondary">{a.d}</p>
-                <Button variant="secondary" size="sm" className="mt-4 w-full" disabled>Coming soon</Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Page>
-    </AppShell>
-  );
-}
+type Agent={workspace_id:string;agent_name:string;tone:string;instructions:string;autonomy_level:string;escalation_rules:string;forbidden_topics:string;enabled:boolean};
+function AgentsPage(){const qc=useQueryClient();const [form,setForm]=useState<Agent|null>(null);const [saving,setSaving]=useState(false);const data=useQuery({queryKey:["agent-overview"],queryFn:async()=>{const [settings,actions,handoffs,booked]=await Promise.all([supabase.from("ai_agent_settings").select("*").maybeSingle(),supabase.from("ai_action_logs").select("id",{count:"exact",head:true}),supabase.from("handoffs").select("id",{count:"exact",head:true}),supabase.from("booking_events").select("id",{count:"exact",head:true})]);if(settings.error)throw settings.error;return{s:settings.data as Agent|null,actions:actions.count??0,handoffs:handoffs.count??0,booked:booked.count??0};}});useEffect(()=>{if(data.data?.s)setForm(data.data.s)},[data.data?.s]);const save=async()=>{if(!form)return;setSaving(true);const {error}=await supabase.from("ai_agent_settings").update({agent_name:form.agent_name,tone:form.tone,instructions:form.instructions,autonomy_level:form.autonomy_level,escalation_rules:form.escalation_rules,forbidden_topics:form.forbidden_topics,enabled:form.enabled,updated_at:new Date().toISOString()}).eq("workspace_id",form.workspace_id);setSaving(false);if(error)return toast.error(error.message);toast.success("Nia updated");await qc.invalidateQueries({queryKey:["agent-overview"]});};return <AppShell><Page><PageHeader title="AI Agent" subtitle="Configure Nia, your booking concierge." actions={<Button size="sm" disabled={!form||saving} onClick={()=>void save()}><Save className="size-3.5"/>{saving?"Saving…":"Save changes"}</Button>}/>{!form?<p className="text-[12px] text-secondary">Loading Nia…</p>:<><Card className="p-5"><div className="flex flex-wrap items-start justify-between gap-4"><div className="flex items-center gap-3"><span className="grid size-12 place-items-center rounded-xl bg-cyan-soft text-primary"><Bot className="size-6"/></span><div><p className="flex items-center gap-2 text-lg text-foreground">{form.agent_name}<Badge variant={form.enabled?"green":"neutral"}>{form.enabled?"Live":"Off"}</Badge></p><p className="text-[12px] text-secondary">Booking concierge for Studio Nine Hair</p></div></div><div className="flex items-center gap-3 rounded-lg border border-border bg-panel-subtle px-3 py-2"><span className="text-[11px] text-secondary">Agent enabled</span><Switch label="Agent enabled" checked={form.enabled} onCheckedChange={enabled=>setForm({...form,enabled})}/></div></div><div className="mt-5 grid gap-4 md:grid-cols-2"><Field label="Agent name"><Input value={form.agent_name} onChange={e=>setForm({...form,agent_name:e.target.value})}/></Field><Field label="Autonomy"><Select value={form.autonomy_level} onChange={e=>setForm({...form,autonomy_level:e.target.value})}><option value="guided">Guided</option><option value="standard">Standard</option><option value="high">High</option></Select></Field><Field label="Tone"><Textarea value={form.tone} onChange={e=>setForm({...form,tone:e.target.value})}/></Field><Field label="Core instructions"><Textarea value={form.instructions} onChange={e=>setForm({...form,instructions:e.target.value})}/></Field><Field label="Escalate when"><Textarea value={form.escalation_rules} onChange={e=>setForm({...form,escalation_rules:e.target.value})}/></Field><Field label="Never discuss or do"><Textarea value={form.forbidden_topics} onChange={e=>setForm({...form,forbidden_topics:e.target.value})}/></Field></div></Card><div className="grid gap-4 md:grid-cols-3"><StatCard label="Actions taken" value={data.data?.actions??0} hint="Checked against live business data"/><StatCard label="Booking events" value={data.data?.booked??0} hint="Created, moved or cancelled"/><StatCard label="Handed to team" value={data.data?.handoffs??0} hint="Human attention requested"/></div><div className="grid gap-3 md:grid-cols-3"><Capability icon={CalendarCheck} title="Booking guardrails" body="Nia checks live availability and confirms only after the slot is rechecked."/><Capability icon={Handshake} title="Human handover" body="Requests for a person pause AI handling until your team returns the chat."/><Capability icon={ShieldCheck} title="Knowledge grounded" body="Prices, policies and business answers come from your saved sources."/></div></>}</Page></AppShell>}
+function Field({label,children}:{label:string;children:React.ReactNode}){return <label className="grid gap-1.5 text-[11px] text-secondary"><span>{label}</span>{children}</label>}
+function Capability({icon:Icon,title,body}:{icon:React.ComponentType<{className?:string}>;title:string;body:string}){return <Card variant="subtle"><span className="grid size-8 place-items-center rounded-md bg-panel text-primary shadow-xs"><Icon className="size-4"/></span><p className="mt-3 text-[13px] text-foreground">{title}</p><p className="mt-1 text-[11px] text-secondary">{body}</p></Card>}
