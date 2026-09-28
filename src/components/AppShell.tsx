@@ -110,22 +110,24 @@ export function AppShell({
         </nav>
       </aside>
 
-      {secondary && secondaryOpen && (
-        <aside aria-label="Views" className="hidden w-52 shrink-0 flex-col overflow-y-auto border-y border-r border-border-subtle bg-panel px-2.5 py-3 lg:flex">
-          {secondary}
-        </aside>
-      )}
-
-      <main id="main" className="min-w-0 flex-1 overflow-y-auto rounded-r-xl border-y border-r border-border-subtle bg-panel shadow-xs">
-        {title ? (
-          <div className="px-8 pb-8 pt-5">
-            <h1 className="flex h-10 items-center text-2xl font-semibold text-foreground">{title}</h1>
-            <div className="mt-6">{children}</div>
-          </div>
-        ) : (
-          children
+      <div className="flex min-w-0 flex-1 overflow-hidden rounded-xl border border-border-subtle bg-panel shadow-sm">
+        {secondary && secondaryOpen && (
+          <aside aria-label="Views" className="hidden w-52 shrink-0 flex-col overflow-y-auto border-r border-border-subtle bg-panel px-2.5 py-3 lg:flex">
+            {secondary}
+          </aside>
         )}
-      </main>
+
+        <main id="main" className="min-w-0 flex-1 overflow-y-auto bg-panel">
+          {title ? (
+            <div className="px-8 pb-8 pt-5">
+              <h1 className="flex h-10 items-center text-2xl font-semibold text-foreground">{title}</h1>
+              <div className="mt-6">{children}</div>
+            </div>
+          ) : (
+            children
+          )}
+        </main>
+      </div>
     </div>
   );
 }
