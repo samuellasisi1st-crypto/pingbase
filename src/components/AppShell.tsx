@@ -72,19 +72,20 @@ export function AppShell({
   const [navOpen, setNavOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const secondaryOpen = controlledSecondaryOpen ?? true;
-  const workspace = useQuery({ queryKey: ["workspace"], enabled: !!session, queryFn: async () => {
-    const { data } = await supabase.from("workspaces").select("id,name,logo_url").limit(1).maybeSingle();
-    return data;
-  } });
-  const wsName = workspace.data?.name ?? "Studio Nine Hair";
-  const wsLogo = workspace.data?.logo_url || defaultLogo.url;
+  const join = useServerFn(joinWorkspace);
+  const workspace = useQuery({ queryKey: ["workspace", session?.user.id], enabled: !!session, staleTime: 60_000, queryFn: () => join({ data: undefined }) });
+  const wsName = workspace.data?.name ?? "";
+  const wsLogo = workspace.data?.logoUrl || defaultLogo.url;
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/auth" });
   }, [loading, session, navigate]);
+  useEffect(() => {
+    if (workspace.data && !workspace.data.onboarded) navigate({ to: "/onboarding" });
+  }, [workspace.data, navigate]);
 
-  if (loading || !session) {
-    return <div className="flex min-h-screen items-center justify-center text-secondary">Loading…</div>;
+  if (loading || !session || !workspace.data || !workspace.data.onboarded) {
+    return <div className="flex min-h-screen items-center justify-center text-secondary">{workspace.isError ? "Couldn't load your workspace. Please refresh." : "Loading…"}</div>;
   }
 
   const email = session.user.email ?? "You";
