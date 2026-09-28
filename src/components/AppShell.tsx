@@ -43,6 +43,14 @@ const MOBILE_MORE = [
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const;
 
+const PROFILE_MENU = [
+  { to: "/search", label: "Search", icon: Search },
+  { to: "/notifications", label: "Notifications", icon: Bell },
+  { to: "/help", label: "Help", icon: CircleHelp },
+  { to: "/whats-new", label: "What's new?", icon: Zap },
+  { to: "/settings", label: "Settings", icon: Settings },
+] as const;
+
 const itemCls =
   "flex h-8 items-center gap-2 rounded-lg border border-transparent px-2.5 text-[12px] font-normal text-secondary transition-[background-color,border-color,color,box-shadow,transform] duration-150 hover:border-border hover:bg-hover hover:text-foreground hover:shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
 const activeCls = "bg-accent font-normal text-foreground shadow-control ring-1 ring-inset ring-border-strong";
