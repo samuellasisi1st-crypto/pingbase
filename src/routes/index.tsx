@@ -80,9 +80,9 @@ function Dashboard() {
   const hour = new Date().getHours();
   const hello = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
-  const todos: { icon: ComponentType<{ className?: string }>; label: string; to: string; tone: "red" | "amber" | "cyan" }[] = [];
+  const todos: { icon: ComponentType<{ className?: string }>; label: string; to: string; tone: "red" | "yellow" | "cyan" }[] = [];
   if (d?.handoffs.length) todos.push({ icon: UserCheck, label: `${d.handoffs.length} customer${d.handoffs.length > 1 ? "s" : ""} asked for a person`, to: "/inbox", tone: "red" });
-  if (unpaid.length) todos.push({ icon: CreditCard, label: `${unpaid.length} upcoming booking${unpaid.length > 1 ? "s" : ""} with an unpaid deposit`, to: "/appointments", tone: "amber" });
+  if (unpaid.length) todos.push({ icon: CreditCard, label: `${unpaid.length} upcoming booking${unpaid.length > 1 ? "s" : ""} with an unpaid deposit`, to: "/appointments", tone: "yellow" });
   if (unread) todos.push({ icon: MailOpen, label: `${unread} unread conversation${unread > 1 ? "s" : ""}`, to: "/inbox", tone: "cyan" });
   if (soon.length) todos.push({ icon: CalendarClock, label: `${soon.length} booking${soon.length > 1 ? "s" : ""} in the next 24 hours`, to: "/appointments", tone: "cyan" });
   for (const c of chanErr) todos.push({ icon: AlertTriangle, label: `${c.channel} connection needs attention`, to: "/settings", tone: "red" });
@@ -184,7 +184,7 @@ function Dashboard() {
                 <span className="w-24 shrink-0 text-tertiary">{isToday(a.starts_at) ? "Today" : new Date(a.starts_at).toLocaleDateString("en-GB", { weekday: "short", day: "numeric" })} {formatSalonTime(a.starts_at)}</span>
                 <span className="min-w-0 flex-1 truncate text-foreground">{a.contact?.full_name ?? "Customer"} · {a.service?.name}</span>
                 <span className="hidden text-secondary sm:inline">{a.staff?.name}</span>
-                <Badge variant={a.deposit_status === "REQUIRED" ? "amber" : "green"}>{a.deposit_status === "REQUIRED" ? "Deposit due" : "Confirmed"}</Badge>
+                <Badge variant={a.deposit_status === "REQUIRED" ? "yellow" : "green"}>{a.deposit_status === "REQUIRED" ? "Deposit due" : "Confirmed"}</Badge>
               </div>
             ))}
           </div>

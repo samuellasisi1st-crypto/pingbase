@@ -18,7 +18,7 @@ export const Route = createFileRoute("/settings")({ head: () => ({ meta: [
   { title: "Settings — Pingbase" }, { name: "description", content: "Manage your business, team, booking rules, knowledge and connected channels." },
   { property: "og:title", content: "Settings — Pingbase" }, { property: "og:description", content: "Manage your business, team, booking rules, knowledge and connected channels." },
   { property: "og:type", content: "website" }, { name: "twitter:card", content: "summary" },
-] }), validateSearch: (s: Record<string, unknown>): { section?: string } => ({ section: typeof s.section === "string" ? s.section : undefined }), component: SettingsPage });
+] }), validateSearch: (s: Record<string, unknown>): { section?: string | undefined } => ({ section: typeof s["section"] === "string" ? s["section"] : undefined }), component: SettingsPage });
 
 type Section="profile"|"notifications"|"security"|"workspace"|"team"|"staff"|"rules"|"files"|"templates"|"channels";
 type Knowledge={id:string;workspace_id:string;kind:string;title:string;body:string;tags:string[];active:boolean;updated_at:string};

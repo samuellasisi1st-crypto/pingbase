@@ -67,7 +67,7 @@ export function ProfileSection() {
   useEffect(() => { if (p.data) { const [f, ...l] = (p.data.full_name ?? "").split(" "); setFirst(f ?? ""); setLast(l.join(" ")); setPhone(p.data.phone ?? ""); setAvatar(p.data.avatar_url); } }, [p.data]);
   const save = async () => {
     const { error } = await supabase.from("profiles").update({ full_name: `${first} ${last}`.trim() || null, phone: phone || null, avatar_url: avatar }).eq("id", uid!);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Profile saved"); qc.invalidateQueries({ queryKey: ["my-profile"] });
   };
   const email = session?.user.email ?? "";
@@ -86,11 +86,11 @@ export function ProfileSection() {
 export function NotificationsSection() {
   return (
     <SettingsFrame title="Notifications">
-      <FieldRow label="Customer asks for a person" hint="Get notified when Nia hands a conversation to your team." aside={<Switch defaultChecked />} />
+      <FieldRow label="Customer asks for a person" hint="Get notified when Nia hands a conversation to your team." aside={<Toggle initial />} />
       <Divider />
-      <FieldRow label="New booking" hint="A booking was created, moved or cancelled." aside={<Switch defaultChecked />} />
+      <FieldRow label="New booking" hint="A booking was created, moved or cancelled." aside={<Toggle initial />} />
       <Divider />
-      <FieldRow label="Payment received" hint="A customer paid a deposit or balance." aside={<Switch />} />
+      <FieldRow label="Payment received" hint="A customer paid a deposit or balance." aside={<Toggle initial={false} />} />
       <p className="max-w-xl pt-3 text-[11px] text-tertiary">Notifications appear inside Pingbase. Email alerts are coming soon.</p>
     </SettingsFrame>
   );
@@ -132,7 +132,7 @@ export function WorkspaceSection() {
     const r2 = await supabase.from("business_settings").update({ legal_name: f.name.trim(), address: f.address || null, phone: f.phone || null, email: f.email || null, currency: f.currency }).eq("workspace_id", id);
     const r3 = await supabase.from("ai_agents").update({ enabled: f.ai }).eq("workspace_id", id);
     const err = r1.error ?? r2.error ?? r3.error;
-    if (err) return toast.error(err.message);
+    if (err) { toast.error(err.message); return; }
     toast.success("Workspace saved");
     qc.invalidateQueries({ queryKey: ["workspace-settings"] }); qc.invalidateQueries({ queryKey: ["workspace"] });
   };
@@ -151,11 +151,11 @@ export function WorkspaceSection() {
       </div>
       <FieldRow label="Currency"><Select value={f.currency} onChange={(e) => setF({ ...f, currency: e.target.value })}>{["GBP", "EUR", "USD", "NGN"].map((c) => <option key={c}>{c}</option>)}</Select></FieldRow>
       <Divider />
-      <FieldRow label="AI replies" hint="Switch on to let your AI agents answer customers." aside={<Switch checked={f.ai} onCheckedChange={(v: boolean) => setF({ ...f, ai: v })} />} />
+      <FieldRow label="AI replies" hint="Switch on to let your AI agents answer customers." aside={<Switch label="AI replies" checked={f.ai} onCheckedChange={(v: boolean) => setF({ ...f, ai: v })} />} />
       <div className="flex max-w-xl justify-end pt-2"><Button onClick={save}>Save</Button></div>
       <Divider />
       <FieldRow label="Delete workspace" hint="Permanently remove this workspace and all its conversations. Contact support to do this." />
-      <Button variant="danger" size="sm" disabled>Delete workspace</Button>
+      <Button variant="destructive" size="sm" disabled>Delete workspace</Button>
     </SettingsFrame>
   );
 }
@@ -206,7 +206,7 @@ export function TemplatesSection({ onConnect }: { onConnect: () => void }) {
       else toast.error(r.error);
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
-  const tone = (s: string) => (s === "APPROVED" ? "green" : s === "REJECTED" ? "red" : "amber") as "green" | "red" | "amber";
+  const tone = (s: string) => (s === "APPROVED" ? "green" : s === "REJECTED" ? "red" : "yellow") as "green" | "red" | "yellow";
   return (
     <SettingsFrame title="WhatsApp templates" actions={!noAccount && <Button size="sm" onClick={() => setOpen(true)}><Plus className="size-3.5" />New template</Button>}>
       <p className="text-[14px] text-foreground">Manage WhatsApp templates</p>
@@ -270,7 +270,7 @@ export async function uploadWorkspaceFile(file: File, folder: string | null, uid
 export async function openWorkspaceFile(f: WsFile) {
   if (!f.path) return;
   const { data, error } = await supabase.storage.from("attachments").createSignedUrl(f.path, 120);
-  if (error) return toast.error(error.message);
+  if (error) { toast.error(error.message); return; }
   window.open(data.signedUrl, "_blank");
 }
 export async function deleteWorkspaceFile(f: WsFile) {
@@ -278,3 +278,5 @@ export async function deleteWorkspaceFile(f: WsFile) {
   const { error } = await supabase.from("workspace_files").delete().eq("id", f.id);
   if (error) throw error;
 }
+
+function Toggle({ initial }: { initial: boolean }) { const [v, setV] = useState(initial); return <Switch label="Toggle" checked={v} onCheckedChange={setV} />; }
