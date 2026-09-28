@@ -74,20 +74,20 @@ function ContactsPage() {
           count={list.length}
           actions={<><Button variant="secondary" size="sm">Export all</Button><Button variant="secondary" size="sm">Import</Button><Button size="sm" disabled title="Contacts are created automatically when customers message you"><Plus className="size-3.5" />New contact</Button></>}
         />
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle pt-4">
+        <div className="grid gap-3 border-t border-border-subtle pt-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
           <div className="flex w-full max-w-xl items-center gap-2">
             <div className="relative min-w-0 flex-1">
             <Search className="absolute left-2.5 top-2.5 size-3.5 text-tertiary" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search for contact…"
                className="h-9 w-full rounded-lg border border-border bg-panel pl-8 pr-3 text-[12px] shadow-xs placeholder:text-tertiary focus:border-primary focus:outline-none" />
             </div>
-            <Button variant="secondary" size="sm"><Filter className="size-3.5" />Filter</Button>
-            <Button variant="secondary" size="sm"><Columns3 className="size-3.5" />View</Button>
+            <Button variant="secondary" size="sm" title="Filter"><Filter className="size-3.5" /><span className="hidden sm:inline">Filter</span></Button>
+            <Button variant="secondary" size="sm" title="View"><Columns3 className="size-3.5" /><span className="hidden sm:inline">View</span></Button>
           </div>
           <div className="flex items-center gap-2 text-[11px] text-tertiary"><span>Page size: 100</span><Button variant="tertiary" size="sm" disabled><ChevronLeft className="size-3.5" /></Button><span>1 / 1</span><Button variant="tertiary" size="sm" disabled><ChevronRight className="size-3.5" /></Button></div>
         </div>
 
-        <div className="overflow-x-auto rounded-lg border border-border bg-panel shadow-xs">
+        <div className="hidden overflow-x-auto rounded-lg border border-border bg-panel shadow-xs sm:block">
           <table className="w-full min-w-[940px] whitespace-nowrap text-left text-[12px]">
             <thead className="border-b border-border bg-panel-subtle text-secondary">
               <tr>
@@ -120,11 +120,12 @@ function ContactsPage() {
             <EmptyState icon={BookUser} title="No contacts here yet" body="Customers are added automatically the first time they message you on any channel." />
           )}
         </div>
+        <div className="divide-y divide-border-subtle overflow-hidden rounded-lg border border-border bg-panel sm:hidden">{list.map((c) => <button key={c.id} type="button" onClick={() => setSelected(c)} className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 p-3 text-left"><Avatar name={c.full_name ?? "?"} size="md"/><span className="min-w-0"><span className="block truncate text-[13px] text-foreground">{c.full_name ?? "Unnamed"}</span><span className="mt-0.5 block truncate text-[11px] text-secondary">{c.email ?? c.phone ?? "No contact details"}</span><span className="mt-1 flex items-center gap-1">{[...new Set(c.channels.map((x) => x.channel))].slice(0,3).map((ch) => <ChannelIcon key={ch} channel={ch}/>)}</span></span><ChevronRight className="size-4 text-tertiary"/></button>)}</div>
       </Page>
 
       {selected && (
         <div className="fixed inset-0 z-40 flex justify-end bg-foreground/20" onClick={() => setSelected(null)}>
-           <div className="m-2 h-[calc(100%-1rem)] w-full max-w-md overflow-y-auto rounded-xl border border-border bg-panel shadow-lg" onClick={(e) => e.stopPropagation()}>
+           <div className="h-full w-full overflow-y-auto bg-panel pb-20 shadow-lg sm:m-2 sm:h-[calc(100%-1rem)] sm:max-w-md sm:rounded-xl sm:border sm:border-border sm:pb-0" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between border-b border-border-subtle px-5 py-4">
               <p className="text-[15px] font-semibold">Contact</p>
               <button onClick={() => setSelected(null)} className="rounded p-1 hover:bg-hover"><X className="size-4" /></button>

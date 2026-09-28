@@ -150,8 +150,7 @@ function InboxPage() {
   }), [all, channel, view, tab, q, previews.data]);
 
   useEffect(() => {
-    if (!activeId && list[0]) setActiveId(list[0].id);
-  }, [list, activeId]);
+  }, [list]);
 
   const secondary = (
     <>
@@ -178,7 +177,7 @@ function InboxPage() {
   return (
     <AppShell secondary={secondary} secondaryOpen={viewsOpen}>
       <div className="grid h-full min-h-0 min-w-0 grid-cols-1 overflow-x-hidden lg:grid-cols-[minmax(16rem,18rem)_minmax(0,1fr)]">
-        <div className="flex min-h-0 flex-col border-r border-border-subtle bg-panel">
+        <div className={`${activeId ? "hidden lg:flex" : "flex"} min-h-0 flex-col border-r border-border-subtle bg-panel`}>
           <div className="flex items-center justify-between px-5 pb-3 pt-5">
             <div className="flex min-w-0 items-center gap-1.5">
               <Button type="button" title={viewsOpen ? "Collapse inbox views" : "Expand inbox views"} aria-label={viewsOpen ? "Collapse inbox views" : "Expand inbox views"} size="sm" variant="tertiary" className="px-1.5" onClick={() => setViewsOpen((open) => !open)}>
@@ -249,7 +248,7 @@ function InboxPage() {
           <p className="border-t border-border-subtle py-2 text-center text-[12px] text-tertiary">Showing {list.length} conversations</p>
         </div>
 
-        {activeId ? <ConversationPane conversationId={activeId} /> : (
+        {activeId ? <ConversationPane conversationId={activeId} onBack={() => setActiveId(null)} /> : (
           <div className="flex items-center justify-center text-tertiary">Select a conversation</div>
         )}
       </div>
@@ -259,7 +258,7 @@ function InboxPage() {
 
 type Appt = { id: string; starts_at: string; status: string; deposit_status: string; price_pence: number; service: { name: string } | null; staff: { name: string } | null };
 
-function ConversationPane({ conversationId }: { conversationId: string }) {
+function ConversationPane({ conversationId, onBack }: { conversationId: string; onBack: () => void }) {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState("");
   const [customerOpen, setCustomerOpen] = useState(false);
@@ -336,35 +335,36 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
     <div className={`grid min-h-0 min-w-0 grid-cols-1 overflow-x-hidden bg-panel-subtle ${customerOpen ? "xl:grid-cols-[minmax(0,1fr)_18rem]" : ""}`}>
       <div className="flex min-h-0 min-w-0 flex-col">
         <div className="grid min-h-14 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-border-subtle bg-panel px-4 py-2">
-          <div className="flex min-w-0 items-center gap-3">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <Button title="Back to conversations" aria-label="Back to conversations" size="sm" variant="tertiary" className="lg:hidden" onClick={onBack}><ChevronLeft className="size-4"/></Button>
             <Avatar name={name} size="md" />
             <div className="min-w-0">
               <p className="truncate text-[15px] font-semibold text-foreground">{name}</p>
               <p className="truncate text-[12px] text-secondary">{CH_LABEL[c.channel]} · {c.intent ? human(c.intent) : human(c.state)}</p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap">
-            <AIHandlingPill state={pill} />
+          <div className="flex shrink-0 items-center gap-1 whitespace-nowrap">
+            <span className="hidden sm:block"><AIHandlingPill state={pill} /></span>
              <Button title="Pause AI" aria-label="Pause AI" size="sm" variant="tertiary" onClick={() => mode.mutate("PAUSED")}><Clock className="size-4" /></Button>
             {c.handling_mode !== "HUMAN" && (
-              <Button size="sm" variant="secondary" onClick={() => mode.mutate("HUMAN")}><Users className="mr-1.5 size-3.5" />Take over</Button>
+              <Button size="sm" variant="secondary" title="Take over" onClick={() => mode.mutate("HUMAN")}><Users className="size-3.5" /><span className="hidden sm:inline">Take over</span></Button>
             )}
             {c.handling_mode !== "AI" && (
-              <Button size="sm" onClick={() => mode.mutate("AI")}><Bot className="mr-1.5 size-3.5" />Return to AI</Button>
+              <Button size="sm" title="Return to AI" onClick={() => mode.mutate("AI")}><Bot className="size-3.5" /><span className="hidden sm:inline">Return to AI</span></Button>
             )}
             {!customerOpen && <Button title="Show customer details" aria-label="Show customer details" size="sm" variant="tertiary" onClick={() => setCustomerOpen(true)}><PanelRightOpen className="size-4" /></Button>}
           </div>
         </div>
 
         {openHandoff && (
-          <div className="mx-6 mt-4 rounded-lg border border-yellow-strong/25 bg-yellow-soft px-4 py-3 text-[13px]">
+          <div className="mx-4 mt-4 rounded-lg border border-yellow-strong/25 bg-yellow-soft px-4 py-3 text-[13px] sm:mx-6">
             <p className="flex items-center gap-2 font-semibold text-foreground"><AlertTriangle className="size-4" /> Handed over: {openHandoff.reason}</p>
             <p className="mt-1 text-secondary">{openHandoff.summary}</p>
             {openHandoff.recommended_action && <p className="mt-1 text-secondary">Suggested: {openHandoff.recommended_action}</p>}
           </div>
         )}
 
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-8 py-6">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4 sm:px-8 sm:py-6">
           {detail.data.messages.map((m) => {
             const day = new Date(m.created_at).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/London" });
             const showDay = day !== lastDay;
@@ -377,7 +377,7 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
                   <p className="flex items-center gap-2 text-[12px] text-secondary"><Bot className="size-3.5 text-primary" /> {m.body}</p>
                 ) : (
                   <div className={m.direction === "outbound" ? "flex justify-end" : "flex justify-start"}>
-                     <div className={`max-w-[72%] rounded-xl border px-4 py-2.5 text-[14px] shadow-xs ${m.direction === "outbound" ? "border-outbound-border bg-outbound text-foreground" : "border-border-subtle bg-panel-subtle text-foreground"}`}>
+                     <div className={`max-w-[88%] rounded-xl border px-3.5 py-2.5 text-[14px] shadow-xs sm:max-w-[72%] ${m.direction === "outbound" ? "border-outbound-border bg-outbound text-foreground" : "border-border-subtle bg-panel-subtle text-foreground"}`}>
                       <p className="whitespace-pre-wrap">{m.body}</p>
                       <p className="mt-1 text-right text-[11px] text-tertiary">
                         {time}{m.direction === "outbound" && ` · ${m.sender_type === "AI" ? "Nia" : m.sender_name ?? "Team"}`}
@@ -390,7 +390,7 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
           })}
         </div>
 
-        <form className="bg-panel-subtle p-4" onSubmit={(e) => { e.preventDefault(); if (draft.trim()) reply.mutate(draft.trim()); }}>
+        <form className="bg-panel-subtle p-3 sm:p-4" onSubmit={(e) => { e.preventDefault(); if (draft.trim()) reply.mutate(draft.trim()); }}>
            <div className="rounded-lg border border-border bg-panel shadow-sm focus-within:border-primary">
             <textarea value={draft} onChange={(e) => setDraft(e.target.value)} rows={2}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); if (draft.trim()) reply.mutate(draft.trim()); } }}
@@ -406,7 +406,7 @@ function ConversationPane({ conversationId }: { conversationId: string }) {
         </form>
       </div>
 
-      {customerOpen && <aside className="hidden min-h-0 overflow-y-auto border-l border-border-subtle bg-panel xl:block">
+      {customerOpen && <aside className="fixed inset-0 z-40 min-h-0 overflow-y-auto bg-panel pb-20 sm:left-auto sm:w-80 sm:border-l sm:border-border-subtle lg:absolute lg:inset-y-0 lg:right-0 lg:pb-0 xl:static xl:block xl:w-auto">
          <div className="flex h-14 items-center justify-between border-b border-border-subtle px-4 text-[14px] font-semibold text-foreground">Customer<Button title="Close customer details" aria-label="Close customer details" size="sm" variant="tertiary" onClick={() => setCustomerOpen(false)}><X className="size-4" /></Button></div>
         <div className="flex items-center gap-3 border-b border-border-subtle px-5 py-4">
           <Avatar name={name} size="lg" />
