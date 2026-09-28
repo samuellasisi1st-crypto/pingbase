@@ -10,8 +10,8 @@
 <!-- LOVABLE:END -->
 
 ## Design system
-- All UI must use the Veya design system in `src/design-system/` (components + `styles/theme.css` tokens), imported from the "Cozy Code Library" project, because it is the single source of truth for colour, radius, shadow, spacing and typography.
-- `src/styles.css` only aliases shadcn names onto Veya primitives; never redefine owned tokens.
+- All UI uses Veya from the Cozy Code Library as the sole source for colour, radius, shadow, spacing and typography.
+- `src/styles.css` only aliases shadcn names; Veya owns tokens and Pingbase uses a warm berry action accent with neutral near-black dark mode.
 
 ## Booking concierge architecture
 - All inbound messages from any channel go through `src/lib/pipeline.server.ts` (dedupe → contact → conversation → AI) so every channel shares one inbox and one agent.
