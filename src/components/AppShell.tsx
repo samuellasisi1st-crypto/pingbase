@@ -96,7 +96,7 @@ export function AppShell({
       <aside className={`hidden shrink-0 flex-col rounded-l-xl border border-border-strong bg-panel py-3 shadow-xs transition-[width] md:flex ${navOpen ? "w-52 px-2.5" : "w-12 px-1.5"}`}>
         <div className={`mb-3 flex items-center ${navOpen ? "gap-1" : "justify-center"}`}>
           <Link to="/settings" search={{ section: "workspace" } as never} title="Workspace settings" className={`flex min-w-0 items-center rounded-lg border border-border bg-panel text-left shadow-xs hover:bg-hover ${navOpen ? "flex-1 gap-2 p-1.5" : "p-1"}`}>
-          <img src={wsLogo} alt="" className="size-7 shrink-0 rounded-lg object-cover" />
+          <img src={wsLogo} alt="" className="size-7 shrink-0 rounded-lg bg-panel-subtle object-contain p-0.5" />
           {navOpen && <span className="min-w-0 flex-1">
             <span className="block text-micro font-semibold uppercase text-tertiary">Workspace</span>
             <span className="block truncate text-[12px] font-normal text-foreground">{wsName}</span>
