@@ -140,4 +140,4 @@
   background-image: repeating-linear-gradient(135deg, var(--border-strong) 0 1px, transparent 1px 7px);
 }
 
-.dark .react-flow { --xy-background-color: var(--bg-panel-subtle); --xy-controls-button-background-color: var(--bg-panel); --xy-controls-button-color: var(--text-primary); --xy-controls-button-border-color: var(--border-default); --xy-minimap-background-color: var(--bg-panel); --xy-edge-stroke: var(--border-strong); }
+.dark .react-flow { --xy-background-color: var(--bg-panel-subtle); --xy-controls-button-background-color: var(--bg-panel); --xy-controls-button-color: var(--text-primary); --xy-controls-button-border-color: var(--border-default); --xy-minimap-background-color: var(--bg-panel); --xy-edge-stroke: var(--border-strong); --xy-minimap-mask-background-color: rgba(0,0,0,.55); --xy-minimap-node-background-color: var(--bg-hover); }

@@ -30,3 +30,9 @@
 
 ## Mobile UI
 - Phones use shared bottom navigation and full-width drill-ins, not squeezed sidebars or wide tables, to prevent horizontal scrolling.
+
+## AI agents & automations
+- A workspace can have many `ai_agents`; `resolveAgentForConversation` in `src/lib/agent.server.ts` picks pinned agent → channel match → default, so every conversation is answered by exactly one agent. `ai_agent_settings` is legacy.
+- Automations are stored as React Flow graphs in `automation_flows`; `scheduleAutomations` walks each enabled flow (trigger → wait → message) so the board is what actually gets scheduled.
+- Chat attachments live in the private `attachments` bucket under `<workspace_id>/…`; outbound delivery uses short-lived signed URLs via `deliverAttachment`.
+- Dark mode is a `.dark` class on <html> overriding Veya semantic tokens in `theme.css`; choice persisted in localStorage `pingbase-theme`.
