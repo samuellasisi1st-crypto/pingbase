@@ -109,6 +109,65 @@ export type Database = {
           },
         ]
       }
+      ai_agents: {
+        Row: {
+          autonomy_level: string
+          channels: string[]
+          created_at: string
+          enabled: boolean
+          escalation_rules: string
+          forbidden_topics: string
+          id: string
+          instructions: string
+          is_default: boolean
+          name: string
+          purpose: string
+          tone: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          autonomy_level?: string
+          channels?: string[]
+          created_at?: string
+          enabled?: boolean
+          escalation_rules?: string
+          forbidden_topics?: string
+          id?: string
+          instructions?: string
+          is_default?: boolean
+          name?: string
+          purpose?: string
+          tone?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          autonomy_level?: string
+          channels?: string[]
+          created_at?: string
+          enabled?: boolean
+          escalation_rules?: string
+          forbidden_topics?: string
+          id?: string
+          instructions?: string
+          is_default?: boolean
+          name?: string
+          purpose?: string
+          tone?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_agents_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_status_history: {
         Row: {
           actor: string | null
@@ -316,6 +375,50 @@ export type Database = {
           },
           {
             foreignKeyName: "automation_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_flows: {
+        Row: {
+          created_at: string
+          edges: Json
+          enabled: boolean
+          id: string
+          kind: string
+          name: string
+          nodes: Json
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          edges?: Json
+          enabled?: boolean
+          id?: string
+          kind?: string
+          name?: string
+          nodes?: Json
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          edges?: Json
+          enabled?: boolean
+          id?: string
+          kind?: string
+          name?: string
+          nodes?: Json
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_flows_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -627,6 +730,7 @@ export type Database = {
       }
       conversations: {
         Row: {
+          agent_id: string | null
           ai_lock_at: string | null
           assigned_to: string | null
           channel: string
@@ -645,6 +749,7 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          agent_id?: string | null
           ai_lock_at?: string | null
           assigned_to?: string | null
           channel: string
@@ -663,6 +768,7 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          agent_id?: string | null
           ai_lock_at?: string | null
           assigned_to?: string | null
           channel?: string
@@ -681,6 +787,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "conversations_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "ai_agents"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conversations_contact_id_fkey"
             columns: ["contact_id"]
