@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import Autoplay from "embla-carousel-autoplay";
 import {
   ArrowRight,
   Bot,
@@ -36,10 +35,10 @@ import platformConvertGlass from "@/assets/platform-convert-glass.png";
 import platformTimeGlass from "@/assets/platform-time-glass.png";
 import platformRevenueGlass from "@/assets/platform-revenue-glass.png";
 import platformContextGlass from "@/assets/platform-context-glass.png";
+import testimonialFeature from "@/assets/testimonial-feature.jpg";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
-  type CarouselApi,
   CarouselContent,
   CarouselItem,
   CarouselNext,
@@ -124,28 +123,52 @@ const PLATFORM_OUTCOMES = [
 
 const TESTIMONIALS = [
   {
-    quote: "We stopped losing bookings overnight. Customers wake up with confirmed appointments, not unanswered DMs.",
+    quote: "We needed coverage without adding to payroll. Pingbase filled the gap instantly and gave us way more consistency than temporary staff.",
     name: "Amara Cole",
-    role: "Salon owner",
-    metricA: ["24/7", "enquiries answered"],
-    metricB: ["31%", "more bookings"],
-    positionClass: "object-left",
+    role: "Owner, Studio Nine Hair",
+    image: industryHairBeauty,
+    tone: "dark",
+    span: "lg:col-start-1 lg:row-start-1 lg:row-span-2",
   },
   {
-    quote: "The whole team can see what Nia promised and step in without asking the customer to repeat themselves.",
+    quote: "We used to miss DMs and lose leads after hours. Now Nia handles every channel and we wake up to booked clients.",
     name: "Leah Morgan",
-    role: "Studio manager",
-    metricA: ["1", "shared inbox"],
-    metricB: ["8h", "saved each week"],
-    positionClass: "object-[75%_center]",
+    role: "Studio manager, East London",
+    image: industryStudios,
+    tone: "neutral",
+    span: "lg:col-start-2 lg:row-start-1",
   },
   {
-    quote: "Reschedules used to take five messages. Now customers choose another real time and the calendar updates.",
+    quote: "We no longer miss calls, and clients get an immediate reply even after hours. It feels like having a 24/7 front desk without the overhead.",
     name: "Maya Ellis",
     role: "Independent stylist",
-    metricA: ["5×", "faster changes"],
-    metricB: ["0", "double bookings"],
-    positionClass: "object-left",
+    image: industryWellness,
+    tone: "neutral",
+    span: "lg:col-start-3 lg:row-start-1",
+  },
+  {
+    quote: "With Pingbase, I’m booking more appointments than before. Clients learn about my services, identify relevant options and confirm in my list.",
+    name: "Nia Okafor",
+    role: "Founder, Nia Skin Studio",
+    image: industryClinics,
+    tone: "neutral",
+    span: "lg:col-start-2 lg:row-start-2",
+  },
+  {
+    quote: "Pingbase understands our callers, captures the right information, and routes calls to the right person. My customers don’t even realize it’s AI.",
+    name: "Dana M.",
+    role: "Partner, BrightPath Clinic",
+    image: industryFitness,
+    tone: "neutral",
+    span: "lg:col-start-1 lg:row-start-3",
+  },
+  {
+    quote: "Nia sounds natural, conversations flow nicely, and the appointment-booking feature works like a charm. It just asked for my web address and handled setup by itself.",
+    name: "Amy G.",
+    role: "Co-founder, Rooted Skincare",
+    image: industryHairBeauty,
+    tone: "accent",
+    span: "lg:col-start-3 lg:row-start-2 lg:row-span-2",
   },
 ];
 
@@ -212,96 +235,59 @@ function RotatingHeroWord() {
 }
 
 function CustomerStories() {
-  const [api, setApi] = useState<CarouselApi>();
-  const [current, setCurrent] = useState(0);
-
-  useEffect(() => {
-    if (!api) return;
-    const updateCurrent = () => setCurrent(api.selectedScrollSnap());
-    updateCurrent();
-    api.on("select", updateCurrent);
-    api.on("reInit", updateCurrent);
-    return () => {
-      api.off("select", updateCurrent);
-      api.off("reInit", updateCurrent);
-    };
-  }, [api]);
-
-  const extendedTestimonials = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS];
-
   return (
-    <section className="relative overflow-hidden bg-sidebar py-24 text-sidebar-foreground md:py-32">
-      <div className="mx-auto max-w-[1360px] px-5 sm:px-8">
-        <div className="mb-12 max-w-[680px]">
-          <div className="mb-5 flex items-center gap-2 text-xs font-medium uppercase text-sidebar-primary">
-            <span className="size-1.5 rounded-full bg-sidebar-primary" />Customer stories
+    <section className="bg-panel py-20 text-foreground md:py-28">
+      <div className="mx-auto max-w-[1280px] px-5 sm:px-8">
+        <div className="grid gap-8 border-t border-border pt-5 md:grid-cols-[1fr_370px] md:items-end">
+          <div>
+            <div className="mb-3 flex items-center gap-2 text-[11px] font-medium uppercase text-secondary">
+              <span className="size-2 rounded-sm bg-primary" />Testimonials
+            </div>
+            <h2 className="max-w-[620px] text-[42px] font-medium leading-[1.02] sm:text-[54px] lg:text-[64px]">
+              Customers love<br />using Pingbase
+            </h2>
           </div>
-          <SectionHeading>More time for the work customers came for.</SectionHeading>
+          <div className="pb-1">
+            <p className="max-w-[350px] text-sm leading-6 text-secondary">See how appointment businesses use Pingbase to reply faster, stay available and turn more conversations into bookings.</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Button asChild variant="outline" className="rounded-md border-0 bg-primary text-primary-foreground shadow-none hover:bg-primary hover:opacity-90"><Link to="/auth">Start free trial</Link></Button>
+              <Button asChild variant="outline" className="rounded-md border border-border-strong bg-panel shadow-none hover:bg-panel-subtle"><Link to="/auth">Book a demo</Link></Button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="relative mx-auto max-w-[1520px]">
-        <Carousel
-          setApi={setApi}
-          opts={{ loop: true, align: "center", slidesToScroll: 1, startIndex: TESTIMONIALS.length }}
-          plugins={[Autoplay({ delay: 6000, stopOnInteraction: false, stopOnMouseEnter: true })]}
-          className="w-full"
-        >
-          <CarouselContent className="-ml-4">
-            {extendedTestimonials.map((item, index) => {
-              const isActive = index % TESTIMONIALS.length === current % TESTIMONIALS.length;
-              return (
-                <CarouselItem key={`${item.name}-${index}`} className="basis-[90%] pl-4 md:basis-[80%] lg:basis-[70%]">
-                  <article className={`transition-[opacity,transform] duration-500 motion-reduce:transition-none ${isActive ? "scale-100 opacity-100" : "scale-[.92] opacity-35"}`}>
-                    <div className="hidden h-[320px] overflow-hidden rounded-lg bg-panel text-foreground md:flex">
-                      <div className="h-full w-[30%] p-3">
-                        <div className="relative size-full overflow-hidden rounded-md">
-                          <img src={industriesImage} alt={`${item.name}, ${item.role}`} loading="lazy" width={1920} height={768} className={`size-full object-cover ${item.positionClass}`} />
-                          <div className="absolute inset-x-0 bottom-0 bg-sidebar/80 p-4 text-sidebar-foreground">
-                            <h3 className="text-base font-medium">{item.name}</h3>
-                            <p className="mt-1 text-xs text-sidebar-foreground/70">{item.role} at Studio Nine Hair</p>
-                          </div>
-                          <Button size="icon" variant="secondary" aria-label={`Play ${item.name}'s story`} className="absolute bottom-4 right-3 size-8 rounded-full border-0 bg-panel text-foreground shadow-none hover:bg-panel-subtle"><Play className="size-3 fill-current" /></Button>
-                        </div>
-                      </div>
-                      <div className="flex flex-1 flex-col justify-between p-6 lg:p-8">
-                        <blockquote className="text-xl font-medium leading-snug lg:text-2xl">“{item.quote}”</blockquote>
-                        <div className="flex flex-wrap items-center gap-8">
-                          <div><p className="text-2xl font-medium">{item.metricA[0]}</p><p className="mt-1 text-xs text-secondary">{item.metricA[1]}</p></div>
-                          <div><p className="text-2xl font-medium">{item.metricB[0]}</p><p className="mt-1 text-xs text-secondary">{item.metricB[1]}</p></div>
-                          <Button variant="secondary" className="ml-auto rounded-full border-0 bg-panel-subtle shadow-none hover:bg-hover">See {item.name.split(" ")[0]}’s story <ArrowRight /></Button>
-                        </div>
-                      </div>
-                    </div>
+        <div className="relative mt-16 aspect-[16/8.4] min-h-[420px] overflow-hidden rounded-md bg-sidebar sm:min-h-[520px]">
+          <img src={testimonialFeature} alt="Studio Nine Hair owner sharing his customer experience" loading="lazy" width={1600} height={900} className="size-full object-cover object-center" />
+          <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-sidebar/90 to-transparent" />
+          <Button size="icon" variant="secondary" aria-label="Play Studio Nine Hair customer story" className="absolute left-1/2 top-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border-0 bg-panel/80 text-foreground shadow-md backdrop-blur hover:bg-panel sm:size-16"><Play className="ml-1 size-5 fill-current" /></Button>
+          <blockquote className="absolute bottom-5 left-5 right-5 text-sm leading-6 text-sidebar-foreground sm:bottom-8 sm:left-8 sm:right-auto sm:max-w-[470px] sm:text-base">“We no longer miss calls or messages, and clients get an immediate answer after hours. It’s like having a 24/7 front desk without the overhead.”</blockquote>
+          <div className="absolute bottom-6 right-6 hidden text-right text-sidebar-foreground sm:bottom-9 sm:right-8 sm:block">
+            <p className="text-lg font-medium">Studio Nine Hair</p>
+            <p className="mt-1 text-xs text-sidebar-foreground/70">Shoreditch, London</p>
+          </div>
+        </div>
 
-                    <div className="flex flex-col overflow-hidden rounded-lg bg-panel text-foreground md:hidden">
-                      <div className="aspect-[4/3] w-full p-3">
-                        <div className="relative size-full overflow-hidden rounded-md">
-                          <img src={industriesImage} alt={`${item.name}, ${item.role}`} loading="lazy" width={1920} height={768} className={`size-full object-cover ${item.positionClass}`} />
-                          <div className="absolute inset-x-0 bottom-0 bg-sidebar/80 p-4 text-sidebar-foreground"><h3 className="text-base font-medium">{item.name}</h3><p className="mt-1 text-xs text-sidebar-foreground/70">{item.role} at Studio Nine Hair</p></div>
-                          <Button size="icon" variant="secondary" aria-label={`Play ${item.name}'s story`} className="absolute bottom-4 right-3 size-8 rounded-full border-0 bg-panel text-foreground shadow-none"><Play className="size-3 fill-current" /></Button>
-                        </div>
-                      </div>
-                      <div className="flex flex-col gap-5 p-5">
-                        <blockquote className="text-lg font-medium leading-snug">“{item.quote}”</blockquote>
-                        <div className="flex gap-6"><div><p className="text-xl font-medium">{item.metricA[0]}</p><p className="text-xs text-secondary">{item.metricA[1]}</p></div><div><p className="text-xl font-medium">{item.metricB[0]}</p><p className="text-xs text-secondary">{item.metricB[1]}</p></div></div>
-                        <Button variant="secondary" className="w-full rounded-full border-0 bg-panel-subtle shadow-none">See {item.name.split(" ")[0]}’s story <ArrowRight /></Button>
-                      </div>
-                    </div>
-                  </article>
-                </CarouselItem>
-              );
-            })}
-          </CarouselContent>
-        </Carousel>
-
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-sidebar to-transparent sm:w-20" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-sidebar to-transparent sm:w-20" />
-
-        <div className="relative z-20 mt-8 flex justify-center gap-2">
-          {TESTIMONIALS.map((item, index) => (
-            <Button key={item.name} variant="ghost" size="icon" aria-label={`Show ${item.name}'s story`} onClick={() => api?.scrollTo(TESTIMONIALS.length + index)} className={`h-2 min-h-2 rounded-full border-0 p-0 shadow-none transition-[width,background-color] ${current % TESTIMONIALS.length === index ? "w-6 bg-sidebar-primary hover:bg-sidebar-primary" : "w-2 bg-sidebar-accent hover:bg-sidebar-border"}`} />
-          ))}
+        <div className="mt-10 grid auto-rows-[minmax(160px,auto)] gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {TESTIMONIALS.map((item) => {
+            const cardTone = item.tone === "dark"
+              ? "bg-sidebar text-sidebar-foreground"
+              : item.tone === "accent"
+                ? "bg-primary text-primary-foreground"
+                : "bg-panel-subtle text-foreground";
+            const metaTone = item.tone === "neutral" ? "text-secondary" : "opacity-70";
+            return (
+              <article key={item.name} className={`flex min-h-[170px] flex-col justify-between rounded-md p-5 sm:p-6 ${cardTone} ${item.span}`}>
+                <div>
+                  {item.tone !== "neutral" && <p className={`mb-5 text-sm font-medium ${metaTone}`}>Studio Nine Hair</p>}
+                  <blockquote className={`${item.tone === "accent" ? "text-xl sm:text-2xl" : item.tone === "dark" ? "text-lg sm:text-xl" : "text-sm"} leading-[1.4]`}>“{item.quote}”</blockquote>
+                </div>
+                <div className="mt-8 flex items-end justify-between gap-4">
+                  <div><p className="text-xs font-medium">{item.name}</p><p className={`mt-1 text-[10px] ${metaTone}`}>{item.role}</p></div>
+                  <img src={item.image} alt="" loading="lazy" width={384} height={768} className="size-9 shrink-0 rounded-full object-cover" />
+                </div>
+              </article>
+            );
+          })}
         </div>
       </div>
     </section>
