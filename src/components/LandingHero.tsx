@@ -31,6 +31,10 @@ import industryFitness from "@/assets/industry-fitness.jpg";
 import ctaPhoto from "@/assets/landing-cta-photo.jpg";
 import footerLandscape from "@/assets/pingbase-footer-landscape-clean.png";
 import sculpture from "@/assets/dashboard-glass-sculpture.png";
+import platformConvertGlass from "@/assets/platform-convert-glass.png";
+import platformTimeGlass from "@/assets/platform-time-glass.png";
+import platformRevenueGlass from "@/assets/platform-revenue-glass.png";
+import platformContextGlass from "@/assets/platform-context-glass.png";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -87,6 +91,33 @@ const INDUSTRIES = [
   { title: "Clinics", body: "Guide patients to the right service and keep every follow-up together.", image: industryClinics },
   { title: "Studios", body: "Collect references, confirm sessions and make schedule changes simple.", image: industryStudios },
   { title: "Fitness", body: "Move enquiries from first message to a confirmed class or consultation.", image: industryFitness },
+];
+
+const PLATFORM_OUTCOMES = [
+  {
+    title: "Convert more enquiries",
+    body: "Reply while customers are ready to book, even outside opening hours.",
+    image: platformConvertGlass,
+    alt: "Glass conversation and confirmation icon",
+  },
+  {
+    title: "Protect your team’s time",
+    body: "Keep routine questions and scheduling out of your team’s day.",
+    image: platformTimeGlass,
+    alt: "Glass clock and sparkle icon",
+  },
+  {
+    title: "Know what drives revenue",
+    body: "Connect conversations to appointments, services and outcomes.",
+    image: platformRevenueGlass,
+    alt: "Glass revenue growth icon",
+  },
+  {
+    title: "Keep every customer connected",
+    body: "Carry verified customer context across channels, bookings and follow-ups.",
+    image: platformContextGlass,
+    alt: "Glass customer and connected channels icon",
+  },
 ];
 
 const TESTIMONIALS = [
@@ -362,27 +393,29 @@ export function LandingHero() {
         </section>
 
         <section id="platform" className="mx-auto max-w-[1120px] px-5 py-24 sm:px-8 md:py-32">
-          <div className="grid gap-14 lg:grid-cols-[1.2fr_.8fr] lg:items-end">
-            <div>
-              <Eyebrow>One connected platform</Eyebrow>
-              <SectionHeading>
-                Unify conversations, bookings and follow-ups so every customer gets an answer.
-              </SectionHeading>
-            </div>
-            <p className="max-w-[440px] text-base leading-7 text-secondary lg:justify-self-end">
+          <div className="max-w-[720px]">
+            <Eyebrow>One connected platform</Eyebrow>
+            <SectionHeading>Unify conversations, bookings and follow-ups so every customer gets an answer.</SectionHeading>
+            <p className="mt-6 max-w-[540px] text-base leading-7 text-secondary">
               Pingbase gives your team one clear view of every customer while Nia handles the repetitive work in the background.
             </p>
           </div>
-          <div className="mt-16 grid border-y border-border md:grid-cols-3">
-            {[
-              ["01", "Convert more enquiries", "Reply while customers are ready to book, even outside opening hours."],
-              ["02", "Protect your team’s time", "Keep routine questions and scheduling out of your team’s day."],
-              ["03", "Know what drives revenue", "Connect conversations to appointments, services and outcomes."],
-            ].map(([number, title, body], index) => (
-              <article key={number} className={`py-8 md:px-8 ${index > 0 ? "border-t border-border md:border-l md:border-t-0" : ""}`}>
-                <span className="text-xs font-medium text-primary">{number}</span>
-                <h3 className="mt-8 text-xl font-medium">{title}</h3>
-                <p className="mt-3 text-sm leading-6 text-secondary">{body}</p>
+          <div className="mt-16 grid border border-border sm:grid-cols-2">
+            {PLATFORM_OUTCOMES.map((item, index) => (
+              <article
+                key={item.title}
+                className={`relative flex min-h-[300px] flex-col justify-end p-7 sm:min-h-[340px] sm:p-9 lg:min-h-[360px] ${index % 2 === 1 ? "sm:border-l sm:border-border" : ""} ${index > 0 ? "border-t border-border sm:border-t-0" : ""} ${index > 1 ? "sm:border-t sm:border-border" : ""}`}
+              >
+                <img
+                  src={item.image}
+                  alt={item.alt}
+                  loading="lazy"
+                  width={816}
+                  height={816}
+                  className="absolute right-5 top-4 size-32 object-contain sm:right-7 sm:top-5 sm:size-36 lg:size-40"
+                />
+                <h3 className="max-w-[350px] text-xl font-medium">{item.title}</h3>
+                <p className="mt-2 max-w-[350px] text-sm leading-6 text-secondary">{item.body}</p>
               </article>
             ))}
           </div>
