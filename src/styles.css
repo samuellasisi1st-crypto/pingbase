@@ -136,9 +136,16 @@
 
 @utility landing-dot-grid {
   background-color: var(--bg-panel-subtle);
-  background-image: radial-gradient(var(--border-strong) 0.75px, transparent 0.75px);
+  background-image: radial-gradient(var(--gray-400) 1px, transparent 1px);
   background-position: 0 0;
-  background-size: 16px 16px;
+  background-size: 15px 15px;
+}
+
+@utility landing-dot-grid-strong {
+  background-color: var(--bg-panel-subtle);
+  background-image: radial-gradient(var(--gray-400) 1.15px, transparent 1.15px);
+  background-position: 0 0;
+  background-size: 14px 14px;
 }
 
 
