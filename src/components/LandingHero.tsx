@@ -24,7 +24,6 @@ import heroBackgroundAsset from "@/assets/landing-hero-bg.jpg.asset.json";
 import appScreenshotAsset from "@/assets/pingbase-product-ui.png.asset.json";
 import niaRobotAsset from "@/assets/nia-robot.jpg.asset.json";
 import omnichannelUiAsset from "@/assets/nia-omnichannel-ui.png.asset.json";
-import phoneCtaAsset from "@/assets/landing-phone-cta.jpg.asset.json";
 import industriesImage from "@/assets/landing-industries.jpg";
 import industryHairBeauty from "@/assets/industry-hair-beauty.jpg";
 import industryWellness from "@/assets/industry-wellness.jpg";
@@ -239,8 +238,8 @@ function CustomerStories() {
   const autoplay = useRef(Autoplay({ delay: 3500, stopOnInteraction: false, stopOnMouseEnter: true }));
 
   return (
-    <section className="bg-panel py-20 text-foreground md:py-28">
-      <div className="mx-auto max-w-[1360px] border-x border-border px-5 sm:px-8">
+    <section className="border-t border-border bg-panel text-foreground">
+      <div className="mx-auto max-w-[1360px] border-x border-border px-5 py-20 sm:px-8 md:py-28">
         <div className="grid gap-8 border-t border-border pt-5 md:grid-cols-[1fr_370px] md:items-end">
           <div>
             <div className="mb-3 flex items-center gap-2 text-[11px] font-medium uppercase text-secondary">
@@ -379,7 +378,7 @@ export function LandingHero() {
           </ul>
         </section>
 
-        <section aria-label="Pingbase product preview" className="w-full border-b border-border py-0">
+        <section aria-label="Pingbase product preview" className="landing-dot-grid w-full border-y border-border">
           <div className="relative mx-auto flex h-[62vw] max-h-[760px] min-h-[310px] w-full max-w-[1360px] items-center justify-center overflow-hidden border-x border-border bg-panel-subtle px-8 py-8 sm:px-16 sm:py-12 md:px-24 lg:px-32">
             <img src={heroBackgroundAsset.url} alt="" aria-hidden="true" width={1024} height={768} className="absolute inset-0 size-full object-cover" />
             <div className="absolute inset-0 bg-panel/15" />
@@ -387,8 +386,8 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section id="industries" className="border-b border-border bg-panel py-20 md:py-28">
-          <div className="mx-auto max-w-[1360px] border-x border-border px-5 sm:px-8">
+        <section id="industries" className="border-b border-border bg-panel">
+          <div className="mx-auto max-w-[1360px] border-x border-border px-5 pt-20 sm:px-8 md:pt-28">
             <div className="flex items-end justify-between gap-8">
               <div>
                 <Eyebrow>Built around your day</Eyebrow>
@@ -397,7 +396,7 @@ export function LandingHero() {
               </div>
             </div>
           </div>
-          <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} className="mt-14 w-full">
+          <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} className="w-full pt-14">
               <CarouselContent className="ml-0 pl-5 sm:pl-8 min-[1360px]:pl-[calc((100vw-1360px)/2+32px)]">
                 {INDUSTRIES.map((item) => (
                   <CarouselItem key={item.title} className="basis-[82%] pl-5 first:pl-0 last:pr-5 sm:basis-[46%] lg:basis-[27%] xl:basis-[23%]">
@@ -410,7 +409,7 @@ export function LandingHero() {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <div className="mx-auto mt-8 flex max-w-[1360px] justify-end gap-2 border-x border-border px-5 sm:px-8">
+              <div className="mx-auto mt-8 flex max-w-[1360px] justify-end gap-2 border-x border-border px-5 pb-20 sm:px-8 md:pb-28">
                 <CarouselPrevious className="static size-10 translate-y-0 rounded-full border-border bg-panel shadow-none" />
                 <CarouselNext className="static size-10 translate-y-0 rounded-full border-border bg-panel shadow-none" />
               </div>
@@ -429,15 +428,16 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section id="platform" className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
-          <div className="max-w-[720px]">
+        <section id="platform" className="border-b border-border bg-panel">
+          <div className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
+            <div className="max-w-[720px]">
             <Eyebrow>One connected platform</Eyebrow>
             <SectionHeading>Unify conversations, bookings and follow-ups so every customer gets an answer.</SectionHeading>
             <p className="mt-6 max-w-[540px] text-base leading-7 text-secondary">
               Pingbase gives your team one clear view of every customer while Nia handles the repetitive work in the background.
             </p>
-          </div>
-          <div className="mt-16 grid border border-border sm:grid-cols-2">
+            </div>
+            <div className="mt-16 grid border border-border sm:grid-cols-2">
             {PLATFORM_OUTCOMES.map((item, index) => (
               <article
                 key={item.title}
@@ -455,6 +455,7 @@ export function LandingHero() {
                 <p className="mt-2 max-w-[350px] text-sm leading-6 text-secondary">{item.body}</p>
               </article>
             ))}
+            </div>
           </div>
         </section>
 
@@ -476,8 +477,9 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section id="nia" className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
-          <div className="grid gap-14 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
+        <section id="nia" className="border-b border-border bg-panel">
+          <div className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
+            <div className="grid gap-14 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
             <div>
               <Eyebrow>Meet your AI agent</Eyebrow>
               <SectionHeading>Nia turns enquiries into confirmed appointments.</SectionHeading>
@@ -500,6 +502,7 @@ export function LandingHero() {
                 <div className="mt-3 flex gap-2"><span className="rounded-full border border-border px-3 py-1.5 text-xs">11:00am</span><span className="rounded-full border border-primary bg-blue-soft px-3 py-1.5 text-xs text-blue-strong">3:30pm</span></div>
               </div>
             </div>
+            </div>
           </div>
         </section>
 
@@ -519,8 +522,9 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section id="resources" className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
-          <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
+        <section id="resources" className="border-b border-border bg-panel">
+          <div className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
+            <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
             <div className="relative min-h-[430px] overflow-hidden rounded-lg border border-border bg-panel-subtle p-6 sm:p-10">
               <div className="absolute left-[12%] top-[12%] grid size-14 place-items-center rounded-xl border border-border bg-panel shadow-md"><MessageCircle className="size-6 text-success" /></div>
               <div className="absolute right-[14%] top-[18%] grid size-14 place-items-center rounded-xl border border-border bg-panel shadow-md"><Instagram className="size-6 text-primary" /></div>
@@ -541,21 +545,21 @@ export function LandingHero() {
                 <div><Sparkles className="size-5 text-primary" /><h3 className="mt-3 text-sm font-medium">Simple to set up</h3><p className="mt-2 text-sm leading-6 text-secondary">Add your business details, connect channels and let Nia start helping.</p></div>
               </div>
             </div>
+            </div>
           </div>
         </section>
 
         <div id="stories"><CustomerStories /></div>
 
-        <section id="pricing" className="bg-panel py-20 md:py-28">
-          <div className="mx-auto max-w-[1360px] border-x border-border px-5 sm:px-8">
-          <div className="relative min-h-[440px] overflow-hidden rounded-lg px-5 py-14 sm:px-8 md:flex md:items-center md:px-12">
-            <img src={phoneCtaAsset.url} alt="Business owner using her phone" loading="lazy" width={736} height={414} className="absolute inset-0 size-full object-cover object-center" />
-            <div className="relative z-10 max-w-[530px] text-foreground">
-              <h2 className="text-[38px] font-normal leading-[1.08] sm:text-[50px]">Your new AI concierge.<br />Ready every day.</h2>
-              <p className="mt-5 max-w-[470px] text-base leading-7 text-secondary">Always reachable. Connected to your calendar. Ready to turn the next message into a booking.</p>
-              <div className="mt-9 flex flex-wrap gap-3"><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-primary bg-primary px-6 text-primary-foreground shadow-none hover:bg-primary hover:opacity-90"><Link to="/auth">Try for free</Link></Button><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-panel bg-panel px-6 text-foreground shadow-none hover:bg-panel-subtle"><Link to="/auth">Book a demo</Link></Button></div>
+        <section id="pricing" className="landing-dot-grid border-y border-border">
+          <div className="mx-auto max-w-[1360px] border-x border-border bg-panel/55 px-5 sm:px-8">
+            <div className="flex min-h-[420px] flex-col items-center justify-center border-x border-border bg-panel/35 px-5 py-20 text-center sm:px-8">
+              <div className="max-w-[760px] text-foreground">
+                <h2 className="text-[40px] font-normal leading-[1.08] sm:text-[54px]">Your new AI concierge.<br />Ready every day.</h2>
+                <p className="mx-auto mt-5 max-w-[560px] text-base leading-7 text-secondary">Always reachable. Connected to your calendar. Ready to turn the next message into a booking.</p>
+                <div className="mt-9 flex flex-wrap justify-center gap-3"><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-primary bg-primary px-6 text-primary-foreground shadow-none hover:bg-primary hover:opacity-90"><Link to="/auth">Try for free</Link></Button><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-border-strong bg-panel px-6 text-foreground shadow-none hover:bg-panel-subtle"><Link to="/auth">Book a demo</Link></Button></div>
+              </div>
             </div>
-          </div>
           </div>
         </section>
       </main>
