@@ -14,6 +14,7 @@ import {
   Mail,
   MessageCircle,
   MessagesSquare,
+  Play,
   RefreshCw,
   ShieldCheck,
   Sparkles,
@@ -257,6 +258,24 @@ function CustomerStories() {
             </div>
           </div>
         </div>
+
+        <figure className="relative mt-14 overflow-hidden rounded-md">
+          <img src={testimonialFeature} alt="A salon owner sharing her experience using Pingbase" className="aspect-[16/9] w-full object-cover" />
+          <button
+            type="button"
+            aria-label="Play customer story"
+            className="absolute left-1/2 top-1/2 flex size-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-panel/90 text-foreground shadow-lg transition-transform hover:scale-105 sm:size-20"
+          >
+            <Play className="ml-1 size-6 fill-current sm:size-7" aria-hidden="true" />
+          </button>
+          <blockquote className="absolute bottom-5 left-5 right-5 text-base font-medium leading-snug text-white drop-shadow sm:bottom-8 sm:left-8 sm:max-w-[470px] sm:right-auto sm:text-2xl">
+            “Nia keeps our chairs full. Every enquiry gets an answer and a booking before we’re even back in the room.”
+          </blockquote>
+          <figcaption className="absolute bottom-5 right-5 hidden text-right text-sm text-white/90 drop-shadow sm:block sm:bottom-8 sm:right-8">
+            <p className="font-medium">Studio Nine Hair</p>
+            <p className="mt-0.5 text-xs opacity-80">Shoreditch, London</p>
+          </figcaption>
+        </figure>
 
         <Carousel
           className="mt-14"
