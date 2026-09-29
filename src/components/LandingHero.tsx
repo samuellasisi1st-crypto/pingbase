@@ -295,7 +295,10 @@ function CustomerStories() {
           </CarouselContent>
         </Carousel>
 
-        <div className="mt-8 flex justify-center gap-2">
+        <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-10 bg-gradient-to-r from-sidebar to-transparent sm:w-20" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-10 bg-gradient-to-l from-sidebar to-transparent sm:w-20" />
+
+        <div className="relative z-20 mt-8 flex justify-center gap-2">
           {TESTIMONIALS.map((item, index) => (
             <Button key={item.name} variant="ghost" size="icon" aria-label={`Show ${item.name}'s story`} onClick={() => api?.scrollTo(TESTIMONIALS.length + index)} className={`h-2 min-h-2 rounded-full border-0 p-0 shadow-none transition-[width,background-color] ${current % TESTIMONIALS.length === index ? "w-6 bg-sidebar-primary hover:bg-sidebar-primary" : "w-2 bg-sidebar-accent hover:bg-sidebar-border"}`} />
           ))}
@@ -306,6 +309,16 @@ function CustomerStories() {
 }
 
 export function LandingHero() {
+  useEffect(() => {
+    const root = document.documentElement;
+    const wasDark = root.classList.contains("dark");
+    root.classList.remove("dark");
+
+    return () => {
+      if (wasDark) root.classList.add("dark");
+    };
+  }, []);
+
   return (
     <div className="min-h-dvh overflow-hidden bg-panel text-foreground">
       <header className="sticky top-0 z-50 border-b border-border bg-panel/95 backdrop-blur">
@@ -358,10 +371,10 @@ export function LandingHero() {
         </section>
 
         <section aria-label="Pingbase product preview" className="w-full border-y border-border py-0">
-          <div className="relative mx-auto flex h-[62vw] max-h-[760px] min-h-[310px] w-full max-w-[1360px] items-end justify-center overflow-hidden bg-panel-subtle px-8 sm:px-16 md:px-24 lg:px-32">
+          <div className="relative mx-auto flex h-[62vw] max-h-[760px] min-h-[310px] w-full max-w-[1360px] items-center justify-center overflow-hidden bg-panel-subtle px-8 py-8 sm:px-16 sm:py-12 md:px-24 lg:px-32">
             <img src={heroBackgroundAsset.url} alt="" aria-hidden="true" width={1024} height={768} className="absolute inset-0 size-full object-cover" />
             <div className="absolute inset-0 bg-panel/15" />
-            <img src={appScreenshotAsset.url} alt="Pingbase inbox showing customer conversations, images and booking details" className="relative z-10 max-h-[88%] w-full max-w-[1060px] object-contain object-bottom" />
+            <img src={appScreenshotAsset.url} alt="Pingbase inbox showing customer conversations, images and booking details" className="relative z-10 max-h-[78%] w-full max-w-[980px] object-contain object-center" />
           </div>
         </section>
 
@@ -376,7 +389,7 @@ export function LandingHero() {
             </div>
           </div>
           <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} className="mt-14 w-full">
-              <CarouselContent className="ml-0">
+              <CarouselContent className="ml-0 pl-5 sm:pl-8 min-[1360px]:pl-[calc((100vw-1360px)/2+32px)]">
                 {INDUSTRIES.map((item) => (
                   <CarouselItem key={item.title} className="basis-[82%] pl-5 first:pl-0 last:pr-5 sm:basis-[46%] lg:basis-[27%] xl:basis-[23%]">
                   <article>
@@ -437,7 +450,9 @@ export function LandingHero() {
         </section>
 
         <section id="solutions" className="relative overflow-hidden bg-sidebar text-sidebar-foreground">
-          <img src={niaRobotAsset.url} alt="Nia, the Pingbase AI concierge" width={736} height={736} className="absolute inset-0 size-full object-cover object-center" />
+          <img src={niaRobotAsset.url} alt="Nia, the Pingbase AI concierge" width={736} height={736} className="absolute inset-0 size-full scale-[1.6] object-cover object-[center_10%] sm:scale-[1.4]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-sidebar via-sidebar/80 to-sidebar/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-sidebar via-transparent to-sidebar/55" />
           <div className="relative mx-auto min-h-[820px] max-w-[1360px] px-5 pb-0 pt-24 sm:px-8 md:pt-32">
             <div className="mx-auto max-w-[700px] text-center">
               <div className="mb-5 flex items-center justify-center gap-2 text-xs font-medium uppercase text-sidebar-primary">
@@ -448,7 +463,7 @@ export function LandingHero() {
               <p className="mx-auto mt-6 max-w-[560px] text-base leading-7 text-sidebar-foreground/70">A continuous conversation across WhatsApp, Instagram, Messenger and email—with the same customer context behind every reply.</p>
             </div>
 
-            <img src={omnichannelUiAsset.url} alt="Pingbase omnichannel inbox connected to WhatsApp and Instagram conversations" width={1920} height={877} className="absolute inset-x-5 bottom-0 w-[calc(100%-2.5rem)] object-contain object-bottom sm:inset-x-8 sm:w-[calc(100%-4rem)]" />
+            <img src={omnichannelUiAsset.url} alt="Pingbase omnichannel inbox connected to WhatsApp and Instagram conversations" width={1920} height={877} className="absolute bottom-0 left-1/2 w-[88%] max-w-[1080px] -translate-x-1/2 object-contain object-bottom sm:w-[80%]" />
           </div>
         </section>
 
@@ -523,7 +538,7 @@ export function LandingHero() {
         <div id="stories"><CustomerStories /></div>
 
         <section id="pricing" className="bg-panel py-20 md:py-28">
-          <div className="relative mx-auto min-h-[440px] max-w-[1360px] overflow-hidden rounded-lg px-5 py-14 sm:px-8 md:flex md:items-center md:px-12">
+          <div className="relative mx-auto min-h-[440px] max-w-[1280px] overflow-hidden rounded-lg px-5 py-14 sm:px-8 md:flex md:items-center md:px-12">
             <img src={phoneCtaAsset.url} alt="Business owner using her phone" loading="lazy" width={736} height={414} className="absolute inset-0 size-full object-cover object-center" />
             <div className="relative z-10 max-w-[530px] text-foreground">
               <h2 className="text-[38px] font-normal leading-[1.08] sm:text-[50px]">Your new AI concierge.<br />Ready every day.</h2>
