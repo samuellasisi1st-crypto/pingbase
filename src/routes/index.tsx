@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import type { ComponentType, ReactNode } from "react";
 import { AlertTriangle, ArrowRight, Bot, CalendarClock, CalendarDays, CheckCircle2, CreditCard, Instagram, MailOpen, MessageCircle, UserCheck } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { LandingHero } from "@/components/LandingHero";
+import { useAuth } from "@/hooks/useAuth";
 import { Badge, Button, Card } from "@/design-system";
 import { supabase } from "@/integrations/supabase/client";
 import { getGoogleCalendarStatus } from "@/lib/channels.functions";
