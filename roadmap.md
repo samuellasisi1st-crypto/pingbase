@@ -13,3 +13,4 @@
 - [x] Recreate the landing testimonial section as the supplied editorial video-and-masonry layout
 - [x] Simplify landing testimonials into an auto-moving three-card carousel
 - [x] Connect landing section strokes and add patterned hero rails and CTA band
+- [x] Tighten landing grid boxes, carousels, dark Nia section, patterns, testimonials, CTA, and footer strokes

@@ -239,8 +239,8 @@ function CustomerStories() {
 
   return (
     <section className="border-t border-border bg-panel text-foreground">
-      <div className="mx-auto max-w-[1360px] border-x border-border px-5 py-20 sm:px-8 md:py-28">
-        <div className="grid gap-8 border-t border-border pt-5 md:grid-cols-[1fr_370px] md:items-end">
+      <div className="mx-auto max-w-[1360px] border-x border-border py-20 md:py-28">
+        <div className="grid gap-8 px-5 md:grid-cols-[1fr_370px] md:items-end sm:px-8">
           <div>
             <div className="mb-3 flex items-center gap-2 text-[11px] font-medium uppercase text-secondary">
               <span className="size-2 rounded-sm bg-primary" />Testimonials
@@ -258,7 +258,7 @@ function CustomerStories() {
           </div>
         </div>
 
-        <figure className="relative mt-14 overflow-hidden rounded-md">
+        <figure className="relative mt-14 overflow-hidden border-y border-border">
           <img src={testimonialFeature} alt="A salon owner sharing her experience using Pingbase" className="aspect-[16/9] w-full object-cover" />
           <button
             type="button"
@@ -277,12 +277,12 @@ function CustomerStories() {
         </figure>
 
         <Carousel
-          className="mt-14"
+          className="border-b border-border"
           opts={{ align: "start", loop: true }}
           plugins={[autoplay.current]}
           aria-label="Customer testimonials"
         >
-          <CarouselContent className="-ml-4">
+          <CarouselContent className="ml-0">
             {TESTIMONIALS.map((item) => {
               const cardTone = item.tone === "dark"
                 ? "bg-sidebar text-sidebar-foreground"
@@ -291,8 +291,8 @@ function CustomerStories() {
                   : "bg-panel-subtle text-foreground";
               const metaTone = item.tone === "neutral" ? "text-secondary" : "opacity-70";
               return (
-                <CarouselItem key={item.name} className="basis-full pl-4 sm:basis-1/2 lg:basis-1/3">
-                  <article className={`flex h-[330px] flex-col justify-between rounded-md p-6 sm:p-7 ${cardTone}`}>
+                <CarouselItem key={item.name} className="basis-full border-r border-border pl-0 sm:basis-1/2 lg:basis-1/3">
+                  <article className={`flex h-[330px] flex-col justify-between p-6 sm:p-7 ${cardTone}`}>
                     <div>
                       <p className={`mb-7 text-xs font-medium ${metaTone}`}>Studio Nine Hair</p>
                       <blockquote className="text-lg leading-[1.45] sm:text-xl">“{item.quote}”</blockquote>
@@ -306,7 +306,7 @@ function CustomerStories() {
               );
             })}
           </CarouselContent>
-          <div className="mt-6 flex justify-end gap-2">
+          <div className="flex justify-end gap-2 border-t border-border px-5 py-5 sm:px-8">
             <CarouselPrevious className="static size-9 translate-y-0 rounded-md border-border-strong bg-panel shadow-none" />
             <CarouselNext className="static size-9 translate-y-0 rounded-md border-border-strong bg-panel shadow-none" />
           </div>
@@ -387,7 +387,7 @@ export function LandingHero() {
         </section>
 
         <section id="industries" className="border-b border-border bg-panel">
-          <div className="mx-auto max-w-[1360px] border-x border-border px-5 pt-20 sm:px-8 md:pt-28">
+          <div className="mx-auto max-w-[1360px] border-x border-border px-5 py-20 sm:px-8 md:py-28">
             <div className="flex items-end justify-between gap-8">
               <div>
                 <Eyebrow>Built around your day</Eyebrow>
@@ -396,22 +396,24 @@ export function LandingHero() {
               </div>
             </div>
           </div>
-          <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} className="w-full pt-14">
-              <CarouselContent className="ml-0 pl-5 sm:pl-8 min-[1360px]:pl-[calc((100vw-1360px)/2+32px)]">
+          <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} className="mx-auto w-full max-w-[1360px] overflow-hidden border-x border-t border-border">
+              <CarouselContent className="ml-0">
                 {INDUSTRIES.map((item) => (
-                  <CarouselItem key={item.title} className="basis-[82%] pl-5 first:pl-0 last:pr-5 sm:basis-[46%] lg:basis-[27%] xl:basis-[23%]">
-                  <article>
-                    <div className="aspect-[4/5] w-full overflow-hidden rounded-lg"><img src={item.image} alt={`${item.title} professional with a customer`} loading="lazy" width={384} height={768} className="size-full object-cover" /></div>
-                    <h3 className="mt-5 text-base font-medium">{item.title}</h3>
-                    <p className="mt-2 min-h-12 text-sm leading-6 text-secondary">{item.body}</p>
-                    <a href="#platform" className="mt-6 inline-flex items-center gap-2 text-sm font-medium hover:text-primary">See how it works <ArrowRight className="size-4" /></a>
+                  <CarouselItem key={item.title} className="basis-[82%] border-r border-border pl-0 sm:basis-[46%] lg:basis-[27%] xl:basis-1/4">
+                   <article className="flex h-full flex-col">
+                     <div className="aspect-[4/5] w-full overflow-hidden border-b border-border"><img src={item.image} alt={`${item.title} professional with a customer`} loading="lazy" width={384} height={768} className="size-full object-cover" /></div>
+                     <div className="flex min-h-[210px] flex-1 flex-col p-5">
+                       <h3 className="text-base font-medium">{item.title}</h3>
+                       <p className="mt-2 text-sm leading-6 text-secondary">{item.body}</p>
+                       <a href="#platform" className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-medium hover:text-primary">See how it works <ArrowRight className="size-4" /></a>
+                     </div>
                   </article>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <div className="mx-auto mt-8 flex max-w-[1360px] justify-end gap-2 border-x border-border px-5 pb-20 sm:px-8 md:pb-28">
-                <CarouselPrevious className="static size-10 translate-y-0 rounded-full border-border bg-panel shadow-none" />
-                <CarouselNext className="static size-10 translate-y-0 rounded-full border-border bg-panel shadow-none" />
+              <div className="flex justify-end gap-2 border-t border-border px-5 py-5 sm:px-8">
+                <CarouselPrevious className="static size-10 translate-y-0 rounded-md border-border bg-panel shadow-none" />
+                <CarouselNext className="static size-10 translate-y-0 rounded-md border-border bg-panel shadow-none" />
               </div>
           </Carousel>
         </section>
@@ -428,16 +430,16 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section id="platform" className="border-b border-border bg-panel">
-          <div className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
-            <div className="max-w-[720px]">
+        <section id="platform" className="landing-dot-grid border-b border-border">
+          <div className="mx-auto max-w-[1360px] border-x border-border bg-panel py-24 md:py-32">
+            <div className="max-w-[780px] px-5 sm:px-8">
             <Eyebrow>One connected platform</Eyebrow>
             <SectionHeading>Unify conversations, bookings and follow-ups so every customer gets an answer.</SectionHeading>
             <p className="mt-6 max-w-[540px] text-base leading-7 text-secondary">
               Pingbase gives your team one clear view of every customer while Nia handles the repetitive work in the background.
             </p>
             </div>
-            <div className="mt-16 grid border border-border sm:grid-cols-2">
+            <div className="mt-16 grid border-y border-border sm:grid-cols-2">
             {PLATFORM_OUTCOMES.map((item, index) => (
               <article
                 key={item.title}
@@ -463,7 +465,7 @@ export function LandingHero() {
           <img src={niaRobotAsset.url} alt="Nia, the Pingbase AI concierge" width={736} height={736} className="absolute inset-0 size-full scale-[1.6] object-cover object-[center_10%] sm:scale-[1.4]" />
           <div className="absolute inset-0 bg-gradient-to-r from-sidebar via-sidebar/80 to-sidebar/30" />
           <div className="absolute inset-0 bg-gradient-to-t from-sidebar via-transparent to-sidebar/55" />
-          <div className="relative mx-auto min-h-[820px] max-w-[1360px] border-x border-sidebar-foreground/10 px-5 pb-0 pt-24 sm:px-8 md:pt-32">
+          <div className="relative mx-auto min-h-[880px] max-w-[1360px] border-x border-sidebar-foreground/10 px-5 pb-[460px] pt-24 sm:px-8 md:pt-32">
             <div className="mx-auto max-w-[700px] text-center">
               <div className="mb-5 flex items-center justify-center gap-2 text-xs font-medium uppercase text-sidebar-primary">
                 <span className="size-1.5 rounded-full bg-sidebar-primary" />
@@ -473,17 +475,17 @@ export function LandingHero() {
               <p className="mx-auto mt-6 max-w-[560px] text-base leading-7 text-sidebar-foreground/70">A continuous conversation across WhatsApp, Instagram, Messenger and email—with the same customer context behind every reply.</p>
             </div>
 
-            <img src={omnichannelUiAsset.url} alt="Pingbase omnichannel inbox connected to WhatsApp and Instagram conversations" width={1920} height={877} className="absolute bottom-0 left-1/2 w-[88%] max-w-[1080px] -translate-x-1/2 object-contain object-bottom sm:w-[80%]" />
+            <img src={omnichannelUiAsset.url} alt="Pingbase omnichannel inbox connected to WhatsApp and Instagram conversations" width={1920} height={877} className="absolute bottom-0 left-1/2 max-h-[430px] w-[86%] max-w-[1040px] -translate-x-1/2 object-contain object-bottom" />
           </div>
         </section>
 
-        <section id="nia" className="border-b border-border bg-panel">
-          <div className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
+        <section id="nia" className="border-b border-sidebar-foreground/10 bg-sidebar text-sidebar-foreground">
+          <div className="mx-auto max-w-[1360px] border-x border-sidebar-foreground/10 px-5 py-24 sm:px-8 md:py-32">
             <div className="grid gap-14 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
             <div>
               <Eyebrow>Meet your AI agent</Eyebrow>
               <SectionHeading>Nia turns enquiries into confirmed appointments.</SectionHeading>
-              <p className="mt-6 max-w-[470px] text-base leading-7 text-secondary">Give Nia your services, team, hours and policies. She uses your live calendar and booking rules to guide every customer from first question to confirmation.</p>
+              <p className="mt-6 max-w-[470px] text-base leading-7 text-sidebar-foreground/70">Give Nia your services, team, hours and policies. She uses your live calendar and booking rules to guide every customer from first question to confirmation.</p>
               <div className="mt-9 space-y-5">
                 {[
                   "Knows your services, prices and policies",
@@ -494,9 +496,9 @@ export function LandingHero() {
               </div>
               <Button asChild variant="outline" className="mt-9 rounded-md"><Link to="/auth">See how Nia works <ArrowRight /></Link></Button>
             </div>
-            <div className="relative min-h-[560px] overflow-hidden rounded-lg bg-panel-subtle">
+            <div className="relative min-h-[560px] overflow-hidden bg-panel-subtle">
               <img src={ctaPhoto} alt="Salon professional supported by Nia" width={1600} height={800} className="absolute inset-0 size-full object-cover object-center" />
-              <div className="absolute left-5 top-5 w-[calc(100%-2.5rem)] max-w-[390px] rounded-lg border border-border bg-panel p-4 shadow-md sm:left-10 sm:top-10">
+              <div className="absolute left-5 top-5 w-[calc(100%-2.5rem)] max-w-[390px] border border-border bg-panel p-4 text-foreground shadow-md sm:left-10 sm:top-10">
                 <div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><Bot className="size-4" /></span><div><p className="text-sm font-medium">Nia</p><p className="text-xs text-secondary">Booking concierge</p></div><span className="ml-auto size-2 rounded-full bg-success" /></div>
                 <div className="mt-5 rounded-md bg-panel-subtle p-4 text-sm leading-6">Maya has two openings on Friday. Would you prefer 11:00am or 3:30pm?</div>
                 <div className="mt-3 flex gap-2"><span className="rounded-full border border-border px-3 py-1.5 text-xs">11:00am</span><span className="rounded-full border border-primary bg-blue-soft px-3 py-1.5 text-xs text-blue-strong">3:30pm</span></div>
@@ -506,11 +508,13 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section className="border-y border-border bg-panel-subtle">
-          <div className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
-            <Eyebrow>Every stage, covered</Eyebrow>
-            <SectionHeading>One customer journey, without the manual hand-offs.</SectionHeading>
-            <div className="mt-14 grid overflow-hidden rounded-lg border border-border-strong sm:grid-cols-2">
+        <section className="landing-dot-grid border-y border-border">
+          <div className="mx-auto max-w-[1360px] border-x border-border bg-panel-subtle py-24 md:py-32">
+            <div className="px-5 sm:px-8">
+              <Eyebrow>Every stage, covered</Eyebrow>
+              <SectionHeading>One customer journey, without the manual hand-offs.</SectionHeading>
+            </div>
+            <div className="mt-14 grid border-y border-border-strong sm:grid-cols-2">
               {JOURNEY.map(({ icon: Icon, title, body }) => (
                 <article key={title} className="min-h-[230px] border-b border-border-strong bg-panel p-7 last:border-b-0 even:border-l sm:p-10 sm:[&:nth-child(3)]:border-b-0">
                   <span className="grid size-10 place-items-center rounded-md bg-blue-soft text-blue-strong"><Icon className="size-5" /></span>
@@ -525,7 +529,7 @@ export function LandingHero() {
         <section id="resources" className="border-b border-border bg-panel">
           <div className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
             <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
-            <div className="relative min-h-[430px] overflow-hidden rounded-lg border border-border bg-panel-subtle p-6 sm:p-10">
+            <div className="relative min-h-[430px] overflow-hidden p-6 sm:p-10">
               <div className="absolute left-[12%] top-[12%] grid size-14 place-items-center rounded-xl border border-border bg-panel shadow-md"><MessageCircle className="size-6 text-success" /></div>
               <div className="absolute right-[14%] top-[18%] grid size-14 place-items-center rounded-xl border border-border bg-panel shadow-md"><Instagram className="size-6 text-primary" /></div>
               <div className="absolute bottom-[16%] left-[18%] grid size-14 place-items-center rounded-xl border border-border bg-panel shadow-md"><Mail className="size-6 text-chart-3" /></div>
@@ -551,22 +555,20 @@ export function LandingHero() {
 
         <div id="stories"><CustomerStories /></div>
 
-        <section id="pricing" className="landing-dot-grid border-y border-border">
-          <div className="mx-auto max-w-[1360px] border-x border-border bg-panel/55 px-5 sm:px-8">
-            <div className="flex min-h-[420px] flex-col items-center justify-center border-x border-border bg-panel/35 px-5 py-20 text-center sm:px-8">
+        <section id="pricing" className="landing-dot-grid-strong border-y border-border">
+          <div className="mx-auto flex min-h-[420px] max-w-[1360px] flex-col items-center justify-center px-5 py-20 text-center sm:px-8">
               <div className="max-w-[760px] text-foreground">
                 <h2 className="text-[40px] font-normal leading-[1.08] sm:text-[54px]">Your new AI concierge.<br />Ready every day.</h2>
                 <p className="mx-auto mt-5 max-w-[560px] text-base leading-7 text-secondary">Always reachable. Connected to your calendar. Ready to turn the next message into a booking.</p>
                 <div className="mt-9 flex flex-wrap justify-center gap-3"><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-primary bg-primary px-6 text-primary-foreground shadow-none hover:bg-primary hover:opacity-90"><Link to="/auth">Try for free</Link></Button><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-border-strong bg-panel px-6 text-foreground shadow-none hover:bg-panel-subtle"><Link to="/auth">Book a demo</Link></Button></div>
               </div>
-            </div>
           </div>
         </section>
       </main>
 
-      <footer className="relative overflow-hidden border-t border-border bg-panel text-foreground">
+      <footer className="relative overflow-hidden bg-panel text-foreground">
         <img src={footerLandscape} alt="" aria-hidden="true" loading="lazy" width={1920} height={803} className="pointer-events-none absolute inset-x-0 bottom-0 h-auto w-full object-contain object-bottom" />
-        <div className="relative z-10 mx-auto max-w-[1360px] border-x border-border px-5 pb-[220px] pt-14 sm:px-8 sm:pb-[300px] md:pb-[430px]">
+        <div className="relative z-10 mx-auto max-w-[1360px] px-5 pb-[220px] pt-14 sm:px-8 sm:pb-[300px] md:pb-[430px]">
           <div className="grid gap-12 border-b border-border pb-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
             <div><div className="flex items-center gap-2 text-base font-semibold"><span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground"><MessagesSquare className="size-4" /></span>Pingbase</div><p className="mt-4 max-w-[230px] text-sm leading-6 text-secondary">The AI booking concierge for appointment businesses.</p></div>
             {FOOTER_LINKS.map((group) => <div key={group.title}><h3 className="text-xs font-medium uppercase text-tertiary">{group.title}</h3><ul className="mt-5 space-y-3">{group.links.map((link) => <li key={link}><a href="#platform" className="text-sm text-secondary transition-colors hover:text-foreground">{link}</a></li>)}</ul></div>)}
