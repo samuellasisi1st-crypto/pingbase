@@ -136,14 +136,14 @@
 
 @utility landing-dot-grid {
   background-color: var(--bg-panel-subtle);
-  background-image: radial-gradient(color-mix(in srgb, var(--gray-400) 58%, transparent) 0.75px, transparent 0.75px);
+  background-image: radial-gradient(color-mix(in srgb, var(--gray-400) 34%, transparent) 0.65px, transparent 0.65px);
   background-position: 0 0;
   background-size: 16px 16px;
 }
 
 @utility landing-dot-grid-strong {
   background-color: var(--bg-panel-subtle);
-  background-image: radial-gradient(color-mix(in srgb, var(--gray-400) 68%, transparent) 0.85px, transparent 0.85px);
+  background-image: radial-gradient(color-mix(in srgb, var(--gray-400) 42%, transparent) 0.75px, transparent 0.75px);
   background-position: 0 0;
   background-size: 16px 16px;
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import testimonialFeature from "@/assets/testimonial-feature.jpg";
 import { Link } from "@tanstack/react-router";
 import Autoplay from "embla-carousel-autoplay";
-import { motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
   Bot,
@@ -25,12 +25,11 @@ import heroBackgroundAsset from "@/assets/landing-hero-bg.jpg.asset.json";
 import appScreenshotAsset from "@/assets/pingbase-product-ui.png.asset.json";
 import niaRobotAsset from "@/assets/nia-robot.jpg.asset.json";
 import omnichannelUiAsset from "@/assets/nia-omnichannel-ui.png.asset.json";
-import industriesImage from "@/assets/landing-industries.jpg";
-import industryHairBeauty from "@/assets/industry-hair-beauty.jpg";
-import industryWellness from "@/assets/industry-wellness.jpg";
-import industryClinics from "@/assets/industry-clinics.jpg";
-import industryStudios from "@/assets/industry-studios.jpg";
-import industryFitness from "@/assets/industry-fitness.jpg";
+import industryHairBeautyAsset from "@/assets/landing-industry-real-hair.jpg.asset.json";
+import industryWellnessAsset from "@/assets/landing-industry-real-wellness.jpg.asset.json";
+import industryClinicsAsset from "@/assets/landing-industry-real-clinics.jpg.asset.json";
+import industryStudiosAsset from "@/assets/landing-industry-real-studios.jpg.asset.json";
+import industryFitnessAsset from "@/assets/landing-industry-real-fitness.jpg.asset.json";
 import ctaPhoto from "@/assets/landing-cta-photo.jpg";
 import platformConvertGlass from "@/assets/platform-convert-glass.png";
 import platformTimeGlass from "@/assets/platform-time-glass.png";
@@ -87,11 +86,11 @@ const JOURNEY = [
 ];
 
 const INDUSTRIES = [
-  { title: "Hair & beauty", body: "Turn DMs into salon bookings, without interrupting the appointment in front of you.", image: industryHairBeauty },
-  { title: "Wellness", body: "Answer treatment questions and fill real openings around the clock.", image: industryWellness },
-  { title: "Clinics", body: "Guide patients to the right service and keep every follow-up together.", image: industryClinics },
-  { title: "Studios", body: "Collect references, confirm sessions and make schedule changes simple.", image: industryStudios },
-  { title: "Fitness", body: "Move enquiries from first message to a confirmed class or consultation.", image: industryFitness },
+  { title: "Hair & beauty", body: "Turn DMs into salon bookings, without interrupting the appointment in front of you.", image: industryHairBeautyAsset.url },
+  { title: "Wellness", body: "Answer treatment questions and fill real openings around the clock.", image: industryWellnessAsset.url },
+  { title: "Clinics", body: "Guide patients to the right service and keep every follow-up together.", image: industryClinicsAsset.url },
+  { title: "Studios", body: "Collect references, confirm sessions and make schedule changes simple.", image: industryStudiosAsset.url },
+  { title: "Fitness", body: "Move enquiries from first message to a confirmed class or consultation.", image: industryFitnessAsset.url },
 ];
 
 const PLATFORM_OUTCOMES = [
@@ -126,7 +125,7 @@ const TESTIMONIALS = [
     quote: "We needed coverage without adding to payroll. Pingbase filled the gap instantly and gave us way more consistency than temporary staff.",
     name: "Amara Cole",
     role: "Owner, Studio Nine Hair",
-    image: industryHairBeauty,
+    image: industryHairBeautyAsset.url,
     tone: "dark",
     span: "lg:col-start-1 lg:row-start-1 lg:row-span-2",
   },
@@ -134,7 +133,7 @@ const TESTIMONIALS = [
     quote: "We used to miss DMs and lose leads after hours. Now Nia handles every channel and we wake up to booked clients.",
     name: "Leah Morgan",
     role: "Studio manager, East London",
-    image: industryStudios,
+    image: industryStudiosAsset.url,
     tone: "neutral",
     span: "lg:col-start-2 lg:row-start-1",
   },
@@ -142,7 +141,7 @@ const TESTIMONIALS = [
     quote: "We no longer miss calls, and clients get an immediate reply even after hours. It feels like having a 24/7 front desk without the overhead.",
     name: "Maya Ellis",
     role: "Independent stylist",
-    image: industryWellness,
+    image: industryWellnessAsset.url,
     tone: "neutral",
     span: "lg:col-start-3 lg:row-start-1",
   },
@@ -150,7 +149,7 @@ const TESTIMONIALS = [
     quote: "With Pingbase, I’m booking more appointments than before. Clients learn about my services, identify relevant options and confirm in my list.",
     name: "Nia Okafor",
     role: "Founder, Nia Skin Studio",
-    image: industryClinics,
+    image: industryClinicsAsset.url,
     tone: "neutral",
     span: "lg:col-start-2 lg:row-start-2",
   },
@@ -158,7 +157,7 @@ const TESTIMONIALS = [
     quote: "Pingbase understands our callers, captures the right information, and routes calls to the right person. My customers don’t even realize it’s AI.",
     name: "Dana M.",
     role: "Partner, BrightPath Clinic",
-    image: industryFitness,
+    image: industryFitnessAsset.url,
     tone: "neutral",
     span: "lg:col-start-1 lg:row-start-3",
   },
@@ -166,7 +165,7 @@ const TESTIMONIALS = [
     quote: "Nia sounds natural, conversations flow nicely, and the appointment-booking feature works like a charm. It just asked for my web address and handled setup by itself.",
     name: "Amy G.",
     role: "Co-founder, Rooted Skincare",
-    image: industryHairBeauty,
+    image: industryHairBeautyAsset.url,
     tone: "accent",
     span: "lg:col-start-3 lg:row-start-2 lg:row-span-2",
   },
@@ -235,6 +234,7 @@ function MessageBubble({ side, children }: { side?: "left" | "right"; children: 
 
 function RotatingHeroWord() {
   const [index, setIndex] = useState(0);
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const timer = window.setInterval(() => setIndex((current) => (current + 1) % HERO_WORDS.length), 2400);
@@ -242,10 +242,19 @@ function RotatingHeroWord() {
   }, []);
 
   return (
-    <span className="relative inline-grid min-w-[12ch] text-tertiary" aria-live="polite">
-      <span key={HERO_WORDS[index]} className="col-start-1 row-start-1 animate-in fade-in slide-in-from-bottom-2 duration-500">
-        {HERO_WORDS[index]}
-      </span>
+    <span className="relative inline-grid min-w-[12ch] overflow-hidden align-bottom text-tertiary" aria-live="polite">
+      <AnimatePresence initial={false} mode="popLayout">
+        <motion.span
+          key={HERO_WORDS[index]}
+          className="col-start-1 row-start-1 inline-block"
+          initial={reduceMotion ? false : { opacity: 0, y: "72%", filter: "blur(5px)" }}
+          animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+          exit={{ opacity: 0, y: "-58%", filter: "blur(4px)" }}
+          transition={{ duration: reduceMotion ? 0 : 0.58, ease: [0.22, 1, 0.36, 1] }}
+        >
+          {HERO_WORDS[index]}
+        </motion.span>
+      </AnimatePresence>
     </span>
   );
 }
@@ -340,6 +349,9 @@ function CustomerStories() {
 }
 
 export function LandingHero() {
+  const industryAutoplay = useRef(Autoplay({ delay: 3200, stopOnInteraction: false, stopOnMouseEnter: true }));
+  const reduceMotion = useReducedMotion();
+
   useEffect(() => {
     const root = document.documentElement;
     const wasDark = root.classList.contains("dark");
@@ -374,32 +386,37 @@ export function LandingHero() {
       </header>
 
       <main>
-        <section className="mx-auto w-full max-w-[1360px] border-x border-border px-5 pb-14 pt-14 sm:px-8 md:pb-20 md:pt-20">
-          <h1 className="max-w-[1040px] text-[46px] font-normal leading-[1.03] sm:text-[62px] md:text-[76px]">
+        <motion.section
+          className="mx-auto w-full max-w-[1360px] border-x border-border px-5 pb-14 pt-14 sm:px-8 md:pb-20 md:pt-20"
+          initial={reduceMotion ? false : "hidden"}
+          animate="visible"
+          variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
+        >
+          <motion.h1 variants={{ hidden: { opacity: 0, y: 28 }, visible: { opacity: 1, y: 0, transition: { duration: 0.72, ease: [0.22, 1, 0.36, 1] } } }} className="max-w-[1040px] text-[46px] font-normal leading-[1.03] sm:text-[62px] md:text-[76px]">
             More bookings
             <br />
             from every <RotatingHeroWord />
-          </h1>
-          <p className="mt-7 max-w-[480px] text-[17px] leading-relaxed text-secondary md:text-lg">
+          </motion.h1>
+          <motion.p variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { duration: 0.62, ease: [0.22, 1, 0.36, 1] } } }} className="mt-7 max-w-[480px] text-[17px] leading-relaxed text-secondary md:text-lg">
             Turn customer chats into confirmed appointments. Nia answers, books and follows up across every channel.
-          </p>
-          <div className="mt-9 flex flex-wrap items-center gap-3">
+          </motion.p>
+          <motion.div variants={{ hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0, transition: { duration: 0.58 } } }} className="mt-9 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" variant="outline" className="h-13 rounded-md border-0 bg-sidebar px-7 text-sidebar-foreground shadow-none hover:bg-sidebar-accent">
               <Link to="/auth">Sign up</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-13 rounded-md border border-border-strong bg-panel px-7 shadow-none hover:bg-panel-subtle">
               <Link to="/auth">Book a demo</Link>
             </Button>
-          </div>
-          <ul className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2">
+          </motion.div>
+          <motion.ul variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.52 } } }} className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-2">
             {CHECKS.map((label) => (
               <li key={label} className="flex items-center gap-1.5 text-[13px] text-secondary">
                 <CheckCircle2 className="size-4 text-primary" aria-hidden="true" />
                 {label}
               </li>
             ))}
-          </ul>
-        </section>
+          </motion.ul>
+        </motion.section>
 
         <section aria-label="Pingbase product preview" className="landing-dot-grid w-full border-y border-border">
           <div className="relative mx-auto flex h-[62vw] max-h-[760px] min-h-[310px] w-full max-w-[1360px] items-center justify-center overflow-hidden border-x border-border bg-panel-subtle px-8 py-8 sm:px-16 sm:py-12 md:px-24 lg:px-32">
@@ -419,7 +436,7 @@ export function LandingHero() {
               </div>
             </Reveal>
           </div>
-          <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} className="mx-auto w-full max-w-[1360px] overflow-hidden border-x border-t border-border">
+          <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} plugins={[industryAutoplay.current]} className="mx-auto w-full max-w-[1360px] overflow-hidden border-x border-t border-border">
               <CarouselContent className="ml-0">
                 {INDUSTRIES.map((item) => (
                   <CarouselItem key={item.title} className="basis-[82%] border-r border-border pl-0 sm:basis-[46%] lg:basis-[27%] xl:basis-1/4">
@@ -590,13 +607,16 @@ export function LandingHero() {
       </main>
 
       <footer className="relative overflow-hidden bg-panel text-foreground">
-        <img src={heroBackgroundAsset.url} alt="" aria-hidden="true" loading="lazy" width={1024} height={768} className="pointer-events-none absolute inset-x-0 bottom-0 h-[58%] w-full object-cover object-center" />
-        <div className="relative z-10 mx-auto max-w-[1360px] px-5 pb-[220px] pt-14 sm:px-8 sm:pb-[300px] md:pb-[430px]">
+        <div className="relative z-10 mx-auto max-w-[1360px] px-5 pt-14 sm:px-8">
           <div className="grid gap-12 border-b border-border pb-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
             <div><div className="flex items-center gap-2 text-base font-semibold"><span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground"><MessagesSquare className="size-4" /></span>Pingbase</div><p className="mt-4 max-w-[230px] text-sm leading-6 text-secondary">The AI booking concierge for appointment businesses.</p></div>
             {FOOTER_LINKS.map((group) => <div key={group.title}><h3 className="text-xs font-medium uppercase text-tertiary">{group.title}</h3><ul className="mt-5 space-y-3">{group.links.map((link) => <li key={link}><a href="#platform" className="text-sm text-secondary transition-colors hover:text-foreground">{link}</a></li>)}</ul></div>)}
           </div>
           <div className="flex flex-col gap-4 pt-7 text-xs text-secondary sm:flex-row sm:items-center sm:justify-between"><p>© 2026 Pingbase. All rights reserved.</p><div className="flex items-center gap-4"><span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-success" />All systems operational</span><Clock3 className="size-3.5" /><FileText className="size-3.5" /></div></div>
+        </div>
+        <div className="relative mt-2 h-[330px] sm:h-[420px] md:h-[520px]">
+          <img src={heroBackgroundAsset.url} alt="" aria-hidden="true" loading="lazy" width={1024} height={768} className="pointer-events-none absolute inset-0 size-full object-cover object-center" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-[42%] bg-gradient-to-b from-panel via-panel/75 to-transparent" />
         </div>
       </footer>
     </div>
