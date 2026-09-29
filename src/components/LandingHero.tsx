@@ -498,7 +498,7 @@ export function LandingHero() {
             </div>
             <div className="relative min-h-[560px] overflow-hidden bg-panel-subtle">
               <img src={ctaPhoto} alt="Salon professional supported by Nia" width={1600} height={800} className="absolute inset-0 size-full object-cover object-center" />
-              <div className="absolute left-5 top-5 w-[calc(100%-2.5rem)] max-w-[390px] rounded-lg border border-border bg-panel p-4 shadow-md sm:left-10 sm:top-10">
+              <div className="absolute left-5 top-5 w-[calc(100%-2.5rem)] max-w-[390px] border border-border bg-panel p-4 text-foreground shadow-md sm:left-10 sm:top-10">
                 <div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><Bot className="size-4" /></span><div><p className="text-sm font-medium">Nia</p><p className="text-xs text-secondary">Booking concierge</p></div><span className="ml-auto size-2 rounded-full bg-success" /></div>
                 <div className="mt-5 rounded-md bg-panel-subtle p-4 text-sm leading-6">Maya has two openings on Friday. Would you prefer 11:00am or 3:30pm?</div>
                 <div className="mt-3 flex gap-2"><span className="rounded-full border border-border px-3 py-1.5 text-xs">11:00am</span><span className="rounded-full border border-primary bg-blue-soft px-3 py-1.5 text-xs text-blue-strong">3:30pm</span></div>
@@ -508,8 +508,8 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section className="border-y border-border bg-panel-subtle">
-          <div className="mx-auto max-w-[1360px] border-x border-border py-24 md:py-32">
+        <section className="landing-dot-grid border-y border-border">
+          <div className="mx-auto max-w-[1360px] border-x border-border bg-panel-subtle py-24 md:py-32">
             <div className="px-5 sm:px-8">
               <Eyebrow>Every stage, covered</Eyebrow>
               <SectionHeading>One customer journey, without the manual hand-offs.</SectionHeading>
@@ -566,7 +566,7 @@ export function LandingHero() {
         </section>
       </main>
 
-      <footer className="relative overflow-hidden border-t border-border bg-panel text-foreground">
+      <footer className="relative overflow-hidden bg-panel text-foreground">
         <img src={footerLandscape} alt="" aria-hidden="true" loading="lazy" width={1920} height={803} className="pointer-events-none absolute inset-x-0 bottom-0 h-auto w-full object-contain object-bottom" />
         <div className="relative z-10 mx-auto max-w-[1360px] px-5 pb-[220px] pt-14 sm:px-8 sm:pb-[300px] md:pb-[430px]">
           <div className="grid gap-12 border-b border-border pb-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
