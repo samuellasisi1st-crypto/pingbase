@@ -22,6 +22,8 @@ import {
 import heroBackgroundAsset from "@/assets/landing-hero-bg.jpg.asset.json";
 import appScreenshotAsset from "@/assets/pingbase-product-ui.png.asset.json";
 import niaRobotAsset from "@/assets/nia-robot.jpg.asset.json";
+import omnichannelUiAsset from "@/assets/nia-omnichannel-ui.png.asset.json";
+import phoneCtaAsset from "@/assets/landing-phone-cta.jpg.asset.json";
 import industriesImage from "@/assets/landing-industries.jpg";
 import industryHairBeauty from "@/assets/industry-hair-beauty.jpg";
 import industryWellness from "@/assets/industry-wellness.jpg";
@@ -311,16 +313,16 @@ export function LandingHero() {
           <Logo />
           <nav aria-label="Main" className="hidden items-center justify-self-center md:flex">
             {MENU.map((item) => (
-              <a key={item.label} href={item.href} className="flex h-9 items-center gap-1 rounded-full px-3.5 text-[15px] text-secondary transition-colors hover:bg-hover hover:text-foreground">
+                <a key={item.label} href={item.href} className="flex h-9 items-center gap-1 rounded-md px-3.5 text-[15px] text-secondary transition-colors hover:bg-hover hover:text-foreground">
                 {item.label}
               </a>
             ))}
           </nav>
           <div className="flex items-center justify-end gap-2">
-            <Button asChild variant="outline" className="border-2 border-primary bg-sidebar text-sidebar-foreground shadow-none hover:bg-sidebar-accent">
+            <Button asChild variant="outline" className="rounded-md border-0 bg-sidebar text-sidebar-foreground shadow-none hover:bg-sidebar-accent">
               <Link to="/auth">Sign up</Link>
             </Button>
-            <Button asChild variant="outline" className="rounded-full border-2 border-sidebar bg-panel shadow-none max-sm:px-3">
+            <Button asChild variant="outline" className="rounded-md border border-border-strong bg-panel shadow-none max-sm:px-3">
               <Link to="/auth">Book a demo</Link>
             </Button>
           </div>
@@ -338,10 +340,10 @@ export function LandingHero() {
             Turn customer chats into confirmed appointments. Nia answers, books and follows up across every channel.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Button asChild size="lg" variant="outline" className="h-13 rounded-full border-2 border-primary bg-sidebar px-7 text-sidebar-foreground shadow-none hover:bg-sidebar-accent">
+            <Button asChild size="lg" variant="outline" className="h-13 rounded-md border-0 bg-sidebar px-7 text-sidebar-foreground shadow-none hover:bg-sidebar-accent">
               <Link to="/auth">Sign up</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="h-13 rounded-full border-2 border-sidebar bg-panel px-7 shadow-none hover:bg-panel-subtle">
+            <Button asChild size="lg" variant="outline" className="h-13 rounded-md border border-border-strong bg-panel px-7 shadow-none hover:bg-panel-subtle">
               <Link to="/auth">Book a demo</Link>
             </Button>
           </div>
@@ -356,10 +358,10 @@ export function LandingHero() {
         </section>
 
         <section aria-label="Pingbase product preview" className="w-full border-y border-border py-0">
-          <div className="relative mx-auto flex h-[62vw] max-h-[760px] min-h-[310px] w-full max-w-[1360px] items-end justify-center overflow-hidden bg-panel-subtle px-5 sm:px-10 md:px-16">
+          <div className="relative mx-auto flex h-[62vw] max-h-[760px] min-h-[310px] w-full max-w-[1360px] items-end justify-center overflow-hidden bg-panel-subtle px-8 sm:px-16 md:px-24 lg:px-32">
             <img src={heroBackgroundAsset.url} alt="" aria-hidden="true" width={1024} height={768} className="absolute inset-0 size-full object-cover" />
             <div className="absolute inset-0 bg-panel/15" />
-            <img src={appScreenshotAsset.url} alt="Pingbase inbox showing customer conversations, images and booking details" className="relative z-10 w-full max-w-[1180px] rounded-t-xl border border-border-strong bg-panel shadow-lg" />
+            <img src={appScreenshotAsset.url} alt="Pingbase inbox showing customer conversations, images and booking details" className="relative z-10 max-h-[88%] w-full max-w-[1060px] object-contain object-bottom" />
           </div>
         </section>
 
@@ -372,10 +374,11 @@ export function LandingHero() {
                 <p className="mt-5 max-w-[520px] text-base leading-7 text-secondary">Pingbase turns conversations into bookings across teams of every shape and size.</p>
               </div>
             </div>
-            <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} className="mt-14">
+          </div>
+          <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} className="mt-14 w-full">
               <CarouselContent className="-ml-5">
                 {INDUSTRIES.map((item) => (
-                  <CarouselItem key={item.title} className="basis-[82%] pl-5 sm:basis-1/2 lg:basis-1/4">
+                  <CarouselItem key={item.title} className="basis-[82%] pl-5 sm:basis-[46%] lg:basis-[27%] xl:basis-[23%]">
                   <article>
                     <div className="aspect-[4/5] w-full overflow-hidden rounded-lg"><img src={item.image} alt={`${item.title} professional with a customer`} loading="lazy" width={384} height={768} className="size-full object-cover" /></div>
                     <h3 className="mt-5 text-base font-medium">{item.title}</h3>
@@ -385,12 +388,11 @@ export function LandingHero() {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <div className="mt-8 flex justify-end gap-2">
+              <div className="mx-auto mt-8 flex max-w-[1360px] justify-end gap-2 px-5 sm:px-8">
                 <CarouselPrevious className="static size-10 translate-y-0 rounded-full border-border bg-panel shadow-none" />
                 <CarouselNext className="static size-10 translate-y-0 rounded-full border-border bg-panel shadow-none" />
               </div>
-            </Carousel>
-          </div>
+          </Carousel>
         </section>
 
         <section className="border-y border-border bg-panel" aria-label="Connected channels">
@@ -434,8 +436,9 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section id="solutions" className="bg-sidebar text-sidebar-foreground">
-          <div className="mx-auto max-w-[1360px] px-5 py-24 sm:px-8 md:py-32">
+        <section id="solutions" className="relative overflow-hidden bg-sidebar text-sidebar-foreground">
+          <img src={niaRobotAsset.url} alt="Nia, the Pingbase AI concierge" width={736} height={736} className="absolute inset-0 size-full object-cover object-center" />
+          <div className="relative mx-auto min-h-[820px] max-w-[1360px] px-5 pb-0 pt-24 sm:px-8 md:pt-32">
             <div className="mx-auto max-w-[700px] text-center">
               <div className="mb-5 flex items-center justify-center gap-2 text-xs font-medium uppercase text-sidebar-primary">
                 <span className="size-1.5 rounded-full bg-sidebar-primary" />
@@ -445,41 +448,7 @@ export function LandingHero() {
               <p className="mx-auto mt-6 max-w-[560px] text-base leading-7 text-sidebar-foreground/70">A continuous conversation across WhatsApp, Instagram, Messenger and email—with the same customer context behind every reply.</p>
             </div>
 
-            <div className="relative mx-auto mt-16 max-w-[980px] overflow-hidden rounded-lg border border-sidebar-border bg-sidebar-accent p-4 shadow-lg sm:p-7">
-              <div className="grid min-h-[480px] overflow-hidden rounded-md border border-sidebar-border bg-panel text-foreground md:grid-cols-[240px_1fr_250px]">
-                <aside className="hidden border-r border-border bg-panel-subtle p-4 md:block">
-                  <div className="flex items-center gap-2 border-b border-border pb-4 text-sm font-medium"><MessagesSquare className="size-4 text-primary" /> Inbox</div>
-                  {[
-                    ["MT", "Mia Thompson", "Can I do Saturday?", "2m"],
-                    ["SK", "Sofia Khan", "Thanks, perfect", "18m"],
-                    ["IR", "Imani Reed", "Sent an image", "1h"],
-                  ].map(([initials, name, preview, time], index) => (
-                    <div key={name} className={`mt-2 flex gap-3 rounded-md p-3 ${index === 0 ? "bg-active" : ""}`}>
-                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-hover text-xs font-medium">{initials}</span>
-                      <div className="min-w-0 flex-1"><div className="flex justify-between gap-2 text-xs font-medium"><span className="truncate">{name}</span><span className="text-tertiary">{time}</span></div><p className="mt-1 truncate text-xs text-secondary">{preview}</p></div>
-                    </div>
-                  ))}
-                </aside>
-                <div className="flex flex-col p-4 sm:p-6">
-                  <div className="flex items-center justify-between border-b border-border pb-4">
-                    <div><p className="text-sm font-medium">Mia Thompson</p><p className="mt-1 text-xs text-secondary">Instagram · AI handling</p></div>
-                    <span className="rounded-full bg-blue-soft px-2.5 py-1 text-xs font-medium text-blue-strong">Nia is replying</span>
-                  </div>
-                  <div className="flex flex-1 flex-col justify-end gap-3 py-6">
-                    <MessageBubble>Hi, do you have any appointments for a silk press this Saturday?</MessageBubble>
-                    <MessageBubble side="right">I do. Maya is available at 10:30am or 2:00pm. Which works best?</MessageBubble>
-                    <MessageBubble>2pm please — I’ll pay in store.</MessageBubble>
-                    <MessageBubble side="right">You’re booked with Maya for Saturday at 2:00pm. I’ve sent your confirmation here.</MessageBubble>
-                  </div>
-                  <div className="rounded-full border border-border bg-panel-subtle px-4 py-3 text-sm text-tertiary">Reply to Mia…</div>
-                </div>
-                <aside className="hidden border-l border-border bg-panel-subtle p-5 md:block">
-                  <p className="text-xs font-medium uppercase text-tertiary">Customer</p>
-                  <div className="mt-5 flex items-center gap-3"><span className="grid size-10 place-items-center rounded-full bg-primary text-sm font-medium text-primary-foreground">MT</span><div><p className="text-sm font-medium">Mia Thompson</p><p className="text-xs text-secondary">3 appointments</p></div></div>
-                  <div className="mt-7 space-y-4 border-t border-border pt-5 text-xs"><div><p className="text-tertiary">Next booking</p><p className="mt-1 font-medium">Silk press · Saturday</p></div><div><p className="text-tertiary">Preferred channel</p><p className="mt-1 font-medium">Instagram</p></div><div><p className="text-tertiary">Handled by</p><p className="mt-1 font-medium">Nia</p></div></div>
-                </aside>
-              </div>
-            </div>
+            <img src={omnichannelUiAsset.url} alt="Pingbase omnichannel inbox connected to WhatsApp and Instagram conversations" width={1920} height={877} className="absolute inset-x-5 bottom-0 w-[calc(100%-2.5rem)] object-contain object-bottom sm:inset-x-8 sm:w-[calc(100%-4rem)]" />
           </div>
         </section>
 
@@ -497,12 +466,11 @@ export function LandingHero() {
                   "Asks your team for help when judgement is needed",
                 ].map((item) => <div key={item} className="flex items-start gap-3 text-sm"><span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-blue-soft text-blue-strong"><Check className="size-3" /></span>{item}</div>)}
               </div>
-              <Button asChild variant="outline" className="mt-9 rounded-full"><Link to="/auth">See how Nia works <ArrowRight /></Link></Button>
+              <Button asChild variant="outline" className="mt-9 rounded-md"><Link to="/auth">See how Nia works <ArrowRight /></Link></Button>
             </div>
             <div className="relative min-h-[560px] overflow-hidden rounded-lg bg-panel-subtle">
-              <img src={niaRobotAsset.url} alt="Nia, the Pingbase AI concierge" width={768} height={768} className="absolute inset-0 size-full object-cover object-center" />
-              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-panel via-panel/80 to-transparent" />
-              <div className="absolute bottom-8 left-5 w-[calc(100%-2.5rem)] max-w-[390px] rounded-lg border border-border bg-panel/95 p-4 shadow-md backdrop-blur sm:bottom-10 sm:left-10">
+              <img src={ctaPhoto} alt="Salon professional supported by Nia" width={1600} height={800} className="absolute inset-0 size-full object-cover object-center" />
+              <div className="absolute left-5 top-5 w-[calc(100%-2.5rem)] max-w-[390px] rounded-lg border border-border bg-panel p-4 shadow-md sm:left-10 sm:top-10">
                 <div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><Bot className="size-4" /></span><div><p className="text-sm font-medium">Nia</p><p className="text-xs text-secondary">Booking concierge</p></div><span className="ml-auto size-2 rounded-full bg-success" /></div>
                 <div className="mt-5 rounded-md bg-panel-subtle p-4 text-sm leading-6">Maya has two openings on Friday. Would you prefer 11:00am or 3:30pm?</div>
                 <div className="mt-3 flex gap-2"><span className="rounded-full border border-border px-3 py-1.5 text-xs">11:00am</span><span className="rounded-full border border-primary bg-blue-soft px-3 py-1.5 text-xs text-blue-strong">3:30pm</span></div>
@@ -556,10 +524,10 @@ export function LandingHero() {
 
         <section id="pricing" className="bg-panel py-20 md:py-28">
           <div className="relative mx-auto min-h-[440px] max-w-[1360px] overflow-hidden rounded-lg px-5 py-14 sm:px-8 md:flex md:items-center md:px-12">
-            <img src={ctaPhoto} alt="Business owner using Pingbase at her salon" loading="lazy" width={1600} height={800} className="absolute inset-0 size-full object-cover" />
-            <div className="relative z-10 max-w-[530px] text-sidebar-foreground">
+            <img src={phoneCtaAsset.url} alt="Business owner using her phone" loading="lazy" width={736} height={414} className="absolute inset-0 size-full object-cover object-center" />
+            <div className="relative z-10 max-w-[530px] text-foreground">
               <h2 className="text-[38px] font-normal leading-[1.08] sm:text-[50px]">Your new AI concierge.<br />Ready every day.</h2>
-              <p className="mt-5 max-w-[470px] text-base leading-7 text-sidebar-foreground/80">Always reachable. Connected to your calendar. Ready to turn the next message into a booking.</p>
+              <p className="mt-5 max-w-[470px] text-base leading-7 text-secondary">Always reachable. Connected to your calendar. Ready to turn the next message into a booking.</p>
               <div className="mt-9 flex flex-wrap gap-3"><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-primary bg-primary px-6 text-primary-foreground shadow-none hover:bg-primary hover:opacity-90"><Link to="/auth">Try for free</Link></Button><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-panel bg-panel px-6 text-foreground shadow-none hover:bg-panel-subtle"><Link to="/auth">Book a demo</Link></Button></div>
             </div>
           </div>
