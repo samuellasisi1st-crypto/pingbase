@@ -37,7 +37,7 @@ function Onboarding() {
   useEffect(() => {
     if (loading) return;
     if (!session) { navigate({ to: "/auth" }); return; }
-    join({ data: undefined }).then((w) => { if (w.onboarded) navigate({ to: "/" }); }).catch(() => undefined);
+    join({ data: undefined }).then((w) => { if (w.onboarded) navigate({ to: "/dashboard" }); }).catch(() => undefined);
   }, [loading, session, navigate, join]);
 
   const steps = [
@@ -72,7 +72,7 @@ function Onboarding() {
       await finish({ data: { name: f.name, phone: f.phone, address: f.address, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/London", hours: { open: f.open, close: f.close, days: f.days }, service: { name: f.service, minutes: Number(f.minutes), pricePence: Math.round(Number(f.price) * 100) }, staffName: f.staff } });
       await qc.invalidateQueries({ queryKey: ["workspace"] });
       toast.success("You're all set up");
-      navigate({ to: "/" });
+      navigate({ to: "/dashboard" });
     } catch (e) { toast.error(e instanceof Error ? e.message : "Couldn't save your setup."); }
     finally { setSaving(false); }
   };
