@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import testimonialFeature from "@/assets/testimonial-feature.jpg";
 import { Link } from "@tanstack/react-router";
 import Autoplay from "embla-carousel-autoplay";
 import {
