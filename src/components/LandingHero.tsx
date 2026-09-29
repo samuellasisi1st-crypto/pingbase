@@ -214,7 +214,7 @@ function Reveal({ children, className = "" }: { children: React.ReactNode; class
     <motion.div
       className={className}
       initial={reduceMotion ? false : { opacity: 0, y: 24 }}
-      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.16 }}
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
     >
@@ -278,7 +278,7 @@ function CustomerStories() {
         <motion.figure
           className="relative mt-14 overflow-hidden border-y border-border"
           initial={reduceMotion ? false : { opacity: 0, y: 28 }}
-          whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.15 }}
           transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         >
