@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import Autoplay from "embla-carousel-autoplay";
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,6 +15,7 @@ import {
   Mail,
   MessageCircle,
   MessagesSquare,
+  Play,
   RefreshCw,
   ShieldCheck,
   Sparkles,
@@ -27,6 +29,14 @@ import ctaPhoto from "@/assets/landing-cta-photo.jpg";
 import footerLandscape from "@/assets/pingbase-footer-landscape-clean.png";
 import sculpture from "@/assets/dashboard-glass-sculpture.png";
 import { Button } from "@/components/ui/button";
+import {
+  Carousel,
+  type CarouselApi,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const MENU = [
   { label: "Platform", href: "#platform", dropdown: true },
@@ -148,13 +158,101 @@ function MessageBubble({ side, children }: { side?: "left" | "right"; children: 
   );
 }
 
+function CustomerStories() {
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+    const updateCurrent = () => setCurrent(api.selectedScrollSnap());
+    updateCurrent();
+    api.on("select", updateCurrent);
+    api.on("reInit", updateCurrent);
+    return () => {
+      api.off("select", updateCurrent);
+      api.off("reInit", updateCurrent);
+    };
+  }, [api]);
+
+  const extendedTestimonials = [...TESTIMONIALS, ...TESTIMONIALS, ...TESTIMONIALS];
+
+  return (
+    <section className="relative overflow-hidden bg-sidebar py-24 text-sidebar-foreground md:py-32">
+      <div className="mx-auto max-w-[1240px] px-5 sm:px-8">
+        <div className="mb-12 max-w-[680px]">
+          <div className="mb-5 flex items-center gap-2 text-xs font-medium uppercase text-sidebar-primary">
+            <span className="size-1.5 rounded-full bg-sidebar-primary" />Customer stories
+          </div>
+          <SectionHeading>More time for the work customers came for.</SectionHeading>
+        </div>
+      </div>
+
+      <div className="relative mx-auto max-w-[1440px]">
+        <Carousel
+          setApi={setApi}
+          opts={{ loop: true, align: "center", slidesToScroll: 1, startIndex: TESTIMONIALS.length }}
+          plugins={[Autoplay({ delay: 6000, stopOnInteraction: false, stopOnMouseEnter: true })]}
+          className="w-full"
+        >
+          <CarouselContent className="-ml-4">
+            {extendedTestimonials.map((item, index) => {
+              const isActive = index % TESTIMONIALS.length === current % TESTIMONIALS.length;
+              return (
+                <CarouselItem key={`${item.name}-${index}`} className="basis-[90%] pl-4 md:basis-[80%] lg:basis-[70%]">
+                  <article className={`transition-[opacity,transform] duration-500 motion-reduce:transition-none ${isActive ? "scale-100 opacity-100" : "scale-[.92] opacity-35"}`}>
+                    <div className="hidden h-[320px] overflow-hidden rounded-lg bg-panel text-foreground md:flex">
+                      <div className="h-full w-[30%] p-3">
+                        <div className="relative size-full overflow-hidden rounded-md">
+                          <img src={industriesImage} alt={`${item.name}, ${item.role}`} loading="lazy" width={1920} height={768} className={`size-full object-cover ${item.positionClass}`} />
+                          <div className="absolute inset-x-0 bottom-0 bg-sidebar/80 p-4 text-sidebar-foreground">
+                            <h3 className="text-base font-medium">{item.name}</h3>
+                            <p className="mt-1 text-xs text-sidebar-foreground/70">{item.role} at Studio Nine Hair</p>
+                          </div>
+                          <Button size="icon" variant="secondary" aria-label={`Play ${item.name}'s story`} className="absolute bottom-4 right-3 size-8 rounded-full border-0 bg-panel text-foreground shadow-none hover:bg-panel-subtle"><Play className="size-3 fill-current" /></Button>
+                        </div>
+                      </div>
+                      <div className="flex flex-1 flex-col justify-between p-6 lg:p-8">
+                        <blockquote className="text-xl font-medium leading-snug lg:text-2xl">“{item.quote}”</blockquote>
+                        <div className="flex flex-wrap items-center gap-8">
+                          <div><p className="text-2xl font-medium">{item.metricA[0]}</p><p className="mt-1 text-xs text-secondary">{item.metricA[1]}</p></div>
+                          <div><p className="text-2xl font-medium">{item.metricB[0]}</p><p className="mt-1 text-xs text-secondary">{item.metricB[1]}</p></div>
+                          <Button variant="secondary" className="ml-auto rounded-full border-0 bg-panel-subtle shadow-none hover:bg-hover">See {item.name.split(" ")[0]}’s story <ArrowRight /></Button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col overflow-hidden rounded-lg bg-panel text-foreground md:hidden">
+                      <div className="aspect-[4/3] w-full p-3">
+                        <div className="relative size-full overflow-hidden rounded-md">
+                          <img src={industriesImage} alt={`${item.name}, ${item.role}`} loading="lazy" width={1920} height={768} className={`size-full object-cover ${item.positionClass}`} />
+                          <div className="absolute inset-x-0 bottom-0 bg-sidebar/80 p-4 text-sidebar-foreground"><h3 className="text-base font-medium">{item.name}</h3><p className="mt-1 text-xs text-sidebar-foreground/70">{item.role} at Studio Nine Hair</p></div>
+                          <Button size="icon" variant="secondary" aria-label={`Play ${item.name}'s story`} className="absolute bottom-4 right-3 size-8 rounded-full border-0 bg-panel text-foreground shadow-none"><Play className="size-3 fill-current" /></Button>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-5 p-5">
+                        <blockquote className="text-lg font-medium leading-snug">“{item.quote}”</blockquote>
+                        <div className="flex gap-6"><div><p className="text-xl font-medium">{item.metricA[0]}</p><p className="text-xs text-secondary">{item.metricA[1]}</p></div><div><p className="text-xl font-medium">{item.metricB[0]}</p><p className="text-xs text-secondary">{item.metricB[1]}</p></div></div>
+                        <Button variant="secondary" className="w-full rounded-full border-0 bg-panel-subtle shadow-none">See {item.name.split(" ")[0]}’s story <ArrowRight /></Button>
+                      </div>
+                    </div>
+                  </article>
+                </CarouselItem>
+              );
+            })}
+          </CarouselContent>
+        </Carousel>
+
+        <div className="mt-8 flex justify-center gap-2">
+          {TESTIMONIALS.map((item, index) => (
+            <Button key={item.name} variant="ghost" size="icon" aria-label={`Show ${item.name}'s story`} onClick={() => api?.scrollTo(TESTIMONIALS.length + index)} className={`h-2 min-h-2 rounded-full border-0 p-0 shadow-none transition-[width,background-color] ${current % TESTIMONIALS.length === index ? "w-6 bg-sidebar-primary hover:bg-sidebar-primary" : "w-2 bg-sidebar-accent hover:bg-sidebar-border"}`} />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function LandingHero() {
-  const [industryStart, setIndustryStart] = useState(0);
-  const [testimonial, setTestimonial] = useState(0);
-  const activeTestimonial = TESTIMONIALS[testimonial] ?? TESTIMONIALS[0];
-
-  if (!activeTestimonial) return null;
-
   return (
     <div className="min-h-dvh overflow-hidden bg-panel text-foreground">
       <header className="sticky top-0 z-50 border-b border-border bg-panel/95 backdrop-blur">
@@ -210,8 +308,8 @@ export function LandingHero() {
           </ul>
         </section>
 
-        <section aria-label="Pingbase product preview" className="w-full px-5 pb-16 sm:px-8 md:pb-24">
-          <div className="relative mx-auto flex h-[62vw] max-h-[700px] min-h-[310px] w-full max-w-[1240px] items-end justify-center overflow-hidden rounded-lg border border-border bg-panel-subtle px-5 sm:px-10 md:px-16">
+        <section aria-label="Pingbase product preview" className="w-full border-y border-border py-0">
+          <div className="relative mx-auto flex h-[62vw] max-h-[700px] min-h-[310px] w-full max-w-[1240px] items-end justify-center overflow-hidden bg-panel-subtle px-5 sm:px-10 md:px-16">
             <img src={heroBackground} alt="" aria-hidden="true" width={1600} height={912} className="absolute inset-0 size-full object-cover" />
             <div className="absolute inset-0 bg-panel/15" />
             <img src={appScreenshot} alt="Pingbase dashboard showing appointments and customer conversations" className="relative z-10 w-full max-w-[1060px] rounded-t-xl border border-border-strong bg-panel shadow-lg" />
@@ -226,24 +324,25 @@ export function LandingHero() {
                 <SectionHeading>One solution, made for appointment businesses.</SectionHeading>
                 <p className="mt-5 max-w-[520px] text-base leading-7 text-secondary">Pingbase turns conversations into bookings across teams of every shape and size.</p>
               </div>
-              <div className="hidden items-center gap-2 sm:flex">
-                <Button variant="ghost" size="icon" aria-label="Previous industries" onClick={() => setIndustryStart((value) => (value - 1 + INDUSTRIES.length) % INDUSTRIES.length)}><ArrowLeft /></Button>
-                <Button variant="ghost" size="icon" aria-label="Next industries" onClick={() => setIndustryStart((value) => (value + 1) % INDUSTRIES.length)}><ArrowRight /></Button>
-              </div>
             </div>
-            <div className="mt-14 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 pr-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {INDUSTRIES.map((item, index) => {
-                const ordered = INDUSTRIES[(index + industryStart) % INDUSTRIES.length] ?? item;
-                return (
-                  <article key={`${ordered.title}-${industryStart}`} className="w-[78vw] max-w-[290px] shrink-0 snap-start sm:w-[290px]">
-                    <div className="aspect-[4/5] w-full overflow-hidden rounded-lg"><img src={industriesImage} alt={`${ordered.title} professional with a customer`} loading="lazy" width={1920} height={768} className={`h-full w-[500%] max-w-none object-cover ${index === 0 ? "translate-x-0" : index === 1 ? "-translate-x-[20%]" : index === 2 ? "-translate-x-[40%]" : index === 3 ? "-translate-x-[60%]" : "-translate-x-[80%]"}`} /></div>
-                    <h3 className="mt-5 text-base font-medium">{ordered.title}</h3>
-                    <p className="mt-2 min-h-12 text-sm leading-6 text-secondary">{ordered.body}</p>
+            <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} className="mt-14">
+              <CarouselContent className="-ml-5">
+                {INDUSTRIES.map((item) => (
+                  <CarouselItem key={item.title} className="basis-[82%] pl-5 sm:basis-1/2 lg:basis-1/4">
+                  <article>
+                    <div className="aspect-[4/5] w-full overflow-hidden rounded-lg"><img src={industriesImage} alt={`${item.title} professional with a customer`} loading="lazy" width={1920} height={768} className={`size-full object-cover ${item.positionClass}`} /></div>
+                    <h3 className="mt-5 text-base font-medium">{item.title}</h3>
+                    <p className="mt-2 min-h-12 text-sm leading-6 text-secondary">{item.body}</p>
                     <a href="#platform" className="mt-6 inline-flex items-center gap-2 text-sm font-medium hover:text-primary">See how it works <ArrowRight className="size-4" /></a>
                   </article>
-                );
-              })}
-            </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <div className="mt-8 flex justify-end gap-2">
+                <CarouselPrevious className="static size-10 translate-y-0 rounded-full border-border bg-panel shadow-none" />
+                <CarouselNext className="static size-10 translate-y-0 rounded-full border-border bg-panel shadow-none" />
+              </div>
+            </Carousel>
           </div>
         </section>
 
@@ -403,39 +502,7 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section className="bg-sidebar text-sidebar-foreground">
-          <div className="mx-auto max-w-[1120px] px-5 py-24 sm:px-8 md:py-32">
-            <div className="grid gap-12 lg:grid-cols-[.8fr_1.2fr] lg:items-end">
-              <div>
-                <div className="mb-5 flex items-center gap-2 text-xs font-medium uppercase text-sidebar-primary"><span className="size-1.5 rounded-full bg-sidebar-primary" />Built for appointment teams</div>
-                <h2 className="text-[34px] font-medium leading-[1.08] sm:text-[48px]">A calmer day for your team. A faster answer for every customer.</h2>
-              </div>
-              <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-sidebar-border bg-sidebar-border sm:grid-cols-3">
-                {[["24/7", "enquiries answered"], ["1", "shared customer view"], ["0", "invented time slots"]].map(([metric, label]) => <div key={label} className="bg-sidebar-accent p-6 sm:p-8"><p className="text-4xl font-medium text-sidebar-primary">{metric}</p><p className="mt-3 text-sm text-sidebar-foreground/70">{label}</p></div>)}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="overflow-hidden bg-sidebar py-24 text-sidebar-foreground md:py-32">
-          <div className="mx-auto max-w-[1240px] px-5 sm:px-8">
-          <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-            <div><div className="mb-5 flex items-center gap-2 text-xs font-medium uppercase text-sidebar-primary"><span className="size-1.5 rounded-full bg-sidebar-primary" />Customer stories</div><SectionHeading>More time for the work customers came for.</SectionHeading></div>
-            <div className="flex gap-2"><Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent" aria-label="Previous story" onClick={() => setTestimonial((value) => (value - 1 + TESTIMONIALS.length) % TESTIMONIALS.length)}><ArrowLeft /></Button><Button variant="ghost" size="icon" className="text-sidebar-foreground hover:bg-sidebar-accent" aria-label="Next story" onClick={() => setTestimonial((value) => (value + 1) % TESTIMONIALS.length)}><ArrowRight /></Button></div>
-          </div>
-          <div className="mx-auto mt-14 grid max-w-[980px] overflow-hidden rounded-lg bg-panel text-foreground shadow-lg md:grid-cols-[32%_1fr]">
-            <div className="relative min-h-[300px] md:min-h-[360px]">
-              <img src={industriesImage} alt={`${activeTestimonial.name}, ${activeTestimonial.role}`} loading="lazy" width={1920} height={768} className={`absolute inset-0 size-full object-cover ${activeTestimonial.positionClass}`} />
-              <div className="absolute inset-x-0 bottom-0 bg-sidebar/80 p-5 text-sidebar-foreground"><p className="font-medium">{activeTestimonial.name}</p><p className="mt-1 text-xs text-sidebar-foreground/70">{activeTestimonial.role}</p></div>
-            </div>
-            <div className="flex flex-col justify-between p-7 sm:p-10">
-              <div><div className="flex gap-1 text-primary" aria-label="Five star rating">{Array.from({ length: 5 }).map((_, index) => <Star key={index} className="size-4 fill-current" />)}</div><blockquote className="mt-6 text-[25px] font-medium leading-snug sm:text-[30px]">“{activeTestimonial.quote}”</blockquote></div>
-              <div className="mt-10 flex flex-wrap items-end gap-8 border-t border-border pt-6"><div><p className="text-2xl font-medium">{activeTestimonial.metricA[0]}</p><p className="mt-1 text-xs text-secondary">{activeTestimonial.metricA[1]}</p></div><div><p className="text-2xl font-medium">{activeTestimonial.metricB[0]}</p><p className="mt-1 text-xs text-secondary">{activeTestimonial.metricB[1]}</p></div><Button variant="secondary" className="ml-auto rounded-full">Read their story <ArrowRight /></Button></div>
-            </div>
-          </div>
-          <div className="mt-7 flex justify-center gap-2">{TESTIMONIALS.map((item, index) => <Button key={item.name} variant="ghost" size="icon" aria-label={`Show ${item.name}'s story`} onClick={() => setTestimonial(index)} className={`h-3 min-h-3 p-0 ${testimonial === index ? "w-8 bg-sidebar-primary hover:bg-sidebar-primary" : "w-3 bg-sidebar-accent hover:bg-sidebar-border"}`} />)}</div>
-          </div>
-        </section>
+        <CustomerStories />
 
         <section id="pricing" className="bg-panel py-20 md:py-28">
           <div className="relative mx-auto min-h-[440px] max-w-[1240px] overflow-hidden rounded-lg px-5 py-14 sm:px-8 md:flex md:items-center md:px-12">
@@ -443,15 +510,15 @@ export function LandingHero() {
             <div className="relative z-10 max-w-[530px] text-sidebar-foreground">
               <h2 className="text-[38px] font-normal leading-[1.08] sm:text-[50px]">Your new AI concierge.<br />Ready every day.</h2>
               <p className="mt-5 max-w-[470px] text-base leading-7 text-sidebar-foreground/80">Always reachable. Connected to your calendar. Ready to turn the next message into a booking.</p>
-              <div className="mt-9 flex flex-wrap gap-3"><Button asChild size="lg" className="h-12 rounded-lg bg-primary px-6 shadow-none"><Link to="/auth">Try for free</Link></Button><Button asChild size="lg" className="h-12 rounded-lg bg-panel px-6 text-foreground shadow-none hover:bg-panel-subtle hover:brightness-100"><Link to="/auth">Book a demo</Link></Button></div>
+              <div className="mt-9 flex flex-wrap gap-3"><Button asChild size="lg" className="h-12 rounded-md border border-primary bg-primary px-6 text-primary-foreground shadow-none hover:bg-primary hover:opacity-90"><Link to="/auth">Try for free</Link></Button><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-panel bg-panel px-6 text-foreground shadow-none hover:bg-panel-subtle"><Link to="/auth">Book a demo</Link></Button></div>
             </div>
           </div>
         </section>
       </main>
 
       <footer className="relative overflow-hidden border-t border-border bg-panel text-foreground">
-        <img src={footerLandscape} alt="A green landscape with futuristic buildings" loading="lazy" width={1920} height={803} className="pointer-events-none absolute inset-x-0 bottom-0 w-full min-w-[900px] max-w-none object-contain object-bottom opacity-80" />
-        <div className="relative z-10 mx-auto max-w-[1120px] px-5 pb-72 pt-14 sm:px-8 md:pb-[360px]">
+        <img src={footerLandscape} alt="" aria-hidden="true" loading="lazy" width={1920} height={803} className="pointer-events-none absolute inset-0 size-full object-cover object-bottom" />
+        <div className="relative z-10 mx-auto min-h-[720px] max-w-[1120px] px-5 pb-72 pt-14 sm:px-8 md:pb-[360px]">
           <div className="grid gap-12 border-b border-border pb-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
             <div><div className="flex items-center gap-2 text-base font-semibold"><span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground"><MessagesSquare className="size-4" /></span>Pingbase</div><p className="mt-4 max-w-[230px] text-sm leading-6 text-secondary">The AI booking concierge for appointment businesses.</p></div>
             {FOOTER_LINKS.map((group) => <div key={group.title}><h3 className="text-xs font-medium uppercase text-tertiary">{group.title}</h3><ul className="mt-5 space-y-3">{group.links.map((link) => <li key={link}><a href="#platform" className="text-sm text-secondary transition-colors hover:text-foreground">{link}</a></li>)}</ul></div>)}
