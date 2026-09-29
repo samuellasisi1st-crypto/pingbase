@@ -18,6 +18,7 @@ import { Route as AutomationsRouteImport } from './routes/automations'
 import { Route as CampaignsRouteImport } from './routes/campaigns'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as ContactsRouteImport } from './routes/contacts'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as HelpRouteImport } from './routes/help'
 import { Route as InboxRouteImport } from './routes/inbox'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -81,6 +82,11 @@ const ChatRoute = ChatRouteImport.update({
 const ContactsRoute = ContactsRouteImport.update({
   id: '/contacts',
   path: '/contacts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HelpRoute = HelpRouteImport.update({
@@ -191,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/campaigns': typeof CampaignsRoute
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
+  '/dashboard': typeof DashboardRoute
   '/help': typeof HelpRoute
   '/inbox': typeof InboxRoute
   '/notifications': typeof NotificationsRoute
@@ -221,6 +228,7 @@ export interface FileRoutesByTo {
   '/campaigns': typeof CampaignsRoute
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
+  '/dashboard': typeof DashboardRoute
   '/help': typeof HelpRoute
   '/inbox': typeof InboxRoute
   '/notifications': typeof NotificationsRoute
@@ -252,6 +260,7 @@ export interface FileRoutesById {
   '/campaigns': typeof CampaignsRoute
   '/chat': typeof ChatRoute
   '/contacts': typeof ContactsRoute
+  '/dashboard': typeof DashboardRoute
   '/help': typeof HelpRoute
   '/inbox': typeof InboxRoute
   '/notifications': typeof NotificationsRoute
@@ -284,6 +293,7 @@ export interface FileRouteTypes {
     | '/campaigns'
     | '/chat'
     | '/contacts'
+    | '/dashboard'
     | '/help'
     | '/inbox'
     | '/notifications'
@@ -314,6 +324,7 @@ export interface FileRouteTypes {
     | '/campaigns'
     | '/chat'
     | '/contacts'
+    | '/dashboard'
     | '/help'
     | '/inbox'
     | '/notifications'
@@ -344,6 +355,7 @@ export interface FileRouteTypes {
     | '/campaigns'
     | '/chat'
     | '/contacts'
+    | '/dashboard'
     | '/help'
     | '/inbox'
     | '/notifications'
@@ -375,6 +387,7 @@ export interface RootRouteChildren {
   CampaignsRoute: typeof CampaignsRoute
   ChatRoute: typeof ChatRoute
   ContactsRoute: typeof ContactsRoute
+  DashboardRoute: typeof DashboardRoute
   HelpRoute: typeof HelpRoute
   InboxRoute: typeof InboxRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -459,6 +472,13 @@ declare module '@tanstack/react-router' {
       path: '/contacts'
       fullPath: '/contacts'
       preLoaderRoute: typeof ContactsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/help': {
@@ -607,6 +627,7 @@ const rootRouteChildren: RootRouteChildren = {
   CampaignsRoute: CampaignsRoute,
   ChatRoute: ChatRoute,
   ContactsRoute: ContactsRoute,
+  DashboardRoute: DashboardRoute,
   HelpRoute: HelpRoute,
   InboxRoute: InboxRoute,
   NotificationsRoute: NotificationsRoute,
