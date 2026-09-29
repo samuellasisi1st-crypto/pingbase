@@ -273,7 +273,7 @@ export function LandingHero() {
             <Button asChild variant="ghost" className="rounded-full max-sm:hidden">
               <Link to="/auth">Sign in</Link>
             </Button>
-            <Button asChild className="border-[3px] border-blue-mid bg-sidebar text-sidebar-foreground shadow-none hover:bg-sidebar-accent hover:brightness-100">
+            <Button asChild variant="outline" className="border-2 border-primary bg-sidebar text-sidebar-foreground shadow-none hover:bg-sidebar-accent">
               <Link to="/auth">Get started</Link>
             </Button>
             <Button asChild variant="outline" className="rounded-full border-2 border-sidebar bg-panel shadow-none max-lg:hidden">
@@ -294,7 +294,7 @@ export function LandingHero() {
             Turn customer chats into confirmed appointments. Nia answers, books and follows up across every channel.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Button asChild size="lg" className="h-13 rounded-full border-[4px] border-blue-mid bg-sidebar px-7 text-sidebar-foreground shadow-none hover:bg-sidebar-accent hover:brightness-100">
+            <Button asChild size="lg" variant="outline" className="h-13 rounded-full border-2 border-primary bg-sidebar px-7 text-sidebar-foreground shadow-none hover:bg-sidebar-accent">
               <Link to="/auth">Get started</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-13 rounded-full border-2 border-sidebar bg-panel px-7 shadow-none hover:bg-panel-subtle">
@@ -513,15 +513,15 @@ export function LandingHero() {
             <div className="relative z-10 max-w-[530px] text-sidebar-foreground">
               <h2 className="text-[38px] font-normal leading-[1.08] sm:text-[50px]">Your new AI concierge.<br />Ready every day.</h2>
               <p className="mt-5 max-w-[470px] text-base leading-7 text-sidebar-foreground/80">Always reachable. Connected to your calendar. Ready to turn the next message into a booking.</p>
-              <div className="mt-9 flex flex-wrap gap-3"><Button asChild size="lg" className="h-12 rounded-md border border-primary bg-primary px-6 text-primary-foreground shadow-none hover:bg-primary hover:opacity-90"><Link to="/auth">Try for free</Link></Button><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-panel bg-panel px-6 text-foreground shadow-none hover:bg-panel-subtle"><Link to="/auth">Book a demo</Link></Button></div>
+              <div className="mt-9 flex flex-wrap gap-3"><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-primary bg-primary px-6 text-primary-foreground shadow-none hover:bg-primary hover:opacity-90"><Link to="/auth">Try for free</Link></Button><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-panel bg-panel px-6 text-foreground shadow-none hover:bg-panel-subtle"><Link to="/auth">Book a demo</Link></Button></div>
             </div>
           </div>
         </section>
       </main>
 
       <footer className="relative overflow-hidden border-t border-border bg-panel text-foreground">
-        <img src={footerLandscape} alt="" aria-hidden="true" loading="lazy" width={1920} height={803} className="pointer-events-none absolute inset-0 size-full object-cover object-bottom" />
-        <div className="relative z-10 mx-auto min-h-[720px] max-w-[1120px] px-5 pb-72 pt-14 sm:px-8 md:pb-[360px]">
+        <img src={footerLandscape} alt="" aria-hidden="true" loading="lazy" width={1920} height={803} className="pointer-events-none absolute inset-x-0 bottom-0 h-auto w-full object-contain object-bottom" />
+        <div className="relative z-10 mx-auto max-w-[1120px] px-5 pb-[220px] pt-14 sm:px-8 sm:pb-[300px] md:pb-[430px]">
           <div className="grid gap-12 border-b border-border pb-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
             <div><div className="flex items-center gap-2 text-base font-semibold"><span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground"><MessagesSquare className="size-4" /></span>Pingbase</div><p className="mt-4 max-w-[230px] text-sm leading-6 text-secondary">The AI booking concierge for appointment businesses.</p></div>
             {FOOTER_LINKS.map((group) => <div key={group.title}><h3 className="text-xs font-medium uppercase text-tertiary">{group.title}</h3><ul className="mt-5 space-y-3">{group.links.map((link) => <li key={link}><a href="#platform" className="text-sm text-secondary transition-colors hover:text-foreground">{link}</a></li>)}</ul></div>)}
