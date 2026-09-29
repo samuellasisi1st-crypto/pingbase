@@ -389,7 +389,7 @@ export function LandingHero() {
             </div>
           </div>
           <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} className="mt-14 w-full">
-              <CarouselContent className="ml-0 pl-[max(20px,calc((100vw-1360px)/2+32px))]">
+              <CarouselContent className="ml-0 pl-5 sm:pl-8 min-[1360px]:pl-[calc((100vw-1360px)/2+32px)]">
                 {INDUSTRIES.map((item) => (
                   <CarouselItem key={item.title} className="basis-[82%] pl-5 first:pl-0 last:pr-5 sm:basis-[46%] lg:basis-[27%] xl:basis-[23%]">
                   <article>
@@ -450,7 +450,7 @@ export function LandingHero() {
         </section>
 
         <section id="solutions" className="relative overflow-hidden bg-sidebar text-sidebar-foreground">
-          <img src={niaRobotAsset.url} alt="Nia, the Pingbase AI concierge" width={736} height={736} className="absolute inset-0 size-full scale-[1.22] object-cover object-[center_18%]" />
+          <img src={niaRobotAsset.url} alt="Nia, the Pingbase AI concierge" width={736} height={736} className="absolute inset-0 size-full scale-[1.6] object-cover object-[center_10%] sm:scale-[1.4]" />
           <div className="absolute inset-0 bg-gradient-to-r from-sidebar via-sidebar/80 to-sidebar/30" />
           <div className="absolute inset-0 bg-gradient-to-t from-sidebar via-transparent to-sidebar/55" />
           <div className="relative mx-auto min-h-[820px] max-w-[1360px] px-5 pb-0 pt-24 sm:px-8 md:pt-32">
