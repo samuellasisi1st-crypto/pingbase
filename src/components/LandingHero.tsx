@@ -240,7 +240,7 @@ function CustomerStories() {
 
   return (
     <section className="bg-panel py-20 text-foreground md:py-28">
-      <div className="mx-auto max-w-[1280px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1360px] border-x border-border px-5 sm:px-8">
         <div className="grid gap-8 border-t border-border pt-5 md:grid-cols-[1fr_370px] md:items-end">
           <div>
             <div className="mb-3 flex items-center gap-2 text-[11px] font-medium uppercase text-secondary">
@@ -331,7 +331,7 @@ export function LandingHero() {
   return (
     <div className="min-h-dvh overflow-hidden bg-panel text-foreground">
       <header className="sticky top-0 z-50 border-b border-border bg-panel/95 backdrop-blur">
-        <div className="mx-auto grid h-16 w-full max-w-[1360px] grid-cols-[auto_1fr] items-center px-5 sm:px-8 md:grid-cols-[1fr_auto_1fr]">
+        <div className="mx-auto grid h-16 w-full max-w-[1360px] grid-cols-[auto_1fr] items-center border-x border-border px-5 sm:px-8 md:grid-cols-[1fr_auto_1fr]">
           <Logo />
           <nav aria-label="Main" className="hidden items-center justify-self-center md:flex">
             {MENU.map((item) => (
@@ -352,7 +352,7 @@ export function LandingHero() {
       </header>
 
       <main>
-        <section className="mx-auto w-full max-w-[1360px] px-5 pb-14 pt-14 sm:px-8 md:pb-20 md:pt-20">
+        <section className="mx-auto w-full max-w-[1360px] border-x border-border px-5 pb-14 pt-14 sm:px-8 md:pb-20 md:pt-20">
           <h1 className="max-w-[1040px] text-[46px] font-normal leading-[1.03] sm:text-[62px] md:text-[76px]">
             More bookings
             <br />
@@ -379,16 +379,16 @@ export function LandingHero() {
           </ul>
         </section>
 
-        <section aria-label="Pingbase product preview" className="w-full border-y border-border py-0">
-          <div className="relative mx-auto flex h-[62vw] max-h-[760px] min-h-[310px] w-full max-w-[1360px] items-center justify-center overflow-hidden bg-panel-subtle px-8 py-8 sm:px-16 sm:py-12 md:px-24 lg:px-32">
+        <section aria-label="Pingbase product preview" className="w-full border-b border-border py-0">
+          <div className="relative mx-auto flex h-[62vw] max-h-[760px] min-h-[310px] w-full max-w-[1360px] items-center justify-center overflow-hidden border-x border-border bg-panel-subtle px-8 py-8 sm:px-16 sm:py-12 md:px-24 lg:px-32">
             <img src={heroBackgroundAsset.url} alt="" aria-hidden="true" width={1024} height={768} className="absolute inset-0 size-full object-cover" />
             <div className="absolute inset-0 bg-panel/15" />
             <img src={appScreenshotAsset.url} alt="Pingbase inbox showing customer conversations, images and booking details" className="relative z-10 max-h-[78%] w-full max-w-[980px] object-contain object-center" />
           </div>
         </section>
 
-        <section id="industries" className="border-y border-border bg-panel py-20 md:py-28">
-          <div className="mx-auto max-w-[1360px] px-5 sm:px-8">
+        <section id="industries" className="border-b border-border bg-panel py-20 md:py-28">
+          <div className="mx-auto max-w-[1360px] border-x border-border px-5 sm:px-8">
             <div className="flex items-end justify-between gap-8">
               <div>
                 <Eyebrow>Built around your day</Eyebrow>
@@ -410,15 +410,15 @@ export function LandingHero() {
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <div className="mx-auto mt-8 flex max-w-[1360px] justify-end gap-2 px-5 sm:px-8">
+              <div className="mx-auto mt-8 flex max-w-[1360px] justify-end gap-2 border-x border-border px-5 sm:px-8">
                 <CarouselPrevious className="static size-10 translate-y-0 rounded-full border-border bg-panel shadow-none" />
                 <CarouselNext className="static size-10 translate-y-0 rounded-full border-border bg-panel shadow-none" />
               </div>
           </Carousel>
         </section>
 
-        <section className="border-y border-border bg-panel" aria-label="Connected channels">
-          <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-center gap-x-10 gap-y-6 px-5 py-9 sm:px-8 md:justify-between">
+        <section className="border-b border-border bg-panel" aria-label="Connected channels">
+          <div className="mx-auto flex max-w-[1360px] flex-wrap items-center justify-center gap-x-10 gap-y-6 border-x border-border px-5 py-9 sm:px-8 md:justify-between">
             <p className="w-full text-center text-xs font-medium uppercase text-tertiary md:w-auto md:text-left">One inbox for every conversation</p>
             {CHANNELS.map(({ label, icon: Icon }) => (
               <div key={label} className="flex items-center gap-2 text-sm font-medium text-secondary">
@@ -429,7 +429,7 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section id="platform" className="mx-auto max-w-[1280px] px-5 py-24 sm:px-8 md:py-32">
+        <section id="platform" className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
           <div className="max-w-[720px]">
             <Eyebrow>One connected platform</Eyebrow>
             <SectionHeading>Unify conversations, bookings and follow-ups so every customer gets an answer.</SectionHeading>
@@ -462,7 +462,7 @@ export function LandingHero() {
           <img src={niaRobotAsset.url} alt="Nia, the Pingbase AI concierge" width={736} height={736} className="absolute inset-0 size-full scale-[1.6] object-cover object-[center_10%] sm:scale-[1.4]" />
           <div className="absolute inset-0 bg-gradient-to-r from-sidebar via-sidebar/80 to-sidebar/30" />
           <div className="absolute inset-0 bg-gradient-to-t from-sidebar via-transparent to-sidebar/55" />
-          <div className="relative mx-auto min-h-[820px] max-w-[1360px] px-5 pb-0 pt-24 sm:px-8 md:pt-32">
+          <div className="relative mx-auto min-h-[820px] max-w-[1360px] border-x border-sidebar-foreground/10 px-5 pb-0 pt-24 sm:px-8 md:pt-32">
             <div className="mx-auto max-w-[700px] text-center">
               <div className="mb-5 flex items-center justify-center gap-2 text-xs font-medium uppercase text-sidebar-primary">
                 <span className="size-1.5 rounded-full bg-sidebar-primary" />
@@ -476,7 +476,7 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section id="nia" className="mx-auto max-w-[1280px] px-5 py-24 sm:px-8 md:py-32">
+        <section id="nia" className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
           <div className="grid gap-14 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
             <div>
               <Eyebrow>Meet your AI agent</Eyebrow>
@@ -504,7 +504,7 @@ export function LandingHero() {
         </section>
 
         <section className="border-y border-border bg-panel-subtle">
-          <div className="mx-auto max-w-[1280px] px-5 py-24 sm:px-8 md:py-32">
+          <div className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
             <Eyebrow>Every stage, covered</Eyebrow>
             <SectionHeading>One customer journey, without the manual hand-offs.</SectionHeading>
             <div className="mt-14 grid overflow-hidden rounded-lg border border-border-strong sm:grid-cols-2">
@@ -519,7 +519,7 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section id="resources" className="mx-auto max-w-[1280px] px-5 py-24 sm:px-8 md:py-32">
+        <section id="resources" className="mx-auto max-w-[1360px] border-x border-border px-5 py-24 sm:px-8 md:py-32">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
             <div className="relative min-h-[430px] overflow-hidden rounded-lg border border-border bg-panel-subtle p-6 sm:p-10">
               <div className="absolute left-[12%] top-[12%] grid size-14 place-items-center rounded-xl border border-border bg-panel shadow-md"><MessageCircle className="size-6 text-success" /></div>
@@ -547,7 +547,8 @@ export function LandingHero() {
         <div id="stories"><CustomerStories /></div>
 
         <section id="pricing" className="bg-panel py-20 md:py-28">
-          <div className="relative mx-auto min-h-[440px] max-w-[1280px] overflow-hidden rounded-lg px-5 py-14 sm:px-8 md:flex md:items-center md:px-12">
+          <div className="mx-auto max-w-[1360px] border-x border-border px-5 sm:px-8">
+          <div className="relative min-h-[440px] overflow-hidden rounded-lg px-5 py-14 sm:px-8 md:flex md:items-center md:px-12">
             <img src={phoneCtaAsset.url} alt="Business owner using her phone" loading="lazy" width={736} height={414} className="absolute inset-0 size-full object-cover object-center" />
             <div className="relative z-10 max-w-[530px] text-foreground">
               <h2 className="text-[38px] font-normal leading-[1.08] sm:text-[50px]">Your new AI concierge.<br />Ready every day.</h2>
@@ -555,12 +556,13 @@ export function LandingHero() {
               <div className="mt-9 flex flex-wrap gap-3"><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-primary bg-primary px-6 text-primary-foreground shadow-none hover:bg-primary hover:opacity-90"><Link to="/auth">Try for free</Link></Button><Button asChild size="lg" variant="outline" className="h-12 rounded-md border border-panel bg-panel px-6 text-foreground shadow-none hover:bg-panel-subtle"><Link to="/auth">Book a demo</Link></Button></div>
             </div>
           </div>
+          </div>
         </section>
       </main>
 
       <footer className="relative overflow-hidden border-t border-border bg-panel text-foreground">
         <img src={footerLandscape} alt="" aria-hidden="true" loading="lazy" width={1920} height={803} className="pointer-events-none absolute inset-x-0 bottom-0 h-auto w-full object-contain object-bottom" />
-        <div className="relative z-10 mx-auto max-w-[1280px] px-5 pb-[220px] pt-14 sm:px-8 sm:pb-[300px] md:pb-[430px]">
+        <div className="relative z-10 mx-auto max-w-[1360px] border-x border-border px-5 pb-[220px] pt-14 sm:px-8 sm:pb-[300px] md:pb-[430px]">
           <div className="grid gap-12 border-b border-border pb-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
             <div><div className="flex items-center gap-2 text-base font-semibold"><span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground"><MessagesSquare className="size-4" /></span>Pingbase</div><p className="mt-4 max-w-[230px] text-sm leading-6 text-secondary">The AI booking concierge for appointment businesses.</p></div>
             {FOOTER_LINKS.map((group) => <div key={group.title}><h3 className="text-xs font-medium uppercase text-tertiary">{group.title}</h3><ul className="mt-5 space-y-3">{group.links.map((link) => <li key={link}><a href="#platform" className="text-sm text-secondary transition-colors hover:text-foreground">{link}</a></li>)}</ul></div>)}
