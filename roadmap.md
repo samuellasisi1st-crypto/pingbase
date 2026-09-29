@@ -8,4 +8,4 @@
 - [x] Switch Pingbase to a crisp blue accent and replace only the dashboard 3D artwork with solid glass imagery
 - [x] Populate Studio Nine with realistic connected customer journeys, bookings, payments, messages, handovers, and automation activity
 - [x] Refine landing page hero, industry carousel, customer journey grid, Creator Canvas testimonials, Superchat CTA, and illustrated white footer
-- [ ] Refine landing imagery, button styling, hero framing, and full-width industry carousel
+- [x] Refine landing imagery, button styling, hero framing, and full-width industry carousel
