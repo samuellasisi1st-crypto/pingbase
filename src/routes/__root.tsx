@@ -18,7 +18,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 
 // Some clients (and old bookmarks) land on "/index" instead of "/". That path
 // has no route, so send it home instead of showing a 404.
-const HOME_ALIASES = ["/index", "/index/", "/index.html", "/home", "/dashboard"];
+const HOME_ALIASES = ["/index", "/index/", "/index.html", "/home"];
 
 function NotFoundComponent() {
   const navigate = useNavigate();
