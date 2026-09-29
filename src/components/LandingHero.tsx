@@ -35,6 +35,7 @@ import platformConvertGlass from "@/assets/platform-convert-glass.png";
 import platformTimeGlass from "@/assets/platform-time-glass.png";
 import platformRevenueGlass from "@/assets/platform-revenue-glass.png";
 import platformContextGlass from "@/assets/platform-context-glass.png";
+import testimonialFeature from "@/assets/testimonial-feature.jpg";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -127,7 +128,7 @@ const TESTIMONIALS = [
     role: "Owner, Studio Nine Hair",
     image: industryHairBeauty,
     tone: "dark",
-    span: "lg:row-span-2",
+    span: "lg:col-start-1 lg:row-start-1 lg:row-span-2",
   },
   {
     quote: "We used to miss DMs and lose leads after hours. Now Nia handles every channel and we wake up to booked clients.",
@@ -135,7 +136,7 @@ const TESTIMONIALS = [
     role: "Studio manager, East London",
     image: industryStudios,
     tone: "neutral",
-    span: "",
+    span: "lg:col-start-2 lg:row-start-1",
   },
   {
     quote: "We no longer miss calls, and clients get an immediate reply even after hours. It feels like having a 24/7 front desk without the overhead.",
@@ -143,7 +144,7 @@ const TESTIMONIALS = [
     role: "Independent stylist",
     image: industryWellness,
     tone: "neutral",
-    span: "",
+    span: "lg:col-start-3 lg:row-start-1",
   },
   {
     quote: "With Pingbase, I’m booking more appointments than before. Clients learn about my services, identify relevant options and confirm in my list.",
@@ -151,7 +152,7 @@ const TESTIMONIALS = [
     role: "Founder, Nia Skin Studio",
     image: industryClinics,
     tone: "neutral",
-    span: "",
+    span: "lg:col-start-2 lg:row-start-2",
   },
   {
     quote: "Pingbase understands our callers, captures the right information, and routes calls to the right person. My customers don’t even realize it’s AI.",
@@ -159,7 +160,7 @@ const TESTIMONIALS = [
     role: "Partner, BrightPath Clinic",
     image: industryFitness,
     tone: "neutral",
-    span: "",
+    span: "lg:col-start-1 lg:row-start-3",
   },
   {
     quote: "Nia sounds natural, conversations flow nicely, and the appointment-booking feature works like a charm. It just asked for my web address and handled setup by itself.",
@@ -167,7 +168,7 @@ const TESTIMONIALS = [
     role: "Co-founder, Rooted Skincare",
     image: industryHairBeauty,
     tone: "accent",
-    span: "lg:row-span-2",
+    span: "lg:col-start-3 lg:row-start-2 lg:row-span-2",
   },
 ];
 
@@ -256,11 +257,11 @@ function CustomerStories() {
         </div>
 
         <div className="relative mt-16 aspect-[16/8.4] min-h-[420px] overflow-hidden rounded-md bg-sidebar sm:min-h-[520px]">
-          <img src={industriesImage} alt="Studio Nine Hair team helping customers" loading="lazy" width={1920} height={768} className="size-full object-cover object-center" />
+          <img src={testimonialFeature} alt="Studio Nine Hair owner sharing his customer experience" loading="lazy" width={1600} height={900} className="size-full object-cover object-center" />
           <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-sidebar/90 to-transparent" />
           <Button size="icon" variant="secondary" aria-label="Play Studio Nine Hair customer story" className="absolute left-1/2 top-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border-0 bg-panel/80 text-foreground shadow-md backdrop-blur hover:bg-panel sm:size-16"><Play className="ml-1 size-5 fill-current" /></Button>
-          <blockquote className="absolute bottom-5 left-5 max-w-[470px] text-sm leading-6 text-sidebar-foreground sm:bottom-8 sm:left-8 sm:text-base">“We no longer miss calls or messages, and clients get an immediate answer after hours. It’s like having a 24/7 front desk without the overhead.”</blockquote>
-          <div className="absolute bottom-6 right-6 text-right text-sidebar-foreground sm:bottom-9 sm:right-8">
+          <blockquote className="absolute bottom-5 left-5 right-5 text-sm leading-6 text-sidebar-foreground sm:bottom-8 sm:left-8 sm:right-auto sm:max-w-[470px] sm:text-base">“We no longer miss calls or messages, and clients get an immediate answer after hours. It’s like having a 24/7 front desk without the overhead.”</blockquote>
+          <div className="absolute bottom-6 right-6 hidden text-right text-sidebar-foreground sm:bottom-9 sm:right-8 sm:block">
             <p className="text-lg font-medium">Studio Nine Hair</p>
             <p className="mt-1 text-xs text-sidebar-foreground/70">Shoreditch, London</p>
           </div>
