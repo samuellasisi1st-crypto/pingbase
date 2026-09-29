@@ -1026,7 +1026,7 @@ export async function runAgent(ctx: Ctx): Promise<string> {
   for (let i = visible.length - 1; i >= 0 && budget > 0; i--) {
     const m = visible[i]!;
     if (m.direction !== "inbound") continue;
-    const atts = (Array.isArray(m.attachments) ? m.attachments : []) as Array<{ path?: string; mime?: string; kind?: string }>;
+    const atts = (Array.isArray((m as { attachments?: unknown }).attachments) ? (m as { attachments: unknown[] }).attachments : []) as Array<{ path?: string; mime?: string; kind?: string }>;
     for (const a of atts) {
       if (budget <= 0 || !a.path || !(a.kind === "image" || (a.mime ?? "").startsWith("image/"))) continue;
       const { data: signed } = await db.storage.from("attachments").createSignedUrl(a.path, 600);
