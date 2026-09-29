@@ -68,6 +68,8 @@ function Dashboard() {
     retry: false,
   });
   const { session, loading: authLoading } = useAuth();
+  // Signed-out visitors (and search engines) see the public landing page.
+  if (!authLoading && !session) return <LandingHero />;
   const now = Date.now();
   const d = q.data;
   const live = (d?.appts ?? []).filter((a) => a.status !== "CANCELLED");
