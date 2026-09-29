@@ -376,9 +376,9 @@ export function LandingHero() {
             </div>
           </div>
           <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} className="mt-14 w-full">
-              <CarouselContent className="-ml-5">
+              <CarouselContent className="ml-0">
                 {INDUSTRIES.map((item) => (
-                  <CarouselItem key={item.title} className="basis-[82%] pl-5 sm:basis-[46%] lg:basis-[27%] xl:basis-[23%]">
+                  <CarouselItem key={item.title} className="basis-[82%] pl-5 first:pl-0 last:pr-5 sm:basis-[46%] lg:basis-[27%] xl:basis-[23%]">
                   <article>
                     <div className="aspect-[4/5] w-full overflow-hidden rounded-lg"><img src={item.image} alt={`${item.title} professional with a customer`} loading="lazy" width={384} height={768} className="size-full object-cover" /></div>
                     <h3 className="mt-5 text-base font-medium">{item.title}</h3>
