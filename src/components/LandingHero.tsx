@@ -249,8 +249,8 @@ function RotatingHeroWord() {
           className="col-start-1 row-start-1 inline-block"
           initial={reduceMotion ? false : { opacity: 0, y: "72%", filter: "blur(5px)" }}
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          exit={reduceMotion ? undefined : { opacity: 0, y: "-58%", filter: "blur(4px)" }}
-          transition={{ duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
+          exit={{ opacity: 0, y: "-58%", filter: "blur(4px)" }}
+          transition={{ duration: reduceMotion ? 0 : 0.58, ease: [0.22, 1, 0.36, 1] }}
         >
           {HERO_WORDS[index]}
         </motion.span>
