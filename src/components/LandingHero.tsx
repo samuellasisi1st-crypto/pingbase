@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import Autoplay from "embla-carousel-autoplay";
 import {
   ArrowRight,
   Bot,
@@ -12,7 +13,6 @@ import {
   Mail,
   MessageCircle,
   MessagesSquare,
-  Play,
   RefreshCw,
   ShieldCheck,
   Sparkles,
@@ -35,7 +35,6 @@ import platformConvertGlass from "@/assets/platform-convert-glass.png";
 import platformTimeGlass from "@/assets/platform-time-glass.png";
 import platformRevenueGlass from "@/assets/platform-revenue-glass.png";
 import platformContextGlass from "@/assets/platform-context-glass.png";
-import testimonialFeature from "@/assets/testimonial-feature.jpg";
 import { Button } from "@/components/ui/button";
 import {
   Carousel,
@@ -235,6 +234,8 @@ function RotatingHeroWord() {
 }
 
 function CustomerStories() {
+  const autoplay = useRef(Autoplay({ delay: 3500, stopOnInteraction: false, stopOnMouseEnter: true }));
+
   return (
     <section className="bg-panel py-20 text-foreground md:py-28">
       <div className="mx-auto max-w-[1280px] px-5 sm:px-8">
@@ -256,39 +257,41 @@ function CustomerStories() {
           </div>
         </div>
 
-        <div className="relative mt-16 aspect-[16/8.4] min-h-[420px] overflow-hidden rounded-md bg-sidebar sm:min-h-[520px]">
-          <img src={testimonialFeature} alt="Studio Nine Hair owner sharing his customer experience" loading="lazy" width={1600} height={900} className="size-full object-cover object-center" />
-          <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-sidebar/90 to-transparent" />
-          <Button size="icon" variant="secondary" aria-label="Play Studio Nine Hair customer story" className="absolute left-1/2 top-1/2 size-14 -translate-x-1/2 -translate-y-1/2 rounded-full border-0 bg-panel/80 text-foreground shadow-md backdrop-blur hover:bg-panel sm:size-16"><Play className="ml-1 size-5 fill-current" /></Button>
-          <blockquote className="absolute bottom-5 left-5 right-5 text-sm leading-6 text-sidebar-foreground sm:bottom-8 sm:left-8 sm:right-auto sm:max-w-[470px] sm:text-base">“We no longer miss calls or messages, and clients get an immediate answer after hours. It’s like having a 24/7 front desk without the overhead.”</blockquote>
-          <div className="absolute bottom-6 right-6 hidden text-right text-sidebar-foreground sm:bottom-9 sm:right-8 sm:block">
-            <p className="text-lg font-medium">Studio Nine Hair</p>
-            <p className="mt-1 text-xs text-sidebar-foreground/70">Shoreditch, London</p>
+        <Carousel
+          className="mt-14"
+          opts={{ align: "start", loop: true }}
+          plugins={[autoplay.current]}
+          aria-label="Customer testimonials"
+        >
+          <CarouselContent className="-ml-4">
+            {TESTIMONIALS.map((item) => {
+              const cardTone = item.tone === "dark"
+                ? "bg-sidebar text-sidebar-foreground"
+                : item.tone === "accent"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-panel-subtle text-foreground";
+              const metaTone = item.tone === "neutral" ? "text-secondary" : "opacity-70";
+              return (
+                <CarouselItem key={item.name} className="basis-full pl-4 sm:basis-1/2 lg:basis-1/3">
+                  <article className={`flex h-[330px] flex-col justify-between rounded-md p-6 sm:p-7 ${cardTone}`}>
+                    <div>
+                      <p className={`mb-7 text-xs font-medium ${metaTone}`}>Studio Nine Hair</p>
+                      <blockquote className="text-lg leading-[1.45] sm:text-xl">“{item.quote}”</blockquote>
+                    </div>
+                    <div className="mt-8 flex items-end justify-between gap-4">
+                      <div><p className="text-xs font-medium">{item.name}</p><p className={`mt-1 text-[10px] ${metaTone}`}>{item.role}</p></div>
+                      <img src={item.image} alt="" loading="lazy" width={384} height={768} className="size-10 shrink-0 rounded-full object-cover" />
+                    </div>
+                  </article>
+                </CarouselItem>
+              );
+            })}
+          </CarouselContent>
+          <div className="mt-6 flex justify-end gap-2">
+            <CarouselPrevious className="static size-9 translate-y-0 rounded-md border-border-strong bg-panel shadow-none" />
+            <CarouselNext className="static size-9 translate-y-0 rounded-md border-border-strong bg-panel shadow-none" />
           </div>
-        </div>
-
-        <div className="mt-10 grid auto-rows-[minmax(160px,auto)] gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {TESTIMONIALS.map((item) => {
-            const cardTone = item.tone === "dark"
-              ? "bg-sidebar text-sidebar-foreground"
-              : item.tone === "accent"
-                ? "bg-primary text-primary-foreground"
-                : "bg-panel-subtle text-foreground";
-            const metaTone = item.tone === "neutral" ? "text-secondary" : "opacity-70";
-            return (
-              <article key={item.name} className={`flex min-h-[170px] flex-col justify-between rounded-md p-5 sm:p-6 ${cardTone} ${item.span}`}>
-                <div>
-                  {item.tone !== "neutral" && <p className={`mb-5 text-sm font-medium ${metaTone}`}>Studio Nine Hair</p>}
-                  <blockquote className={`${item.tone === "accent" ? "text-xl sm:text-2xl" : item.tone === "dark" ? "text-lg sm:text-xl" : "text-sm"} leading-[1.4]`}>“{item.quote}”</blockquote>
-                </div>
-                <div className="mt-8 flex items-end justify-between gap-4">
-                  <div><p className="text-xs font-medium">{item.name}</p><p className={`mt-1 text-[10px] ${metaTone}`}>{item.role}</p></div>
-                  <img src={item.image} alt="" loading="lazy" width={384} height={768} className="size-9 shrink-0 rounded-full object-cover" />
-                </div>
-              </article>
-            );
-          })}
-        </div>
+        </Carousel>
       </div>
     </section>
   );
