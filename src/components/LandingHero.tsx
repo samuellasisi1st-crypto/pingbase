@@ -320,7 +320,7 @@ export function LandingHero() {
             <Button asChild variant="outline" className="border-2 border-primary bg-sidebar text-sidebar-foreground shadow-none hover:bg-sidebar-accent">
               <Link to="/auth">Sign up</Link>
             </Button>
-            <Button asChild variant="outline" className="rounded-full border-2 border-sidebar bg-panel shadow-none max-lg:hidden">
+            <Button asChild variant="outline" className="rounded-full border-2 border-sidebar bg-panel shadow-none max-sm:px-3">
               <Link to="/auth">Book a demo</Link>
             </Button>
           </div>
@@ -500,8 +500,8 @@ export function LandingHero() {
               <Button asChild variant="outline" className="mt-9 rounded-full"><Link to="/auth">See how Nia works <ArrowRight /></Link></Button>
             </div>
             <div className="relative min-h-[560px] overflow-hidden rounded-lg bg-panel-subtle">
-              <img src={niaRobotAsset.url} alt="Nia, the Pingbase AI concierge" loading="lazy" width={768} height={768} className="absolute inset-0 size-full object-cover object-center" />
-              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-panel via-panel/90 to-transparent" />
+              <img src={niaRobotAsset.url} alt="Nia, the Pingbase AI concierge" width={768} height={768} className="absolute inset-0 size-full object-cover object-center" />
+              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-panel via-panel/80 to-transparent" />
               <div className="absolute bottom-8 left-5 w-[calc(100%-2.5rem)] max-w-[390px] rounded-lg border border-border bg-panel/95 p-4 shadow-md backdrop-blur sm:bottom-10 sm:left-10">
                 <div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><Bot className="size-4" /></span><div><p className="text-sm font-medium">Nia</p><p className="text-xs text-secondary">Booking concierge</p></div><span className="ml-auto size-2 rounded-full bg-success" /></div>
                 <div className="mt-5 rounded-md bg-panel-subtle p-4 text-sm leading-6">Maya has two openings on Friday. Would you prefer 11:00am or 3:30pm?</div>
