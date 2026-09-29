@@ -134,6 +134,13 @@
   background-size: 16px 16px;
 }
 
+@utility landing-dot-grid {
+  background-color: var(--bg-panel-subtle);
+  background-image: radial-gradient(var(--border-strong) 0.75px, transparent 0.75px);
+  background-position: 0 0;
+  background-size: 16px 16px;
+}
+
 
 @utility busy-stripes {
   background-color: var(--bg-hover);
