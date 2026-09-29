@@ -4,6 +4,8 @@ import { useServerFn } from "@tanstack/react-start";
 import type { ComponentType, ReactNode } from "react";
 import { AlertTriangle, ArrowRight, Bot, CalendarClock, CalendarDays, CheckCircle2, CreditCard, Instagram, MailOpen, MessageCircle, UserCheck } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
+import { LandingHero } from "@/components/LandingHero";
+import { useAuth } from "@/hooks/useAuth";
 import { Badge, Button, Card } from "@/design-system";
 import { supabase } from "@/integrations/supabase/client";
 import { getGoogleCalendarStatus } from "@/lib/channels.functions";
@@ -13,10 +15,10 @@ import dashboardSculpture from "@/assets/dashboard-glass-sculpture.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Pingbase" },
-      { name: "description", content: "Today's bookings, what needs your attention and how your business is doing at a glance." },
-      { property: "og:title", content: "Dashboard — Pingbase" },
-      { property: "og:description", content: "Today's bookings, what needs your attention and how your business is doing at a glance." },
+      { title: "Pingbase — AI booking concierge" },
+      { name: "description", content: "Turn customer chats into confirmed appointments. Pingbase answers on WhatsApp, Instagram and Messenger and books real appointments in your calendar." },
+      { property: "og:title", content: "Pingbase — AI booking concierge" },
+      { property: "og:description", content: "Turn customer chats into confirmed appointments. Pingbase answers on WhatsApp, Instagram and Messenger and books real appointments in your calendar." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -65,6 +67,9 @@ function Dashboard() {
     },
     retry: false,
   });
+  const { session, loading: authLoading } = useAuth();
+  // Signed-out visitors (and search engines) see the public landing page.
+  if (!authLoading && !session) return <LandingHero />;
   const now = Date.now();
   const d = q.data;
   const live = (d?.appts ?? []).filter((a) => a.status !== "CANCELLED");
