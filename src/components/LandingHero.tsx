@@ -69,11 +69,11 @@ const JOURNEY = [
 ];
 
 const INDUSTRIES = [
-  { title: "Hair & beauty", body: "Turn DMs into salon bookings, without interrupting the appointment in front of you.", position: "0% center" },
-  { title: "Wellness", body: "Answer treatment questions and fill real openings around the clock.", position: "25% center" },
-  { title: "Clinics", body: "Guide patients to the right service and keep every follow-up together.", position: "50% center" },
-  { title: "Studios", body: "Collect references, confirm sessions and make schedule changes simple.", position: "75% center" },
-  { title: "Fitness", body: "Move enquiries from first message to a confirmed class or consultation.", position: "100% center" },
+  { title: "Hair & beauty", body: "Turn DMs into salon bookings, without interrupting the appointment in front of you.", positionClass: "object-left" },
+  { title: "Wellness", body: "Answer treatment questions and fill real openings around the clock.", positionClass: "object-[25%_center]" },
+  { title: "Clinics", body: "Guide patients to the right service and keep every follow-up together.", positionClass: "object-center" },
+  { title: "Studios", body: "Collect references, confirm sessions and make schedule changes simple.", positionClass: "object-[75%_center]" },
+  { title: "Fitness", body: "Move enquiries from first message to a confirmed class or consultation.", positionClass: "object-right" },
 ];
 
 const TESTIMONIALS = [
@@ -83,7 +83,7 @@ const TESTIMONIALS = [
     role: "Salon owner",
     metricA: ["24/7", "enquiries answered"],
     metricB: ["31%", "more bookings"],
-    position: "0% center",
+    positionClass: "object-left",
   },
   {
     quote: "The whole team can see what Nia promised and step in without asking the customer to repeat themselves.",
@@ -91,7 +91,7 @@ const TESTIMONIALS = [
     role: "Studio manager",
     metricA: ["1", "shared inbox"],
     metricB: ["8h", "saved each week"],
-    position: "75% center",
+    positionClass: "object-[75%_center]",
   },
   {
     quote: "Reschedules used to take five messages. Now customers choose another real time and the calendar updates.",
@@ -99,7 +99,7 @@ const TESTIMONIALS = [
     role: "Independent stylist",
     metricA: ["5×", "faster changes"],
     metricB: ["0", "double bookings"],
-    position: "0% center",
+    positionClass: "object-left",
   },
 ];
 
@@ -170,7 +170,7 @@ export function LandingHero() {
             <Button asChild variant="ghost" className="rounded-full max-sm:hidden">
               <Link to="/auth">Sign in</Link>
             </Button>
-            <Button asChild className="border-[3px] border-green-soft bg-sidebar text-sidebar-foreground shadow-none hover:bg-sidebar-accent hover:brightness-100">
+            <Button asChild className="border-[3px] border-blue-mid bg-sidebar text-sidebar-foreground shadow-none hover:bg-sidebar-accent hover:brightness-100">
               <Link to="/auth">Get started</Link>
             </Button>
             <Button asChild variant="outline" className="rounded-full border-2 border-sidebar bg-panel shadow-none max-lg:hidden">
@@ -191,7 +191,7 @@ export function LandingHero() {
             Turn customer chats into confirmed appointments. Nia answers, books and follows up across every channel.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Button asChild size="lg" className="h-13 rounded-full border-[4px] border-green-soft bg-sidebar px-7 text-sidebar-foreground shadow-none hover:bg-sidebar-accent hover:brightness-100">
+            <Button asChild size="lg" className="h-13 rounded-full border-[4px] border-blue-mid bg-sidebar px-7 text-sidebar-foreground shadow-none hover:bg-sidebar-accent hover:brightness-100">
               <Link to="/auth">Get started</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-13 rounded-full border-2 border-sidebar bg-panel px-7 shadow-none hover:bg-panel-subtle">
@@ -234,7 +234,7 @@ export function LandingHero() {
                 const ordered = INDUSTRIES[(index + industryStart) % INDUSTRIES.length];
                 return (
                   <article key={`${ordered.title}-${industryStart}`} className="w-[78vw] max-w-[290px] shrink-0 snap-start sm:w-[290px]">
-                    <img src={industriesImage} alt={`${ordered.title} professional with a customer`} loading="lazy" width={1920} height={768} className="aspect-[4/5] w-full rounded-lg object-cover" style={{ objectPosition: ordered.position }} />
+                    <img src={industriesImage} alt={`${ordered.title} professional with a customer`} loading="lazy" width={1920} height={768} className={`aspect-[4/5] w-full rounded-lg object-cover ${ordered.positionClass}`} />
                     <h3 className="mt-5 text-base font-medium">{ordered.title}</h3>
                     <p className="mt-2 min-h-12 text-sm leading-6 text-secondary">{ordered.body}</p>
                     <a href="#platform" className="mt-6 inline-flex items-center gap-2 text-sm font-medium hover:text-primary">See how it works <ArrowRight className="size-4" /></a>
@@ -423,7 +423,7 @@ export function LandingHero() {
           </div>
           <div className="mx-auto mt-14 grid max-w-[980px] overflow-hidden rounded-lg bg-panel text-foreground shadow-lg md:grid-cols-[32%_1fr]">
             <div className="relative min-h-[300px] md:min-h-[360px]">
-              <img src={industriesImage} alt={`${activeTestimonial.name}, ${activeTestimonial.role}`} loading="lazy" width={1920} height={768} className="absolute inset-0 size-full object-cover" style={{ objectPosition: activeTestimonial.position }} />
+              <img src={industriesImage} alt={`${activeTestimonial.name}, ${activeTestimonial.role}`} loading="lazy" width={1920} height={768} className={`absolute inset-0 size-full object-cover ${activeTestimonial.positionClass}`} />
               <div className="absolute inset-x-0 bottom-0 bg-sidebar/80 p-5 text-sidebar-foreground"><p className="font-medium">{activeTestimonial.name}</p><p className="mt-1 text-xs text-sidebar-foreground/70">{activeTestimonial.role}</p></div>
             </div>
             <div className="flex flex-col justify-between p-7 sm:p-10">
