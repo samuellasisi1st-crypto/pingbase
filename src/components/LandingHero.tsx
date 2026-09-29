@@ -151,7 +151,9 @@ function MessageBubble({ side, children }: { side?: "left" | "right"; children: 
 export function LandingHero() {
   const [industryStart, setIndustryStart] = useState(0);
   const [testimonial, setTestimonial] = useState(0);
-  const activeTestimonial = TESTIMONIALS[testimonial];
+  const activeTestimonial = TESTIMONIALS[testimonial] ?? TESTIMONIALS[0];
+
+  if (!activeTestimonial) return null;
 
   return (
     <div className="min-h-dvh overflow-hidden bg-panel text-foreground">
@@ -231,7 +233,7 @@ export function LandingHero() {
             </div>
             <div className="mt-14 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 pr-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {INDUSTRIES.map((item, index) => {
-                const ordered = INDUSTRIES[(index + industryStart) % INDUSTRIES.length];
+                const ordered = INDUSTRIES[(index + industryStart) % INDUSTRIES.length] ?? item;
                 return (
                   <article key={`${ordered.title}-${industryStart}`} className="w-[78vw] max-w-[290px] shrink-0 snap-start sm:w-[290px]">
                     <div className="aspect-[4/5] w-full overflow-hidden rounded-lg"><img src={industriesImage} alt={`${ordered.title} professional with a customer`} loading="lazy" width={1920} height={768} className={`h-full w-[500%] max-w-none object-cover ${index === 0 ? "translate-x-0" : index === 1 ? "-translate-x-[20%]" : index === 2 ? "-translate-x-[40%]" : index === 3 ? "-translate-x-[60%]" : "-translate-x-[80%]"}`} /></div>
