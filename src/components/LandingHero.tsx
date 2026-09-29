@@ -229,12 +229,12 @@ export function LandingHero() {
                 <Button variant="ghost" size="icon" aria-label="Next industries" onClick={() => setIndustryStart((value) => (value + 1) % INDUSTRIES.length)}><ArrowRight /></Button>
               </div>
             </div>
-            <div className="mt-14 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="mt-14 flex snap-x snap-mandatory gap-5 overflow-x-auto pb-4 pr-5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {INDUSTRIES.map((item, index) => {
                 const ordered = INDUSTRIES[(index + industryStart) % INDUSTRIES.length];
                 return (
                   <article key={`${ordered.title}-${industryStart}`} className="w-[78vw] max-w-[290px] shrink-0 snap-start sm:w-[290px]">
-                    <img src={industriesImage} alt={`${ordered.title} professional with a customer`} loading="lazy" width={1920} height={768} className={`aspect-[4/5] w-full rounded-lg object-cover ${ordered.positionClass}`} />
+                    <div className="aspect-[4/5] w-full overflow-hidden rounded-lg"><img src={industriesImage} alt={`${ordered.title} professional with a customer`} loading="lazy" width={1920} height={768} className={`h-full w-[500%] max-w-none object-cover ${index === 0 ? "translate-x-0" : index === 1 ? "-translate-x-[20%]" : index === 2 ? "-translate-x-[40%]" : index === 3 ? "-translate-x-[60%]" : "-translate-x-[80%]"}`} /></div>
                     <h3 className="mt-5 text-base font-medium">{ordered.title}</h3>
                     <p className="mt-2 min-h-12 text-sm leading-6 text-secondary">{ordered.body}</p>
                     <a href="#platform" className="mt-6 inline-flex items-center gap-2 text-sm font-medium hover:text-primary">See how it works <ArrowRight className="size-4" /></a>
@@ -448,7 +448,7 @@ export function LandingHero() {
       </main>
 
       <footer className="relative overflow-hidden border-t border-border bg-panel text-foreground">
-        <img src={footerLandscape} alt="A green landscape with futuristic buildings" loading="lazy" width={1920} height={803} className="pointer-events-none absolute inset-x-0 bottom-0 w-full min-w-[900px] max-w-none object-contain object-bottom opacity-70" />
+        <img src={footerLandscape} alt="A green landscape with futuristic buildings" loading="lazy" width={1920} height={803} className="pointer-events-none absolute inset-x-0 bottom-0 w-full min-w-[900px] max-w-none object-contain object-bottom opacity-80" />
         <div className="relative z-10 mx-auto max-w-[1120px] px-5 pb-72 pt-14 sm:px-8 md:pb-[360px]">
           <div className="grid gap-12 border-b border-border pb-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
             <div><div className="flex items-center gap-2 text-base font-semibold"><span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground"><MessagesSquare className="size-4" /></span>Pingbase</div><p className="mt-4 max-w-[230px] text-sm leading-6 text-secondary">The AI booking concierge for appointment businesses.</p></div>
