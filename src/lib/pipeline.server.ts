@@ -128,6 +128,23 @@ export async function processInboundMessage(msg: InboundMessage) {
   const contactId = await resolveContact(msg);
   const conversation = await resolveConversation(msg, contactId);
 
+  // Voice notes: transcribe so Nia (and the team) can read what was said.
+  let body = msg.body;
+  const transcripts: string[] = [];
+  for (const att of msg.attachments ?? []) {
+    const { isAudio, transcribeStoredAudio } = await import("./media-understanding.server");
+    if (!isAudio(att)) continue;
+    try {
+      const text = await transcribeStoredAudio(att.path, att.mime, att.filename);
+      if (text) transcripts.push(text);
+    } catch (e) {
+      console.error("Voice note transcription error", e);
+    }
+  }
+  if (transcripts.length) {
+    body = `🎤 Voice note: "${transcripts.join(" ")}"`;
+  }
+
   await db.from("messages").insert({
     workspace_id: msg.workspaceId,
     conversation_id: conversation.id,
@@ -136,10 +153,10 @@ export async function processInboundMessage(msg: InboundMessage) {
     external_message_id: msg.externalMessageId ?? null,
     direction: "inbound",
     sender_type: "CUSTOMER",
-    body: msg.body,
+    body,
     content_type: msg.attachments?.length ? (msg.attachments[0]!.kind === "image" ? "image" : "file") : "text",
     attachments: (msg.attachments ?? []) as never,
-    metadata: (msg.metadata ?? {}) as never,
+    metadata: { ...(msg.metadata ?? {}), ...(transcripts.length ? { transcript: transcripts.join(" ") } : {}) } as never,
   });
 
   const nowIso = new Date().toISOString();
