@@ -15,3 +15,4 @@
 - [x] Connect landing section strokes and add patterned hero rails and CTA band
 - [x] Tighten landing grid boxes, carousels, dark Nia section, patterns, testimonials, CTA, and footer strokes
 - [x] Soften landing patterns, animate sections, restore Nia CTA contrast, and replace the footer landscape
+- [x] Add authentic industry photography, hero word transitions, industry autoplay, and a blended photographic footer
