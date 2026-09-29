@@ -20,11 +20,11 @@ export function LandingHero() {
   return (
     <div className="flex min-h-dvh flex-col bg-panel text-foreground">
       <header className="mx-auto grid h-16 w-full max-w-[1240px] grid-cols-[auto_1fr] items-center px-5 sm:px-8 md:grid-cols-[1fr_auto_1fr]">
-        <Link to="/" className="flex items-center gap-2" aria-label="Pingbase home">
-          <span className="grid size-7 place-items-center rounded-lg bg-[image:var(--gradient-primary)] text-white shadow-button-glow">
+        <Link to="/" className="flex min-w-0 items-center gap-2" aria-label="Pingbase home">
+          <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-[image:var(--gradient-primary)] text-white shadow-button-glow">
             <MessagesSquare className="size-4" aria-hidden="true" />
           </span>
-          <span className="text-[17px] font-semibold tracking-tight">Pingbase</span>
+          <span className="min-w-0 truncate text-[17px] font-semibold tracking-tight">Pingbase</span>
         </Link>
 
         <nav aria-label="Main" className="hidden items-center justify-self-center md:flex">
@@ -41,13 +41,13 @@ export function LandingHero() {
         </nav>
 
         <div className="flex items-center justify-end gap-2">
-          <Link to="/auth" className="hidden h-9 items-center rounded-full px-3.5 text-[15px] text-secondary transition-colors duration-150 hover:text-foreground sm:inline-flex">
+          <Link to="/auth" className="inline-flex h-9 items-center rounded-full px-3.5 text-[15px] text-secondary transition-colors duration-150 hover:text-foreground max-sm:hidden">
             Sign in
           </Link>
           <Link to="/auth" className={primaryPill}>
             Get started
           </Link>
-          <Link to="/auth" className={`${outlinePill} hidden lg:inline-flex`}>
+          <Link to="/auth" className={`${outlinePill} max-lg:hidden`}>
             Book a demo
           </Link>
         </div>
