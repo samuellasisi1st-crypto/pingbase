@@ -7,7 +7,6 @@ import {
   CalendarCheck2,
   Check,
   CheckCircle2,
-  ChevronDown,
   Clock3,
   FileText,
   Instagram,
@@ -20,8 +19,9 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
-import appScreenshot from "@/assets/landing-app-dashboard.jpg";
-import heroBackground from "@/assets/landing-hero-background.jpg";
+import heroBackgroundAsset from "@/assets/landing-hero-bg.jpg.asset.json";
+import appScreenshotAsset from "@/assets/pingbase-product-ui.png.asset.json";
+import niaRobotAsset from "@/assets/nia-robot.jpg.asset.json";
 import industriesImage from "@/assets/landing-industries.jpg";
 import industryHairBeauty from "@/assets/industry-hair-beauty.jpg";
 import industryWellness from "@/assets/industry-wellness.jpg";
@@ -30,7 +30,6 @@ import industryStudios from "@/assets/industry-studios.jpg";
 import industryFitness from "@/assets/industry-fitness.jpg";
 import ctaPhoto from "@/assets/landing-cta-photo.jpg";
 import footerLandscape from "@/assets/pingbase-footer-landscape-clean.png";
-import sculpture from "@/assets/dashboard-glass-sculpture.png";
 import platformConvertGlass from "@/assets/platform-convert-glass.png";
 import platformTimeGlass from "@/assets/platform-time-glass.png";
 import platformRevenueGlass from "@/assets/platform-revenue-glass.png";
@@ -46,13 +45,14 @@ import {
 } from "@/components/ui/carousel";
 
 const MENU = [
-  { label: "Platform", href: "#platform", dropdown: true },
-  { label: "Solutions", href: "#solutions", dropdown: true },
-  { label: "Resources", href: "#resources", dropdown: true },
-  { label: "Pricing", href: "#pricing", dropdown: false },
+  { label: "Industries", href: "#industries" },
+  { label: "Platform", href: "#platform" },
+  { label: "Nia", href: "#nia" },
+  { label: "Stories", href: "#stories" },
 ];
 
 const CHECKS = ["14-day free trial", "No credit card required", "Cancel anytime"];
+const HERO_WORDS = ["message", "enquiry", "DM", "conversation"];
 
 const CHANNELS = [
   { label: "WhatsApp", icon: MessageCircle },
@@ -192,6 +192,23 @@ function MessageBubble({ side, children }: { side?: "left" | "right"; children: 
   );
 }
 
+function RotatingHeroWord() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setIndex((current) => (current + 1) % HERO_WORDS.length), 2400);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return (
+    <span className="relative inline-grid min-w-[12ch] text-tertiary" aria-live="polite">
+      <span key={HERO_WORDS[index]} className="col-start-1 row-start-1 animate-in fade-in slide-in-from-bottom-2 duration-500">
+        {HERO_WORDS[index]}
+      </span>
+    </span>
+  );
+}
+
 function CustomerStories() {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
@@ -212,7 +229,7 @@ function CustomerStories() {
 
   return (
     <section className="relative overflow-hidden bg-sidebar py-24 text-sidebar-foreground md:py-32">
-      <div className="mx-auto max-w-[1240px] px-5 sm:px-8">
+      <div className="mx-auto max-w-[1360px] px-5 sm:px-8">
         <div className="mb-12 max-w-[680px]">
           <div className="mb-5 flex items-center gap-2 text-xs font-medium uppercase text-sidebar-primary">
             <span className="size-1.5 rounded-full bg-sidebar-primary" />Customer stories
@@ -221,7 +238,7 @@ function CustomerStories() {
         </div>
       </div>
 
-      <div className="relative mx-auto max-w-[1440px]">
+      <div className="relative mx-auto max-w-[1520px]">
         <Carousel
           setApi={setApi}
           opts={{ loop: true, align: "center", slidesToScroll: 1, startIndex: TESTIMONIALS.length }}
@@ -290,24 +307,20 @@ export function LandingHero() {
   return (
     <div className="min-h-dvh overflow-hidden bg-panel text-foreground">
       <header className="sticky top-0 z-50 border-b border-border bg-panel/95 backdrop-blur">
-        <div className="mx-auto grid h-16 w-full max-w-[1240px] grid-cols-[auto_1fr] items-center px-5 sm:px-8 md:grid-cols-[1fr_auto_1fr]">
+        <div className="mx-auto grid h-16 w-full max-w-[1360px] grid-cols-[auto_1fr] items-center px-5 sm:px-8 md:grid-cols-[1fr_auto_1fr]">
           <Logo />
           <nav aria-label="Main" className="hidden items-center justify-self-center md:flex">
             {MENU.map((item) => (
               <a key={item.label} href={item.href} className="flex h-9 items-center gap-1 rounded-full px-3.5 text-[15px] text-secondary transition-colors hover:bg-hover hover:text-foreground">
                 {item.label}
-                {item.dropdown && <ChevronDown className="size-3.5 text-tertiary" aria-hidden="true" />}
               </a>
             ))}
           </nav>
           <div className="flex items-center justify-end gap-2">
-            <Button asChild variant="ghost" className="rounded-full max-sm:hidden">
-              <Link to="/auth">Sign in</Link>
-            </Button>
             <Button asChild variant="outline" className="border-2 border-primary bg-sidebar text-sidebar-foreground shadow-none hover:bg-sidebar-accent">
-              <Link to="/auth">Get started</Link>
+              <Link to="/auth">Sign up</Link>
             </Button>
-            <Button asChild variant="outline" className="rounded-full border-2 border-sidebar bg-panel shadow-none max-lg:hidden">
+            <Button asChild variant="outline" className="rounded-full border-2 border-sidebar bg-panel shadow-none max-sm:px-3">
               <Link to="/auth">Book a demo</Link>
             </Button>
           </div>
@@ -315,18 +328,18 @@ export function LandingHero() {
       </header>
 
       <main>
-        <section className="mx-auto w-full max-w-[1240px] px-5 pb-14 pt-14 sm:px-8 md:pb-20 md:pt-20">
-          <h1 className="max-w-[860px] text-[46px] font-normal leading-[1.03] sm:text-[62px] md:text-[76px]">
+        <section className="mx-auto w-full max-w-[1360px] px-5 pb-14 pt-14 sm:px-8 md:pb-20 md:pt-20">
+          <h1 className="max-w-[1040px] text-[46px] font-normal leading-[1.03] sm:text-[62px] md:text-[76px]">
             More bookings
             <br />
-            from every <span className="font-normal text-tertiary">message</span>
+            from every <RotatingHeroWord />
           </h1>
           <p className="mt-7 max-w-[480px] text-[17px] leading-relaxed text-secondary md:text-lg">
             Turn customer chats into confirmed appointments. Nia answers, books and follows up across every channel.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <Button asChild size="lg" variant="outline" className="h-13 rounded-full border-2 border-primary bg-sidebar px-7 text-sidebar-foreground shadow-none hover:bg-sidebar-accent">
-              <Link to="/auth">Get started</Link>
+              <Link to="/auth">Sign up</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="h-13 rounded-full border-2 border-sidebar bg-panel px-7 shadow-none hover:bg-panel-subtle">
               <Link to="/auth">Book a demo</Link>
@@ -343,15 +356,15 @@ export function LandingHero() {
         </section>
 
         <section aria-label="Pingbase product preview" className="w-full border-y border-border py-0">
-          <div className="relative mx-auto flex h-[62vw] max-h-[700px] min-h-[310px] w-full max-w-[1240px] items-end justify-center overflow-hidden bg-panel-subtle px-5 sm:px-10 md:px-16">
-            <img src={heroBackground} alt="" aria-hidden="true" width={1600} height={912} className="absolute inset-0 size-full object-cover" />
+          <div className="relative mx-auto flex h-[62vw] max-h-[760px] min-h-[310px] w-full max-w-[1360px] items-end justify-center overflow-hidden bg-panel-subtle px-5 sm:px-10 md:px-16">
+            <img src={heroBackgroundAsset.url} alt="" aria-hidden="true" width={1024} height={768} className="absolute inset-0 size-full object-cover" />
             <div className="absolute inset-0 bg-panel/15" />
-            <img src={appScreenshot} alt="Pingbase dashboard showing appointments and customer conversations" className="relative z-10 w-full max-w-[1060px] rounded-t-xl border border-border-strong bg-panel shadow-lg" />
+            <img src={appScreenshotAsset.url} alt="Pingbase inbox showing customer conversations, images and booking details" className="relative z-10 w-full max-w-[1180px] rounded-t-xl border border-border-strong bg-panel shadow-lg" />
           </div>
         </section>
 
         <section id="industries" className="border-y border-border bg-panel py-20 md:py-28">
-          <div className="mx-auto max-w-[1240px] px-5 sm:px-8">
+          <div className="mx-auto max-w-[1360px] px-5 sm:px-8">
             <div className="flex items-end justify-between gap-8">
               <div>
                 <Eyebrow>Built around your day</Eyebrow>
@@ -381,7 +394,7 @@ export function LandingHero() {
         </section>
 
         <section className="border-y border-border bg-panel" aria-label="Connected channels">
-          <div className="mx-auto flex max-w-[1120px] flex-wrap items-center justify-center gap-x-10 gap-y-6 px-5 py-9 sm:px-8 md:justify-between">
+          <div className="mx-auto flex max-w-[1280px] flex-wrap items-center justify-center gap-x-10 gap-y-6 px-5 py-9 sm:px-8 md:justify-between">
             <p className="w-full text-center text-xs font-medium uppercase text-tertiary md:w-auto md:text-left">One inbox for every conversation</p>
             {CHANNELS.map(({ label, icon: Icon }) => (
               <div key={label} className="flex items-center gap-2 text-sm font-medium text-secondary">
@@ -392,7 +405,7 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section id="platform" className="mx-auto max-w-[1120px] px-5 py-24 sm:px-8 md:py-32">
+        <section id="platform" className="mx-auto max-w-[1280px] px-5 py-24 sm:px-8 md:py-32">
           <div className="max-w-[720px]">
             <Eyebrow>One connected platform</Eyebrow>
             <SectionHeading>Unify conversations, bookings and follow-ups so every customer gets an answer.</SectionHeading>
@@ -422,7 +435,7 @@ export function LandingHero() {
         </section>
 
         <section id="solutions" className="bg-sidebar text-sidebar-foreground">
-          <div className="mx-auto max-w-[1240px] px-5 py-24 sm:px-8 md:py-32">
+          <div className="mx-auto max-w-[1360px] px-5 py-24 sm:px-8 md:py-32">
             <div className="mx-auto max-w-[700px] text-center">
               <div className="mb-5 flex items-center justify-center gap-2 text-xs font-medium uppercase text-sidebar-primary">
                 <span className="size-1.5 rounded-full bg-sidebar-primary" />
@@ -470,7 +483,7 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-[1120px] px-5 py-24 sm:px-8 md:py-32">
+        <section id="nia" className="mx-auto max-w-[1280px] px-5 py-24 sm:px-8 md:py-32">
           <div className="grid gap-14 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
             <div>
               <Eyebrow>Meet your AI agent</Eyebrow>
@@ -486,9 +499,10 @@ export function LandingHero() {
               </div>
               <Button asChild variant="outline" className="mt-9 rounded-full"><Link to="/auth">See how Nia works <ArrowRight /></Link></Button>
             </div>
-            <div className="relative min-h-[500px] overflow-hidden rounded-lg bg-panel-subtle">
-              <img src={sculpture} alt="Blue glass Pingbase sculpture" className="absolute -right-20 bottom-[-15%] h-[92%] max-w-none object-contain opacity-90" />
-              <div className="absolute left-5 top-6 w-[78%] max-w-[350px] rounded-lg border border-border bg-panel p-4 shadow-md sm:left-10 sm:top-10">
+            <div className="relative min-h-[560px] overflow-hidden rounded-lg bg-panel-subtle">
+              <img src={niaRobotAsset.url} alt="Nia, the Pingbase AI concierge" width={768} height={768} className="absolute inset-0 size-full object-cover object-center" />
+              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-panel via-panel/80 to-transparent" />
+              <div className="absolute bottom-8 left-5 w-[calc(100%-2.5rem)] max-w-[390px] rounded-lg border border-border bg-panel/95 p-4 shadow-md backdrop-blur sm:bottom-10 sm:left-10">
                 <div className="flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-primary text-primary-foreground"><Bot className="size-4" /></span><div><p className="text-sm font-medium">Nia</p><p className="text-xs text-secondary">Booking concierge</p></div><span className="ml-auto size-2 rounded-full bg-success" /></div>
                 <div className="mt-5 rounded-md bg-panel-subtle p-4 text-sm leading-6">Maya has two openings on Friday. Would you prefer 11:00am or 3:30pm?</div>
                 <div className="mt-3 flex gap-2"><span className="rounded-full border border-border px-3 py-1.5 text-xs">11:00am</span><span className="rounded-full border border-primary bg-blue-soft px-3 py-1.5 text-xs text-blue-strong">3:30pm</span></div>
@@ -498,7 +512,7 @@ export function LandingHero() {
         </section>
 
         <section className="border-y border-border bg-panel-subtle">
-          <div className="mx-auto max-w-[1120px] px-5 py-24 sm:px-8 md:py-32">
+          <div className="mx-auto max-w-[1280px] px-5 py-24 sm:px-8 md:py-32">
             <Eyebrow>Every stage, covered</Eyebrow>
             <SectionHeading>One customer journey, without the manual hand-offs.</SectionHeading>
             <div className="mt-14 grid overflow-hidden rounded-lg border border-border-strong sm:grid-cols-2">
@@ -513,7 +527,7 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section id="resources" className="mx-auto max-w-[1120px] px-5 py-24 sm:px-8 md:py-32">
+        <section id="resources" className="mx-auto max-w-[1280px] px-5 py-24 sm:px-8 md:py-32">
           <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
             <div className="relative min-h-[430px] overflow-hidden rounded-lg border border-border bg-panel-subtle p-6 sm:p-10">
               <div className="absolute left-[12%] top-[12%] grid size-14 place-items-center rounded-xl border border-border bg-panel shadow-md"><MessageCircle className="size-6 text-success" /></div>
@@ -538,10 +552,10 @@ export function LandingHero() {
           </div>
         </section>
 
-        <CustomerStories />
+        <div id="stories"><CustomerStories /></div>
 
         <section id="pricing" className="bg-panel py-20 md:py-28">
-          <div className="relative mx-auto min-h-[440px] max-w-[1240px] overflow-hidden rounded-lg px-5 py-14 sm:px-8 md:flex md:items-center md:px-12">
+          <div className="relative mx-auto min-h-[440px] max-w-[1360px] overflow-hidden rounded-lg px-5 py-14 sm:px-8 md:flex md:items-center md:px-12">
             <img src={ctaPhoto} alt="Business owner using Pingbase at her salon" loading="lazy" width={1600} height={800} className="absolute inset-0 size-full object-cover" />
             <div className="relative z-10 max-w-[530px] text-sidebar-foreground">
               <h2 className="text-[38px] font-normal leading-[1.08] sm:text-[50px]">Your new AI concierge.<br />Ready every day.</h2>
@@ -554,7 +568,7 @@ export function LandingHero() {
 
       <footer className="relative overflow-hidden border-t border-border bg-panel text-foreground">
         <img src={footerLandscape} alt="" aria-hidden="true" loading="lazy" width={1920} height={803} className="pointer-events-none absolute inset-x-0 bottom-0 h-auto w-full object-contain object-bottom" />
-        <div className="relative z-10 mx-auto max-w-[1120px] px-5 pb-[220px] pt-14 sm:px-8 sm:pb-[300px] md:pb-[430px]">
+        <div className="relative z-10 mx-auto max-w-[1280px] px-5 pb-[220px] pt-14 sm:px-8 sm:pb-[300px] md:pb-[430px]">
           <div className="grid gap-12 border-b border-border pb-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
             <div><div className="flex items-center gap-2 text-base font-semibold"><span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground"><MessagesSquare className="size-4" /></span>Pingbase</div><p className="mt-4 max-w-[230px] text-sm leading-6 text-secondary">The AI booking concierge for appointment businesses.</p></div>
             {FOOTER_LINKS.map((group) => <div key={group.title}><h3 className="text-xs font-medium uppercase text-tertiary">{group.title}</h3><ul className="mt-5 space-y-3">{group.links.map((link) => <li key={link}><a href="#platform" className="text-sm text-secondary transition-colors hover:text-foreground">{link}</a></li>)}</ul></div>)}
