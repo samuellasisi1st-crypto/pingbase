@@ -607,14 +607,16 @@ export function LandingHero() {
       </main>
 
       <footer className="relative overflow-hidden bg-panel text-foreground">
-        <img src={heroBackgroundAsset.url} alt="" aria-hidden="true" loading="lazy" width={1024} height={768} className="pointer-events-none absolute inset-x-0 bottom-0 h-[62%] w-full object-cover object-center" />
-        <div className="pointer-events-none absolute inset-x-0 top-[32%] z-[1] h-[30%] bg-gradient-to-b from-panel via-panel/80 to-transparent" />
-        <div className="relative z-10 mx-auto max-w-[1360px] px-5 pb-[220px] pt-14 sm:px-8 sm:pb-[300px] md:pb-[430px]">
+        <div className="relative z-10 mx-auto max-w-[1360px] px-5 pt-14 sm:px-8">
           <div className="grid gap-12 border-b border-border pb-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
             <div><div className="flex items-center gap-2 text-base font-semibold"><span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground"><MessagesSquare className="size-4" /></span>Pingbase</div><p className="mt-4 max-w-[230px] text-sm leading-6 text-secondary">The AI booking concierge for appointment businesses.</p></div>
             {FOOTER_LINKS.map((group) => <div key={group.title}><h3 className="text-xs font-medium uppercase text-tertiary">{group.title}</h3><ul className="mt-5 space-y-3">{group.links.map((link) => <li key={link}><a href="#platform" className="text-sm text-secondary transition-colors hover:text-foreground">{link}</a></li>)}</ul></div>)}
           </div>
           <div className="flex flex-col gap-4 pt-7 text-xs text-secondary sm:flex-row sm:items-center sm:justify-between"><p>© 2026 Pingbase. All rights reserved.</p><div className="flex items-center gap-4"><span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-success" />All systems operational</span><Clock3 className="size-3.5" /><FileText className="size-3.5" /></div></div>
+        </div>
+        <div className="relative mt-2 h-[330px] sm:h-[420px] md:h-[520px]">
+          <img src={heroBackgroundAsset.url} alt="" aria-hidden="true" loading="lazy" width={1024} height={768} className="pointer-events-none absolute inset-0 size-full object-cover object-center" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-[42%] bg-gradient-to-b from-panel via-panel/75 to-transparent" />
         </div>
       </footer>
     </div>
