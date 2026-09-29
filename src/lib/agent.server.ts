@@ -1000,7 +1000,9 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     "- Paying in store / cash / on the day is fully accepted and is NEVER a reason to escalate. Never hand over to a person because of payment, deposits, or online payment being unavailable — just complete the booking as IN_STORE. If the customer says they want to 'pay', offer pay in store and book it.",
     "- If the customer already has a PENDING appointment for the same request and chooses pay in store, don't create a duplicate: cancel the old pending one with cancel_booking and create the new booking as IN_STORE, or reschedule it.",
     "- Use escalate_to_human only for refunds, complaints, policy exceptions, explicit requests for a person, or repeated tool failures. After escalating, tell the customer a team member will pick it up, and stop.",
-    "- A message like '[Customer sent a image]' or '[Customer sent a document: …]' means they shared a file; the team can see it in the inbox but you cannot view its contents. Acknowledge it warmly, never describe or judge what it shows, and if it matters for the booking (e.g. a reference photo) add an internal note so the stylist reviews it.",
+    "- You can see photos customers send. Use them naturally: e.g. recognise an inspiration hairstyle and suggest the matching service from the list, or read a screenshot. Only suggest services that exist in the list, never quote prices or durations from the photo, and don't make medical judgements — if a photo shows a skin/scalp concern, suggest a consultation or add an internal note for the stylist. If a photo is unclear, say so and ask.",
+    "- A message starting with '🎤 Voice note:' is the transcript of a customer's voice note. Reply as if you listened to it; if a voice note couldn't be transcribed (just '[Customer sent a audio]'), politely ask them to type it.",
+    "- For documents ('[Customer sent a document: …]') you cannot view contents; acknowledge and add an internal note if relevant.",
     "- When a customer asks for a menu, price list or guide, use list_business_files then send_business_file. Only say it was sent if delivered is true.",
     "- Keep set_conversation_state up to date.",
     "- The customer is one person across WhatsApp, Instagram and Messenger. If they already spoke to you or booked on another channel, use that history naturally (e.g. 'I see the booking you made on WhatsApp') instead of starting over, and never re-ask for details you already hold.",
@@ -1017,15 +1019,40 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     "- Keep the CRM profile current: call create_or_update_contact whenever the customer mentions their name, email, a preference, a sensitivity or allergy, who they usually see, or anything a stylist would want to know next time. Add short tags and keep summary to one sentence.",
   ].join("\n");
 
-  const transcript = (history ?? [])
-    .filter((m) => m.direction !== "internal")
-    .map((m) => ({
-      role: (m.direction === "inbound" ? "user" : "assistant") as "user" | "assistant",
-      content:
-        m.direction === "outbound" && m.sender_type === "HUMAN"
-          ? `[staff member ${m.sender_name ?? ""}] ${m.body}`
-          : m.body,
-    }));
+  const visible = (history ?? []).filter((m) => m.direction !== "internal");
+  // Let Nia actually look at the most recent customer photos (max 4, signed for 10 minutes).
+  const imageUrls = new Map<number, string[]>();
+  let budget = 4;
+  for (let i = visible.length - 1; i >= 0 && budget > 0; i--) {
+    const m = visible[i]!;
+    if (m.direction !== "inbound") continue;
+    const atts = (Array.isArray((m as { attachments?: unknown }).attachments) ? (m as unknown as { attachments: unknown[] }).attachments : []) as Array<{ path?: string; mime?: string; kind?: string }>;
+    for (const a of atts) {
+      if (budget <= 0 || !a.path || !(a.kind === "image" || (a.mime ?? "").startsWith("image/"))) continue;
+      const { data: signed } = await db.storage.from("attachments").createSignedUrl(a.path, 600);
+      if (!signed?.signedUrl) continue;
+      imageUrls.set(i, [...(imageUrls.get(i) ?? []), signed.signedUrl]);
+      budget--;
+    }
+  }
+
+  const transcript = visible.map((m, i) => {
+    const text =
+      m.direction === "outbound" && m.sender_type === "HUMAN"
+        ? `[staff member ${m.sender_name ?? ""}] ${m.body}`
+        : m.body;
+    const imgs = imageUrls.get(i);
+    if (m.direction === "inbound" && imgs?.length) {
+      return {
+        role: "user" as const,
+        content: [
+          { type: "text" as const, text: text || "[Customer sent a photo]" },
+          ...imgs.map((u) => ({ type: "image" as const, image: new URL(u) })),
+        ],
+      };
+    }
+    return { role: (m.direction === "inbound" ? "user" : "assistant") as "user" | "assistant", content: text };
+  });
 
   const runIdFetch = createRunIdFetch();
   const openai = createOpenAI({
