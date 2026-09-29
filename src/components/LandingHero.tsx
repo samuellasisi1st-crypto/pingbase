@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import Autoplay from "embla-carousel-autoplay";
 import {
-  ArrowLeft,
   ArrowRight,
   Bot,
   CalendarCheck2,
@@ -19,12 +18,16 @@ import {
   RefreshCw,
   ShieldCheck,
   Sparkles,
-  Star,
   Users,
 } from "lucide-react";
 import appScreenshot from "@/assets/landing-app-dashboard.jpg";
 import heroBackground from "@/assets/landing-hero-background.jpg";
 import industriesImage from "@/assets/landing-industries.jpg";
+import industryHairBeauty from "@/assets/industry-hair-beauty.jpg";
+import industryWellness from "@/assets/industry-wellness.jpg";
+import industryClinics from "@/assets/industry-clinics.jpg";
+import industryStudios from "@/assets/industry-studios.jpg";
+import industryFitness from "@/assets/industry-fitness.jpg";
 import ctaPhoto from "@/assets/landing-cta-photo.jpg";
 import footerLandscape from "@/assets/pingbase-footer-landscape-clean.png";
 import sculpture from "@/assets/dashboard-glass-sculpture.png";
@@ -79,11 +82,11 @@ const JOURNEY = [
 ];
 
 const INDUSTRIES = [
-  { title: "Hair & beauty", body: "Turn DMs into salon bookings, without interrupting the appointment in front of you.", positionClass: "object-left" },
-  { title: "Wellness", body: "Answer treatment questions and fill real openings around the clock.", positionClass: "object-[25%_center]" },
-  { title: "Clinics", body: "Guide patients to the right service and keep every follow-up together.", positionClass: "object-center" },
-  { title: "Studios", body: "Collect references, confirm sessions and make schedule changes simple.", positionClass: "object-[75%_center]" },
-  { title: "Fitness", body: "Move enquiries from first message to a confirmed class or consultation.", positionClass: "object-right" },
+  { title: "Hair & beauty", body: "Turn DMs into salon bookings, without interrupting the appointment in front of you.", image: industryHairBeauty },
+  { title: "Wellness", body: "Answer treatment questions and fill real openings around the clock.", image: industryWellness },
+  { title: "Clinics", body: "Guide patients to the right service and keep every follow-up together.", image: industryClinics },
+  { title: "Studios", body: "Collect references, confirm sessions and make schedule changes simple.", image: industryStudios },
+  { title: "Fitness", body: "Move enquiries from first message to a confirmed class or consultation.", image: industryFitness },
 ];
 
 const TESTIMONIALS = [
@@ -330,7 +333,7 @@ export function LandingHero() {
                 {INDUSTRIES.map((item) => (
                   <CarouselItem key={item.title} className="basis-[82%] pl-5 sm:basis-1/2 lg:basis-1/4">
                   <article>
-                    <div className="aspect-[4/5] w-full overflow-hidden rounded-lg"><img src={industriesImage} alt={`${item.title} professional with a customer`} loading="lazy" width={1920} height={768} className={`size-full object-cover ${item.positionClass}`} /></div>
+                    <div className="aspect-[4/5] w-full overflow-hidden rounded-lg"><img src={item.image} alt={`${item.title} professional with a customer`} loading="lazy" width={384} height={768} className="size-full object-cover" /></div>
                     <h3 className="mt-5 text-base font-medium">{item.title}</h3>
                     <p className="mt-2 min-h-12 text-sm leading-6 text-secondary">{item.body}</p>
                     <a href="#platform" className="mt-6 inline-flex items-center gap-2 text-sm font-medium hover:text-primary">See how it works <ArrowRight className="size-4" /></a>
