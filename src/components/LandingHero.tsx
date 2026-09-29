@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import testimonialFeature from "@/assets/testimonial-feature.jpg";
 import { Link } from "@tanstack/react-router";
 import Autoplay from "embla-carousel-autoplay";
+import { motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
   Bot,
@@ -31,7 +32,6 @@ import industryClinics from "@/assets/industry-clinics.jpg";
 import industryStudios from "@/assets/industry-studios.jpg";
 import industryFitness from "@/assets/industry-fitness.jpg";
 import ctaPhoto from "@/assets/landing-cta-photo.jpg";
-import footerLandscape from "@/assets/pingbase-footer-landscape-clean.png";
 import platformConvertGlass from "@/assets/platform-convert-glass.png";
 import platformTimeGlass from "@/assets/platform-time-glass.png";
 import platformRevenueGlass from "@/assets/platform-revenue-glass.png";
@@ -207,6 +207,22 @@ function SectionHeading({ children, className = "" }: { children: React.ReactNod
   );
 }
 
+function Reveal({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  const reduceMotion = useReducedMotion();
+
+  return (
+    <motion.div
+      className={className}
+      initial={reduceMotion ? false : { opacity: 0, y: 24 }}
+      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.16 }}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 function MessageBubble({ side, children }: { side?: "left" | "right"; children: React.ReactNode }) {
   return (
     <div className={`flex ${side === "right" ? "justify-end" : "justify-start"}`}>
@@ -236,11 +252,12 @@ function RotatingHeroWord() {
 
 function CustomerStories() {
   const autoplay = useRef(Autoplay({ delay: 3500, stopOnInteraction: false, stopOnMouseEnter: true }));
+  const reduceMotion = useReducedMotion();
 
   return (
     <section className="border-t border-border bg-panel text-foreground">
       <div className="mx-auto max-w-[1360px] border-x border-border py-20 md:py-28">
-        <div className="grid gap-8 px-5 md:grid-cols-[1fr_370px] md:items-end sm:px-8">
+        <Reveal className="grid gap-8 px-5 md:grid-cols-[1fr_370px] md:items-end sm:px-8">
           <div>
             <div className="mb-3 flex items-center gap-2 text-[11px] font-medium uppercase text-secondary">
               <span className="size-2 rounded-sm bg-primary" />Testimonials
@@ -256,9 +273,15 @@ function CustomerStories() {
               <Button asChild variant="outline" className="rounded-md border border-border-strong bg-panel shadow-none hover:bg-panel-subtle"><Link to="/auth">Book a demo</Link></Button>
             </div>
           </div>
-        </div>
+        </Reveal>
 
-        <figure className="relative mt-14 overflow-hidden border-y border-border">
+        <motion.figure
+          className="relative mt-14 overflow-hidden border-y border-border"
+          initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+          whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.15 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        >
           <img src={testimonialFeature} alt="A salon owner sharing her experience using Pingbase" className="aspect-[16/9] w-full object-cover" />
           <button
             type="button"
@@ -274,7 +297,7 @@ function CustomerStories() {
             <p className="font-medium">Studio Nine Hair</p>
             <p className="mt-0.5 text-xs opacity-80">Shoreditch, London</p>
           </figcaption>
-        </figure>
+        </motion.figure>
 
         <Carousel
           className="border-b border-border"
@@ -388,13 +411,13 @@ export function LandingHero() {
 
         <section id="industries" className="border-b border-border bg-panel">
           <div className="mx-auto max-w-[1360px] border-x border-border px-5 py-20 sm:px-8 md:py-28">
-            <div className="flex items-end justify-between gap-8">
+            <Reveal className="flex items-end justify-between gap-8">
               <div>
                 <Eyebrow>Built around your day</Eyebrow>
                 <SectionHeading>One solution, made for appointment businesses.</SectionHeading>
                 <p className="mt-5 max-w-[520px] text-base leading-7 text-secondary">Pingbase turns conversations into bookings across teams of every shape and size.</p>
               </div>
-            </div>
+            </Reveal>
           </div>
           <Carousel opts={{ loop: true, align: "start", slidesToScroll: 1 }} className="mx-auto w-full max-w-[1360px] overflow-hidden border-x border-t border-border">
               <CarouselContent className="ml-0">
@@ -432,13 +455,13 @@ export function LandingHero() {
 
         <section id="platform" className="landing-dot-grid border-b border-border">
           <div className="mx-auto max-w-[1360px] border-x border-border bg-panel py-24 md:py-32">
-            <div className="max-w-[780px] px-5 sm:px-8">
+            <Reveal className="max-w-[780px] px-5 sm:px-8">
             <Eyebrow>One connected platform</Eyebrow>
             <SectionHeading>Unify conversations, bookings and follow-ups so every customer gets an answer.</SectionHeading>
             <p className="mt-6 max-w-[540px] text-base leading-7 text-secondary">
               Pingbase gives your team one clear view of every customer while Nia handles the repetitive work in the background.
             </p>
-            </div>
+            </Reveal>
             <div className="mt-16 grid border-y border-border sm:grid-cols-2">
             {PLATFORM_OUTCOMES.map((item, index) => (
               <article
@@ -479,10 +502,10 @@ export function LandingHero() {
           </div>
         </section>
 
-        <section id="nia" className="border-b border-sidebar-foreground/10 bg-sidebar text-sidebar-foreground">
+        <section id="nia" className="border-y border-sidebar-foreground/15 bg-sidebar text-sidebar-foreground">
           <div className="mx-auto max-w-[1360px] border-x border-sidebar-foreground/10 px-5 py-24 sm:px-8 md:py-32">
             <div className="grid gap-14 lg:grid-cols-[.9fr_1.1fr] lg:items-center">
-            <div>
+            <Reveal>
               <Eyebrow>Meet your AI agent</Eyebrow>
               <SectionHeading>Nia turns enquiries into confirmed appointments.</SectionHeading>
               <p className="mt-6 max-w-[470px] text-base leading-7 text-sidebar-foreground/70">Give Nia your services, team, hours and policies. She uses your live calendar and booking rules to guide every customer from first question to confirmation.</p>
@@ -494,8 +517,8 @@ export function LandingHero() {
                   "Asks your team for help when judgement is needed",
                 ].map((item) => <div key={item} className="flex items-start gap-3 text-sm"><span className="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full bg-blue-soft text-blue-strong"><Check className="size-3" /></span>{item}</div>)}
               </div>
-              <Button asChild variant="outline" className="mt-9 rounded-md"><Link to="/auth">See how Nia works <ArrowRight /></Link></Button>
-            </div>
+              <Button asChild variant="outline" className="mt-9 rounded-md border-panel bg-panel text-foreground shadow-none hover:bg-panel-subtle"><Link to="/auth">See how Nia works <ArrowRight /></Link></Button>
+            </Reveal>
             <div className="relative min-h-[560px] overflow-hidden bg-panel-subtle">
               <img src={ctaPhoto} alt="Salon professional supported by Nia" width={1600} height={800} className="absolute inset-0 size-full object-cover object-center" />
               <div className="absolute left-5 top-5 w-[calc(100%-2.5rem)] max-w-[390px] border border-border bg-panel p-4 text-foreground shadow-md sm:left-10 sm:top-10">
@@ -540,7 +563,7 @@ export function LandingHero() {
               <div className="absolute bottom-[27%] left-1/2 h-px w-[27%] -translate-x-full rotate-[30deg] bg-border-strong" />
               <div className="absolute bottom-[25%] left-1/2 h-px w-[28%] -rotate-[31deg] bg-border-strong" />
             </div>
-            <div>
+            <Reveal>
               <Eyebrow>Fits your business</Eyebrow>
               <SectionHeading>Connect the tools your customers and team already use.</SectionHeading>
               <p className="mt-6 max-w-[470px] text-base leading-7 text-secondary">Bring messages, calendars, files and customer details together. Pingbase keeps each business separate and every conversation secure.</p>
@@ -548,7 +571,7 @@ export function LandingHero() {
                 <div><ShieldCheck className="size-5 text-primary" /><h3 className="mt-3 text-sm font-medium">Private by design</h3><p className="mt-2 text-sm leading-6 text-secondary">Each workspace keeps its own data, channels and customer records.</p></div>
                 <div><Sparkles className="size-5 text-primary" /><h3 className="mt-3 text-sm font-medium">Simple to set up</h3><p className="mt-2 text-sm leading-6 text-secondary">Add your business details, connect channels and let Nia start helping.</p></div>
               </div>
-            </div>
+            </Reveal>
             </div>
           </div>
         </section>
@@ -567,7 +590,7 @@ export function LandingHero() {
       </main>
 
       <footer className="relative overflow-hidden bg-panel text-foreground">
-        <img src={footerLandscape} alt="" aria-hidden="true" loading="lazy" width={1920} height={803} className="pointer-events-none absolute inset-x-0 bottom-0 h-auto w-full object-contain object-bottom" />
+        <img src={heroBackgroundAsset.url} alt="" aria-hidden="true" loading="lazy" width={1024} height={768} className="pointer-events-none absolute inset-x-0 bottom-0 h-[58%] w-full object-cover object-center" />
         <div className="relative z-10 mx-auto max-w-[1360px] px-5 pb-[220px] pt-14 sm:px-8 sm:pb-[300px] md:pb-[430px]">
           <div className="grid gap-12 border-b border-border pb-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
             <div><div className="flex items-center gap-2 text-base font-semibold"><span className="grid size-7 place-items-center rounded-lg bg-primary text-primary-foreground"><MessagesSquare className="size-4" /></span>Pingbase</div><p className="mt-4 max-w-[230px] text-sm leading-6 text-secondary">The AI booking concierge for appointment businesses.</p></div>
