@@ -131,7 +131,7 @@ function Editor({ data }: { data: Data }) {
               <div><span className={label}>Corners</span><Seg value={f.radius} options={[["square", "Square"], ["rounded", "Soft"], ["pill", "Round"]]} onChange={(v) => set("radius", v as SiteInput["radius"])} /></div>
             </div>
             </div>
-          </section>
+          </section>}
 
           <section className={`${card} flex flex-wrap items-center justify-between gap-3`}>
             <div className="min-w-0"><p className="text-[14px] text-foreground">Publish</p><p className="truncate text-[12px] text-tertiary">{url}</p></div>
