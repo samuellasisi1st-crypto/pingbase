@@ -127,10 +127,13 @@ function Editor({ data }: { data: Data }) {
               ))}
             </div>
             <div className="border-t border-border-subtle pt-5"><div className="mb-4 flex items-center gap-2"><Palette className="size-4 text-secondary"/><p className="text-[14px] text-foreground">Style</p></div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div><span className={label}>Brand colour</span><div className="flex items-center gap-2"><input type="color" value={f.accent ?? tpl.palette.accent} onChange={(e) => set("accent", e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border bg-panel" />{f.accent && <button type="button" className="text-[11px] text-secondary underline" onClick={() => set("accent", null)}>Reset</button>}</div></div>
-              <div><span className={label}>Mode</span><Seg value={f.mode} options={[["light", "Light"], ["dark", "Dark"]]} onChange={(v) => set("mode", v as SiteInput["mode"])} /></div>
-              <div><span className={label}>Corners</span><Seg value={f.radius} options={[["square", "Square"], ["rounded", "Soft"], ["pill", "Round"]]} onChange={(v) => set("radius", v as SiteInput["radius"])} /></div>
+            <div className="space-y-5">
+              <AccentPicker value={f.accent ?? tpl.palette.accent} custom={f.accent} onSelect={(hex) => set("accent", hex)} onReset={() => set("accent", null)} />
+              <FontPicker value={f.headingFont} fallback={tpl.headingFont} onSelect={(id) => set("headingFont", id)} />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div><span className={label}>Mode</span><Seg value={f.mode} options={[["light", "Light"], ["dark", "Dark"]]} onChange={(v) => set("mode", v as SiteInput["mode"])} /></div>
+                <div><span className={label}>Corners</span><Seg value={f.radius} options={[["square", "Square"], ["rounded", "Soft"], ["pill", "Round"]]} onChange={(v) => set("radius", v as SiteInput["radius"])} /></div>
+              </div>
             </div>
             </div>
           </section>}
