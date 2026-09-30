@@ -1888,6 +1888,7 @@ export type Database = {
     Functions: {
       is_workspace_member: { Args: { _workspace_id: string }; Returns: boolean }
       public_store: { Args: { _slug: string }; Returns: Json }
+      site_data: { Args: { _workspace_id: string }; Returns: Json }
       workspace_team: {
         Args: { _workspace_id: string }
         Returns: {
