@@ -8,7 +8,8 @@ import { AppShell, Page, PageHeader } from "@/components/AppShell";
 import { Badge, Button, Input, Switch, Textarea } from "@/design-system";
 import { CatalogImages, useSignedImages } from "@/components/CatalogImages";
 import { SiteRenderer, resolveSite } from "@/components/site/SiteRenderer";
-import { DEFAULT_TEMPLATE, SITE_CATEGORIES, SITE_FONTS_HREF, SITE_SECTIONS, SITE_TEMPLATES, defaultSections, normaliseSections, templateById, type SiteCategoryId } from "@/config/site-templates";
+import { DEFAULT_TEMPLATE, SITE_CATEGORIES, SITE_FONTS_HREF, SITE_SECTIONS, SITE_TEMPLATES, defaultSections, normaliseSections, templateById, type SiteCategoryId, type SectionSetting } from "@/config/site-templates";
+import type { PublicStore } from "@/lib/catalog.functions";
 import { getWebsiteEditor, saveWebsite, type SiteInput } from "@/lib/website.functions";
 
 export const Route = createFileRoute("/website")({
@@ -29,13 +30,13 @@ function WebsitePage() {
   return (
     <AppShell>
       <Page>
-        {q.data ? <Editor data={q.data} /> : <PageHeader title="Website" subtitle={q.isError ? "Couldn't load your website." : "Loading…"} />}
+        {q.data ? <Editor data={q.data as Data} /> : <PageHeader title="Website" subtitle={q.isError ? "Couldn't load your website." : "Loading…"} />}
       </Page>
     </AppShell>
   );
 }
 
-type Data = Awaited<ReturnType<typeof getWebsiteEditor>>;
+type Data = { store: PublicStore; heroPath: string | null; published: boolean };
 
 function initial(d: Data): SiteInput {
   const r = resolveSite(d.store);
@@ -62,7 +63,7 @@ function Editor({ data }: { data: Data }) {
     ...data.store,
     site: {
       category: f.category, template: f.template, accent: f.accent, mode: f.mode, radius: f.radius, sections: f.sections,
-      hero_image: f.heroImage ? (/^https?:/.test(f.heroImage) ? f.heroImage : signed[0] ?? null) : null,
+      hero_image: f.heroImage ? (/^https?:/.test(f.heroImage) ? f.heroImage : signed(f.heroImage) ?? null) : null,
       headline: f.headline || null, subheadline: f.subheadline || null, about: f.about || null, faqs: f.faqs, socials: f.socials,
     },
   }), [data.store, f, signed]);
@@ -127,14 +128,14 @@ function Editor({ data }: { data: Data }) {
             <p className="text-[14px] text-foreground">3. Sections</p>
             <p className="text-[12px] text-tertiary">Turn off anything you don't need. With the shop off, customers won't see products at all.</p>
             <ul className="mt-3 divide-y divide-border-subtle">
-              {normaliseSections(f.sections, f.sections).map((s, i) => {
+              {normaliseSections(f.sections, f.sections as SectionSetting[]).map((s, i) => {
                 const meta = SITE_SECTIONS.find((x) => x.id === s.id)!;
                 const empty = (s.id === "shop" && !data.store.products.length) || (s.id === "services" && !data.store.services.length) || (s.id === "faq" && !f.faqs.length) || (s.id === "team" && !data.store.team.length);
                 return (
                   <li key={s.id} className="flex items-center gap-2 py-2">
                     <div className="flex flex-col"><button type="button" aria-label="Move up" onClick={() => move(i, -1)} className="text-tertiary hover:text-foreground"><ArrowUp className="size-3.5" /></button><button type="button" aria-label="Move down" onClick={() => move(i, 1)} className="text-tertiary hover:text-foreground"><ArrowDown className="size-3.5" /></button></div>
                     <span className="min-w-0 flex-1 text-[13px] text-foreground">{meta.name}{empty && s.enabled && <span className="ml-2 text-[11px] text-tertiary">Nothing to show yet</span>}</span>
-                    <Switch checked={s.enabled} onCheckedChange={(v: boolean) => set("sections", f.sections.map((x) => x.id === s.id ? { ...x, enabled: v } : x))} aria-label={`Show ${meta.name}`} />
+                    <Switch label="" checked={s.enabled} onCheckedChange={(v: boolean) => set("sections", f.sections.map((x) => x.id === s.id ? { ...x, enabled: v } : x))} aria-label={`Show ${meta.name}`} />
                   </li>
                 );
               })}
@@ -169,7 +170,7 @@ function Editor({ data }: { data: Data }) {
             <div className="min-w-0"><p className="text-[14px] text-foreground">Publish</p><p className="truncate text-[12px] text-tertiary">{url}</p></div>
             <div className="flex items-center gap-3">
               <Button variant="secondary" size="sm" onClick={() => { void navigator.clipboard.writeText(url); toast.success("Link copied"); }}><Copy className="size-3.5" />Copy link</Button>
-              <label className="flex items-center gap-2 text-[13px] text-foreground"><Switch checked={f.published} onCheckedChange={(v: boolean) => set("published", v)} />Live</label>
+              <label className="flex items-center gap-2 text-[13px] text-foreground"><Switch label="" checked={f.published} onCheckedChange={(v: boolean) => set("published", v)} />Live</label>
             </div>
           </section>
         </div>
