@@ -217,6 +217,67 @@ function Seg({ value, options, onChange }: { value: string; options: [string, st
   );
 }
 
+/** Ink that stays readable on top of a chosen colour. */
+function onColour(hex: string) {
+  const n = Number.parseInt(hex.replace("#", ""), 16);
+  const l = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return l > 0.62 ? "#111111" : "#FFFFFF";
+}
+
+/** Curated brand-colour swatches plus a free hex field. */
+function AccentPicker({ value, custom, onSelect, onReset }: { value: string; custom: string | null; onSelect: (hex: string) => void; onReset: () => void }) {
+  const current = value.toUpperCase();
+  const [hex, setHex] = useState(current);
+  useEffect(() => { setHex(current); }, [current]);
+  const swatches = SITE_ACCENTS.some((c) => c.toUpperCase() === current) ? [...SITE_ACCENTS] : [current, ...SITE_ACCENTS];
+  return (
+    <div>
+      <span className="mb-2 block text-[12px] text-secondary">Brand colour</span>
+      <div className="flex flex-wrap gap-2">
+        {swatches.map((c) => {
+          const on = c.toUpperCase() === current;
+          return <button key={c} type="button" aria-label={`Brand colour ${c}`} aria-pressed={on} onClick={() => onSelect(c)}
+            className={`grid size-8 place-items-center rounded-full border transition-transform hover:scale-105 ${on ? "border-foreground/30 ring-2 ring-primary/40" : "border-border"}`}
+            style={{ background: c, color: onColour(c) }}>{on && <Check className="size-3.5" />}</button>;
+        })}
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="size-8 shrink-0 rounded-full border border-border" style={{ background: current }} />
+        <input value={hex} spellCheck={false} aria-label="Custom colour hex" placeholder="#B4593A"
+          onChange={(e) => setHex(e.target.value)}
+          onBlur={() => { const v = hex.trim(); if (/^#[0-9a-fA-F]{6}$/.test(v)) onSelect(v.toUpperCase()); else setHex(current); }}
+          onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+          className="h-9 w-28 rounded-md border border-border bg-panel px-3 font-mono text-[12px] uppercase text-foreground outline-none focus:border-primary" />
+        <span className="text-[11px] text-tertiary">Or paste any hex</span>
+        {custom && <button type="button" className="text-[11px] text-secondary underline" onClick={onReset}>Reset to template</button>}
+      </div>
+    </div>
+  );
+}
+
+/** Heading faces, each previewed in its own typeface. */
+function FontPicker({ value, fallback, onSelect }: { value: string | null; fallback: string; onSelect: (id: string | null) => void }) {
+  return (
+    <div>
+      <span className="mb-2 flex items-center gap-1.5 text-[12px] text-secondary"><Type className="size-3.5" />Heading font</span>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <button type="button" aria-pressed={value === null} onClick={() => onSelect(null)}
+          className={`rounded-lg border p-3 text-left transition-colors ${value === null ? "border-primary bg-hover" : "border-border hover:bg-hover"}`}>
+          <span className="block truncate text-[18px] leading-tight text-foreground" style={{ fontFamily: fallback }}>Ag</span>
+          <span className="mt-1 block truncate text-[11px] text-tertiary">Template default</span>
+        </button>
+        {SITE_HEADING_FONTS.map((font) => (
+          <button key={font.id} type="button" aria-pressed={value === font.id} onClick={() => onSelect(font.id)}
+            className={`rounded-lg border p-3 text-left transition-colors ${value === font.id ? "border-primary bg-hover" : "border-border hover:bg-hover"}`}>
+            <span className="block truncate text-[18px] leading-tight text-foreground" style={{ fontFamily: font.stack }}>Ag</span>
+            <span className="mt-1 block truncate text-[11px] text-tertiary">{font.name}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /** Small drawn thumbnail in each template's palette and type, no screenshots needed. */
 function TemplateSwatch({ id }: { id: string }) {
   const t = templateById(id);
