@@ -1,14 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Copy, ExternalLink, Eye, Plus, Smartphone, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, ExternalLink, Eye, HelpCircle, Image, Info, LayoutGrid, MapPin, MessageCircle, Package, Palette, Pencil, Plus, Scissors, Smartphone, Trash2, UsersRound, X } from "lucide-react";
 import { AppShell, Page, PageHeader } from "@/components/AppShell";
-import { Badge, Button, Input, Switch, Textarea } from "@/design-system";
+import { Badge, Button, IconButton, Input, Switch, Tabs, Textarea } from "@/design-system";
 import { CatalogImages, useSignedImages } from "@/components/CatalogImages";
 import { SiteRenderer, resolveSite } from "@/components/site/SiteRenderer";
-import { DEFAULT_TEMPLATE, SITE_CATEGORIES, SITE_FONTS_HREF, SITE_SECTIONS, SITE_TEMPLATES, defaultSections, normaliseSections, templateById, type SiteCategoryId, type SectionSetting } from "@/config/site-templates";
+import { SITE_FONTS_HREF, SITE_SECTIONS, SITE_TEMPLATES, normaliseSections, templateById, type SiteSectionId, type SectionSetting } from "@/config/site-templates";
 import type { PublicStore } from "@/lib/catalog.functions";
 import { getWebsiteEditor, saveWebsite, type SiteInput } from "@/lib/website.functions";
 
@@ -52,7 +52,8 @@ function Editor({ data }: { data: Data }) {
   const save = useServerFn(saveWebsite);
   const qc = useQueryClient();
   const [f, setF] = useState<SiteInput>(() => initial(data));
-  const [cat, setCat] = useState<SiteCategoryId>(f.category as SiteCategoryId);
+  const [tab, setTab] = useState<"layout" | "look">("layout");
+  const [editing, setEditing] = useState<"hero" | SiteSectionId | null>(null);
   const [busy, setBusy] = useState(false);
   const [phone, setPhone] = useState(false);
   const set = <K extends keyof SiteInput>(k: K, v: SiteInput[K]) => setF((x) => ({ ...x, [k]: v }));
@@ -72,8 +73,7 @@ function Editor({ data }: { data: Data }) {
 
   const pickTemplate = (id: string) => {
     const t = templateById(id);
-    setF((x) => ({ ...x, template: id, accent: null, radius: t.radius, mode: t.palette.bg.startsWith("#0") ? "dark" : "light", category: cat,
-      sections: x.category === cat ? x.sections : defaultSections(cat, data.store.products.length > 0, data.store.services.length > 0) }));
+    setF((x) => ({ ...x, template: id, accent: null, radius: t.radius, mode: t.palette.bg.startsWith("#0") ? "dark" : "light" }));
   };
   const move = (i: number, d: -1 | 1) => { const s = [...f.sections]; const j = i + d; if (j < 0 || j >= s.length) return; [s[i], s[j]] = [s[j]!, s[i]!]; set("sections", s); };
 
@@ -84,11 +84,11 @@ function Editor({ data }: { data: Data }) {
     finally { setBusy(false); }
   };
 
-  useEffect(() => { document.body.style.overflow = phone ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [phone]);
+  useEffect(() => { document.body.style.overflow = phone || editing ? "hidden" : ""; return () => { document.body.style.overflow = ""; }; }, [phone, editing]);
 
-  const templates = SITE_TEMPLATES.filter((t) => t.categories.includes(cat));
   const card = "rounded-lg border border-border bg-panel p-4";
   const label = "mb-1.5 block text-[12px] text-secondary";
+  const sectionIcon: Record<SiteSectionId, typeof Info> = { about: Info, services: Scissors, shop: Package, gallery: Image, team: UsersRound, faq: HelpCircle, location: MapPin, contact: MessageCircle };
 
   return (
     <>
@@ -101,70 +101,37 @@ function Editor({ data }: { data: Data }) {
 
       <div className="grid gap-6 border-t border-border-subtle pt-4 lg:grid-cols-[minmax(0,1fr)_400px]">
         <div className="min-w-0 space-y-5">
-          <section className={card}>
-            <p className="text-[14px] text-foreground">1. What kind of business?</p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {SITE_CATEGORIES.map((c) => (
-                <button key={c.id} type="button" onClick={() => setCat(c.id)} className={`rounded-lg border p-3 text-left ${cat === c.id ? "border-primary bg-panel-subtle" : "border-border hover:bg-hover"}`}>
-                  <span className="block text-[13px] text-foreground">{c.name}</span><span className="block text-[11px] text-tertiary">{c.hint}</span>
-                </button>
-              ))}
-            </div>
-          </section>
+          <Tabs variant="segmented" items={[{ value: "layout", label: "Page layout" }, { value: "look", label: "Look" }]} value={tab} onChange={(value) => setTab(value as "layout" | "look")} />
 
-          <section className={card}>
-            <div className="flex items-center justify-between"><p className="text-[14px] text-foreground">2. Pick a template</p><span className="text-[11px] text-tertiary">{templates.length} for {SITE_CATEGORIES.find((c) => c.id === cat)?.name}</span></div>
-            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {templates.map((t) => (
-                <button key={t.id} type="button" onClick={() => pickTemplate(t.id)} className={`overflow-hidden rounded-lg border text-left ${f.template === t.id ? "border-primary ring-2 ring-primary/25" : "border-border hover:border-border-strong"}`}>
-                  <TemplateSwatch id={t.id} />
-                  <div className="p-2.5"><p className="flex items-center gap-1.5 text-[13px] text-foreground">{t.name}{DEFAULT_TEMPLATE[cat] === t.id && <Badge variant="neutral">Suggested</Badge>}</p><p className="text-[11px] text-tertiary">{t.hint}</p></div>
-                </button>
-              ))}
-            </div>
-          </section>
-
-          <section className={card}>
-            <p className="text-[14px] text-foreground">3. Sections</p>
-            <p className="text-[12px] text-tertiary">Turn off anything you don't need. With the shop off, customers won't see products at all.</p>
-            <ul className="mt-3 divide-y divide-border-subtle">
+          {tab === "layout" ? <section className={card}>
+            <div className="flex items-start gap-3 border-b border-border-subtle pb-4"><span className="grid size-8 shrink-0 place-items-center rounded-md bg-hover text-secondary"><LayoutGrid className="size-4" /></span><div><p className="text-[14px] text-foreground">Page sections</p><p className="mt-0.5 text-[12px] text-tertiary">Arrange what customers see, edit the words and hide anything you do not need.</p></div></div>
+            <ul className="mt-3 space-y-2">
+              <SectionRow icon={Image} name="Hero" hint={f.headline || data.store.workspace.name} onEdit={() => setEditing("hero")} />
               {normaliseSections(f.sections, f.sections as SectionSetting[]).map((s, i) => {
-                const meta = SITE_SECTIONS.find((x) => x.id === s.id)!;
+                const meta = SITE_SECTIONS.find((x) => x.id === s.id);
+                if (!meta) return null;
                 const empty = (s.id === "shop" && !data.store.products.length) || (s.id === "services" && !data.store.services.length) || (s.id === "faq" && !f.faqs.length) || (s.id === "team" && !data.store.team.length);
-                return (
-                  <li key={s.id} className="flex items-center gap-2 py-2">
-                    <div className="flex flex-col"><button type="button" aria-label="Move up" onClick={() => move(i, -1)} className="text-tertiary hover:text-foreground"><ArrowUp className="size-3.5" /></button><button type="button" aria-label="Move down" onClick={() => move(i, 1)} className="text-tertiary hover:text-foreground"><ArrowDown className="size-3.5" /></button></div>
-                    <span className="min-w-0 flex-1 text-[13px] text-foreground">{meta.name}{empty && s.enabled && <span className="ml-2 text-[11px] text-tertiary">Nothing to show yet</span>}</span>
-                    <Switch label="" checked={s.enabled} onCheckedChange={(v: boolean) => set("sections", f.sections.map((x) => x.id === s.id ? { ...x, enabled: v } : x))} aria-label={`Show ${meta.name}`} />
-                  </li>
-                );
+                return <SectionRow key={s.id} icon={sectionIcon[s.id]} name={meta.name} hint={empty && s.enabled ? "Nothing to show yet" : s.enabled ? "Visible on your website" : "Hidden from your website"} enabled={s.enabled} onToggle={(v) => set("sections", f.sections.map((x) => x.id === s.id ? { ...x, enabled: v } : x))} onEdit={() => setEditing(s.id)} onUp={() => move(i, -1)} onDown={() => move(i, 1)} first={i === 0} last={i === f.sections.length - 1} />;
               })}
             </ul>
-          </section>
-
-          <section className={`${card} space-y-4`}>
-            <p className="text-[14px] text-foreground">4. Look & words</p>
+          </section> : <section className={`${card} space-y-5`}>
+            <div><p className="text-[14px] text-foreground">Templates</p><p className="mt-0.5 text-[12px] text-tertiary">Every template works for services, products or both.</p></div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {SITE_TEMPLATES.map((t) => (
+                <button key={t.id} type="button" onClick={() => pickTemplate(t.id)} aria-pressed={f.template === t.id} className={`overflow-hidden rounded-lg border text-left transition-colors ${f.template === t.id ? "border-primary ring-2 ring-primary/25" : "border-border hover:border-border-strong"}`}>
+                  <TemplateSwatch id={t.id} />
+                  <div className="p-2.5"><p className="flex items-center gap-1.5 text-[13px] text-foreground">{t.name}{f.template === t.id && <Badge variant="cyan">Selected</Badge>}</p><p className="text-[11px] text-tertiary">{t.hint}</p></div>
+                </button>
+              ))}
+            </div>
+            <div className="border-t border-border-subtle pt-5"><div className="mb-4 flex items-center gap-2"><Palette className="size-4 text-secondary"/><p className="text-[14px] text-foreground">Style</p></div>
             <div className="grid gap-4 sm:grid-cols-3">
               <div><span className={label}>Brand colour</span><div className="flex items-center gap-2"><input type="color" value={f.accent ?? tpl.palette.accent} onChange={(e) => set("accent", e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border bg-panel" />{f.accent && <button type="button" className="text-[11px] text-secondary underline" onClick={() => set("accent", null)}>Reset</button>}</div></div>
               <div><span className={label}>Mode</span><Seg value={f.mode} options={[["light", "Light"], ["dark", "Dark"]]} onChange={(v) => set("mode", v as SiteInput["mode"])} /></div>
               <div><span className={label}>Corners</span><Seg value={f.radius} options={[["square", "Square"], ["rounded", "Soft"], ["pill", "Round"]]} onChange={(v) => set("radius", v as SiteInput["radius"])} /></div>
             </div>
-            <div><span className={label}>Main photo</span><CatalogImages workspaceId={data.store.workspace.id} paths={f.heroImage && !/^https?:/.test(f.heroImage) ? [f.heroImage] : []} onChange={(p) => set("heroImage", p[0] ?? null)} max={1} /><p className="mt-1 text-[11px] text-tertiary">No photo? We use your first service or product photo.</p></div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label><span className={label}>Headline</span><Input value={f.headline} onChange={(e) => set("headline", e.target.value)} placeholder={data.store.workspace.name} /></label>
-              <label><span className={label}>Subheadline</span><Input value={f.subheadline} onChange={(e) => set("subheadline", e.target.value)} placeholder={data.store.workspace.tagline ?? "A short line about you"} /></label>
             </div>
-            <label className="block"><span className={label}>About</span><Textarea rows={4} value={f.about} onChange={(e) => set("about", e.target.value)} placeholder="Tell customers who you are and what makes you different." /></label>
-            <label className="block"><span className={label}>Instagram</span><Input value={f.socials.instagram} onChange={(e) => set("socials", { ...f.socials, instagram: e.target.value })} placeholder="@yourbusiness" /></label>
-            <div>
-              <div className="flex items-center justify-between"><span className={label}>FAQs</span><Button size="sm" variant="tertiary" onClick={() => set("faqs", [...f.faqs, { q: "", a: "" }])}><Plus className="size-3.5" />Add</Button></div>
-              <div className="space-y-2">{f.faqs.map((x, i) => (
-                <div key={i} className="grid gap-2 rounded-md border border-border-subtle p-2">
-                  <div className="flex gap-2"><Input value={x.q} placeholder="Question" onChange={(e) => set("faqs", f.faqs.map((y, j) => j === i ? { ...y, q: e.target.value } : y))} /><Button variant="tertiary" size="sm" aria-label="Remove" onClick={() => set("faqs", f.faqs.filter((_, j) => j !== i))}><Trash2 className="size-3.5" /></Button></div>
-                  <Textarea rows={2} value={x.a} placeholder="Answer" onChange={(e) => set("faqs", f.faqs.map((y, j) => j === i ? { ...y, a: e.target.value } : y))} />
-                </div>))}</div>
-            </div>
-          </section>
+          </section>}
 
           <section className={`${card} flex flex-wrap items-center justify-between gap-3`}>
             <div className="min-w-0"><p className="text-[14px] text-foreground">Publish</p><p className="truncate text-[12px] text-tertiary">{url}</p></div>
@@ -189,8 +156,44 @@ function Editor({ data }: { data: Data }) {
           <div className="flex-1 overflow-y-auto"><SiteRenderer store={previewStore} site={site} preview /></div>
         </div>
       )}
+      {editing && <SectionEditor section={editing} data={data} form={f} set={set} onClose={() => setEditing(null)} />}
     </>
   );
+}
+
+function SectionRow({ icon: Icon, name, hint, enabled, onToggle, onEdit, onUp, onDown, first, last }: { icon: typeof Info; name: string; hint: string; enabled?: boolean; onToggle?: (value: boolean) => void; onEdit: () => void; onUp?: () => void; onDown?: () => void; first?: boolean; last?: boolean }) {
+  return <li className={`flex items-center gap-2 rounded-lg border border-border p-2.5 ${enabled === false ? "bg-panel-subtle opacity-70" : "bg-panel"}`}>
+    <span className="grid size-8 shrink-0 place-items-center rounded-md bg-hover text-secondary"><Icon className="size-4" /></span>
+    <span className="min-w-0 flex-1"><span className="block text-[13px] text-foreground">{name}</span><span className="block truncate text-[11px] text-tertiary">{hint}</span></span>
+    {onUp && <span className="flex shrink-0 flex-col"><IconButton size="sm" aria-label={`Move ${name} up`} disabled={first} onClick={onUp}><ArrowUp className="size-3.5" /></IconButton><IconButton size="sm" aria-label={`Move ${name} down`} disabled={last} onClick={onDown}><ArrowDown className="size-3.5" /></IconButton></span>}
+    <IconButton aria-label={`Edit ${name}`} title={`Edit ${name}`} onClick={onEdit}><Pencil className="size-4" /></IconButton>
+    {onToggle && <Switch label="" aria-label={`Show ${name}`} checked={enabled ?? true} onCheckedChange={onToggle} />}
+  </li>;
+}
+
+function SectionEditor({ section, data, form, set, onClose }: { section: "hero" | SiteSectionId; data: Data; form: SiteInput; set: <K extends keyof SiteInput>(key: K, value: SiteInput[K]) => void; onClose: () => void }) {
+  const names: Record<"hero" | SiteSectionId, string> = { hero: "Hero", about: "About", services: "Services & booking", shop: "Shop", gallery: "Gallery", team: "Team", faq: "FAQ", location: "Location & hours", contact: "Contact & WhatsApp" };
+  const label = "mb-1.5 block text-[12px] text-secondary";
+  const catalogue = section === "services" || section === "shop" || section === "gallery";
+  return <div className="fixed inset-0 z-50 flex justify-end bg-foreground/20" onClick={onClose}>
+    <aside className="h-full w-full overflow-y-auto bg-panel pb-20 shadow-lg sm:m-2 sm:h-[calc(100%-1rem)] sm:max-w-lg sm:rounded-xl sm:border sm:border-border sm:pb-0" onClick={(event) => event.stopPropagation()}>
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border-subtle bg-panel px-4 py-4 sm:px-5"><div><p className="text-[15px] text-foreground">{names[section]}</p><p className="text-[11px] text-tertiary">Changes appear in the preview straight away.</p></div><IconButton aria-label="Close editor" onClick={onClose}><X className="size-4" /></IconButton></header>
+      <div className="space-y-5 p-4 sm:p-5">
+        {section === "hero" && <><div><span className={label}>Main photo</span><CatalogImages workspaceId={data.store.workspace.id} paths={form.heroImage && !/^https?:/.test(form.heroImage) ? [form.heroImage] : []} onChange={(paths) => set("heroImage", paths[0] ?? null)} max={1} /><p className="mt-1 text-[11px] text-tertiary">Without one, Pingbase uses your first service or product photo.</p></div><label className="block"><span className={label}>Headline</span><Input value={form.headline} onChange={(event) => set("headline", event.target.value)} placeholder={data.store.workspace.name} /></label><label className="block"><span className={label}>Subheadline</span><Input value={form.subheadline} onChange={(event) => set("subheadline", event.target.value)} placeholder={data.store.workspace.tagline ?? "A short line about you"} /></label></>}
+        {section === "about" && <label className="block"><span className={label}>About your business</span><Textarea className="min-h-44" value={form.about} onChange={(event) => set("about", event.target.value)} placeholder="Tell customers who you are and what makes you different." /></label>}
+        {catalogue && <ManagedSection icon={section === "services" ? Scissors : section === "shop" ? Package : Image} title={section === "services" ? "Services come from your catalogue" : section === "shop" ? "Products come from your catalogue" : "Gallery photos come from your services and products"} body="Update the items, descriptions and photos there. Your website preview will use the latest visible content." to="/services" tab={section === "shop" ? "products" : "services"} />}
+        {section === "team" && <ManagedSection icon={UsersRound} title="Team comes from workspace settings" body="Names and roles stay consistent across appointments, Nia and your website." to="/settings" settings="team" />}
+        {section === "location" && <ManagedSection icon={MapPin} title="Location and hours come from workspace settings" body="Update your address and opening hours once and Pingbase uses them everywhere." to="/settings" settings="workspace" />}
+        {section === "contact" && <><label className="block"><span className={label}>Instagram</span><Input value={form.socials.instagram} onChange={(event) => set("socials", { ...form.socials, instagram: event.target.value })} placeholder="@yourbusiness" /></label><label className="block"><span className={label}>TikTok</span><Input value={form.socials.tiktok} onChange={(event) => set("socials", { ...form.socials, tiktok: event.target.value })} placeholder="@yourbusiness" /></label><ManagedSection icon={MessageCircle} title="Phone, email and WhatsApp" body="Business contact details come from workspace settings. WhatsApp uses your connected channel." to="/settings" settings="workspace" /></>}
+        {section === "faq" && <div><div className="mb-3 flex items-center justify-between"><span className={label}>Questions and answers</span><Button size="sm" variant="secondary" onClick={() => set("faqs", [...form.faqs, { q: "", a: "" }])}><Plus className="size-3.5" />Add</Button></div><div className="space-y-3">{form.faqs.map((item, index) => <div key={index} className="grid gap-2 rounded-lg border border-border p-3"><div className="flex gap-2"><Input value={item.q} placeholder="Question" onChange={(event) => set("faqs", form.faqs.map((value, i) => i === index ? { ...value, q: event.target.value } : value))} /><IconButton aria-label="Remove question" onClick={() => set("faqs", form.faqs.filter((_, i) => i !== index))}><Trash2 className="size-4" /></IconButton></div><Textarea rows={3} value={item.a} placeholder="Answer" onChange={(event) => set("faqs", form.faqs.map((value, i) => i === index ? { ...value, a: event.target.value } : value))} /></div>)}{!form.faqs.length && <p className="rounded-lg border border-dashed border-border p-6 text-center text-[12px] text-tertiary">No questions yet.</p>}</div></div>}
+        <div className="flex justify-end border-t border-border-subtle pt-4"><Button onClick={onClose}>Done</Button></div>
+      </div>
+    </aside>
+  </div>;
+}
+
+function ManagedSection({ icon: Icon, title, body, to, tab, settings }: { icon: typeof Info; title: string; body: string; to: "/services" | "/settings"; tab?: "services" | "products"; settings?: "workspace" | "team" }) {
+  return <div className="rounded-lg border border-border bg-panel-subtle p-4"><span className="grid size-9 place-items-center rounded-md bg-hover text-primary"><Icon className="size-4" /></span><p className="mt-3 text-[13px] text-foreground">{title}</p><p className="mt-1 text-[12px] leading-relaxed text-secondary">{body}</p><Link to={to} search={to === "/services" ? { tab: tab ?? "services" } : { section: settings ?? "workspace" }}><Button variant="secondary" size="sm" className="mt-4">Manage content<ExternalLink className="size-3.5" /></Button></Link></div>;
 }
 
 function PhoneFrame({ children }: { children: React.ReactNode }) {
