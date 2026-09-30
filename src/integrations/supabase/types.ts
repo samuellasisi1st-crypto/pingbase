@@ -1704,6 +1704,68 @@ export type Database = {
           },
         ]
       }
+      website_configs: {
+        Row: {
+          about: string | null
+          accent: string | null
+          category: string
+          created_at: string
+          faqs: Json
+          headline: string | null
+          hero_image: string | null
+          mode: string
+          radius: string
+          sections: Json
+          socials: Json
+          subheadline: string | null
+          template: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          about?: string | null
+          accent?: string | null
+          category?: string
+          created_at?: string
+          faqs?: Json
+          headline?: string | null
+          hero_image?: string | null
+          mode?: string
+          radius?: string
+          sections?: Json
+          socials?: Json
+          subheadline?: string | null
+          template?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          about?: string | null
+          accent?: string | null
+          category?: string
+          created_at?: string
+          faqs?: Json
+          headline?: string | null
+          hero_image?: string | null
+          mode?: string
+          radius?: string
+          sections?: Json
+          socials?: Json
+          subheadline?: string | null
+          template?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "website_configs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_files: {
         Row: {
           created_at: string
