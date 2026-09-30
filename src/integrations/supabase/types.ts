@@ -1479,6 +1479,7 @@ export type Database = {
           location_type: string
           name: string
           online_booking: boolean
+          payment_mode: string
           position: number
           price_pence: number
           visible_in_store: boolean
@@ -1498,6 +1499,7 @@ export type Database = {
           location_type?: string
           name: string
           online_booking?: boolean
+          payment_mode?: string
           position?: number
           price_pence?: number
           visible_in_store?: boolean
@@ -1517,6 +1519,7 @@ export type Database = {
           location_type?: string
           name?: string
           online_booking?: boolean
+          payment_mode?: string
           position?: number
           price_pence?: number
           visible_in_store?: boolean

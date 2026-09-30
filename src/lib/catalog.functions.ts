@@ -25,6 +25,7 @@ const serviceInput = z.object({
   locationType: z.enum(["in_person", "at_customer", "online"]),
   visibleInStore: z.boolean(),
   onlineBooking: z.boolean(),
+  paymentMode: z.enum(["in_store", "deposit", "full"]).default("in_store"),
   active: z.boolean(),
   imagePaths: z.array(z.string().max(400)).max(8),
   staffIds: z.array(z.string().uuid()).max(100),
@@ -71,7 +72,7 @@ export const getServiceEditor = createServerFn({ method: "POST" })
     const service: ServiceInput = {
       id: s.id, name: s.name, description: s.description ?? "", categoryName: cat?.name ?? "",
       pricePence: s.price_pence, durationMinutes: s.duration_minutes, bufferMinutes: s.buffer_minutes, depositPence: s.deposit_pence,
-      locationType: s.location_type as ServiceInput["locationType"], visibleInStore: s.visible_in_store, onlineBooking: s.online_booking, active: s.active,
+      locationType: s.location_type as ServiceInput["locationType"], visibleInStore: s.visible_in_store, onlineBooking: s.online_booking, paymentMode: ((s as { payment_mode?: string }).payment_mode ?? "in_store") as ServiceInput["paymentMode"], active: s.active,
       imagePaths: s.image_urls ?? [], staffIds: (links ?? []).map((l: any) => l.staff_id),
       variants: (variants ?? []).map((v: any) => ({ name: v.name, pricePence: v.price_pence, durationMinutes: v.duration_minutes })),
       addons: (addons ?? []).map((a: any) => ({ name: a.name, pricePence: a.price_pence, durationMinutes: a.duration_minutes })),
@@ -93,7 +94,7 @@ export const saveService = createServerFn({ method: "POST" })
       category_id: await categoryId(db, w, data.categoryName, "service"),
       price_pence: cheapest?.pricePence ?? data.pricePence,
       duration_minutes: cheapest?.durationMinutes ?? data.durationMinutes,
-      buffer_minutes: data.bufferMinutes, deposit_pence: data.depositPence, location_type: data.locationType,
+      buffer_minutes: data.bufferMinutes, deposit_pence: data.depositPence, location_type: data.locationType, payment_mode: data.paymentMode,
       visible_in_store: data.visibleInStore, online_booking: data.onlineBooking, active: data.active, image_urls: data.imagePaths,
     };
     let id = data.id;
@@ -199,7 +200,7 @@ export const updateStoreSettings = createServerFn({ method: "POST" })
 type PublicStore = {
   workspace: { id: string; name: string; slug: string; logo_url: string | null; tagline: string | null; address: string | null; phone: string | null };
   categories: Array<{ id: string; name: string; kind: string }>;
-  services: Array<{ id: string; name: string; description: string | null; price_pence: number; duration_minutes: number; deposit_pence: number; category_id: string | null; location_type: string; image_urls: string[]; variants: Array<{ name: string; price_pence: number; duration_minutes: number }>; addons: Array<{ name: string; price_pence: number }> }>;
+  services: Array<{ id: string; name: string; description: string | null; price_pence: number; duration_minutes: number; deposit_pence: number; category_id: string | null; location_type: string; image_urls: string[]; online_booking: boolean; payment_mode: string; variants: Array<{ name: string; price_pence: number; duration_minutes: number }>; addons: Array<{ name: string; price_pence: number }> }>;
   products: Array<{ id: string; name: string; description: string | null; price_pence: number; compare_at_pence: number | null; image_urls: string[]; fulfilment: "reserve" | "enquiry"; category_id: string | null; in_stock: boolean }>;
   whatsapp: string | null;
 };

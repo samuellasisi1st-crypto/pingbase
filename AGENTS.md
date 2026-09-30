@@ -53,3 +53,5 @@
 - Services are edited in a 4-step wizard at `/services/$serviceId` and saved in one `saveService` call that replaces variants, add-ons, intake questions and staff links together, so a service is never half-saved.
 - Products live in `products`; each chooses `reserve` (pay in store) or `enquiry`, because online payments aren't enabled yet.
 - The public store `/s/$slug` reads only through the service-role `public_store` SQL function (visible, active items only), and catalogue photos stay in the private `attachments` bucket under `<workspace_id>/catalog/` served via signed URLs, since public buckets are blocked.
+
+- Public store self-booking goes through `src/lib/store-booking.functions.ts`, which re-checks the slot with `isSlotStillFree` before inserting, so customers can never double-book.
