@@ -196,7 +196,7 @@ export function SiteRenderer({ store, site, onBook, onProduct, preview }: Props)
               {store.workspace.phone && <Btn solid={false} href={`tel:${store.workspace.phone}`}><Phone className="size-4" />{store.workspace.phone}</Btn>}
               {store.workspace.email && <Btn solid={false} href={`mailto:${store.workspace.email}`}><Mail className="size-4" />Email</Btn>}
             </div>
-            {site.socials.instagram && <a href={site.socials.instagram.startsWith("http") ? site.socials.instagram : `https://instagram.com/${site.socials.instagram.replace(/^@/, "")}`} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-1.5 text-[13px]" style={{ color: block ? undefined : p.soft }}><Instagram className="size-4" />{site.socials.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@")}</a>}
+            {site.socials["instagram"] && <a href={site.socials["instagram"]!.startsWith("http") ? site.socials["instagram"]! : `https://instagram.com/${site.socials["instagram"]!.replace(/^@/, "")}`} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-1.5 text-[13px]" style={{ color: block ? undefined : p.soft }}><Instagram className="size-4" />{site.socials["instagram"]!.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@")}</a>}
           </div>, "contact");
         return null;
       })}

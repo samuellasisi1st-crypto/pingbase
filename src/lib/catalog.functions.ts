@@ -197,7 +197,7 @@ export const updateStoreSettings = createServerFn({ method: "POST" })
 
 /* ------------------------------- Public store ------------------------------- */
 
-export type SiteConfigRow = { category: string; template: string; accent: string | null; mode: string; radius: string; sections: unknown; hero_image: string | null; headline: string | null; subheadline: string | null; about: string | null; faqs: Array<{ q: string; a: string }>; socials: Record<string, string> };
+export type SiteConfigRow = { category: string; template: string; accent: string | null; mode: string; radius: string; sections: Array<{ id: string; enabled: boolean }> | null; hero_image: string | null; headline: string | null; subheadline: string | null; about: string | null; faqs: Array<{ q: string; a: string }>; socials: Record<string, string> };
 export type PublicStore = {
   workspace: { id: string; name: string; slug: string; logo_url: string | null; tagline: string | null; address: string | null; phone: string | null; email: string | null; opening_hours: Record<string, [string, string] | null> | null };
   site: SiteConfigRow | null;
