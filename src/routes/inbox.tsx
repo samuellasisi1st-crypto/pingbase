@@ -314,7 +314,7 @@ function ConversationPane({ conversationId, onBack }: { conversationId: string; 
     mutationFn: (body: string) => sendHumanReply({ data: { conversationId, body } }),
     onSuccess: (result) => {
       setDraft("");
-      if (!result.delivered) toast.warning("Saved, but this channel is not connected yet so it was not delivered.");
+      if (!result.delivered) toast.warning(`Saved, but not delivered: ${(result as { error?: string }).error ?? "channel unavailable"}`);
       refresh();
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "Could not send"),
