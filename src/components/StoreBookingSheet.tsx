@@ -27,7 +27,8 @@ export function BookingSheet({ slug, service, onClose }: { slug: string; service
   const today = days[day]!;
   const slots = useQuery({ queryKey: ["store-slots", slug, service.id, today.key], queryFn: () => fetchSlots({ data: { slug, serviceId: service.id, fromISO: today.start.toISOString() } }) });
   const call = service.location_type === "online";
-  const payNote = service.payment_mode === "in_store" ? "Pay at your appointment" : "Pay in store for now — online payment is coming soon";
+  // Payment is always taken in person on the day, so it never blocks a booking.
+  const payNote = "Pay in person on the day of your appointment";
 
   const submit = async () => {
     if (!slot) return;
