@@ -65,6 +65,7 @@ function Editor({ data }: { data: Data }) {
     ...data.store,
     site: {
       category: f.category, template: f.template, accent: f.accent, mode: f.mode, radius: f.radius, sections: f.sections,
+      heading_font: f.headingFont,
       hero_image: f.heroImage ? (/^https?:/.test(f.heroImage) ? f.heroImage : signed(f.heroImage) ?? null) : null,
       headline: f.headline || null, subheadline: f.subheadline || null, about: f.about || null, faqs: f.faqs, socials: f.socials,
     },
