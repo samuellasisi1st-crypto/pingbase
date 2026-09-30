@@ -71,7 +71,7 @@ export function SiteRenderer({ store, site, onBook, onProduct, preview }: Props)
   const style = {
     "--s-bg": p.bg, "--s-surface": p.surface, "--s-text": p.text, "--s-soft": p.soft, "--s-border": p.border,
     "--s-accent": accent, "--s-on-accent": onAccent, "--s-r": r, "--s-card-r": cardR,
-    "--s-head": t.headingFont, "--s-body": t.bodyFont,
+    "--s-head": t.headingFont, "--s-hero": preview ? "620px" : "88svh", "--s-body": t.bodyFont,
     background: p.bg, color: p.text, fontFamily: t.bodyFont,
   } as CSSProperties;
 
@@ -196,7 +196,7 @@ export function SiteRenderer({ store, site, onBook, onProduct, preview }: Props)
               {store.workspace.phone && <Btn solid={false} href={`tel:${store.workspace.phone}`}><Phone className="size-4" />{store.workspace.phone}</Btn>}
               {store.workspace.email && <Btn solid={false} href={`mailto:${store.workspace.email}`}><Mail className="size-4" />Email</Btn>}
             </div>
-            {site.socials.instagram && <a href={site.socials.instagram.startsWith("http") ? site.socials.instagram : `https://instagram.com/${site.socials.instagram.replace(/^@/, "")}`} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-1.5 text-[13px]" style={{ color: block ? undefined : p.soft }}><Instagram className="size-4" />{site.socials.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@")}</a>}
+            {site.socials["instagram"] && <a href={site.socials["instagram"]!.startsWith("http") ? site.socials["instagram"]! : `https://instagram.com/${site.socials["instagram"]!.replace(/^@/, "")}`} target="_blank" rel="noreferrer" className="mt-6 inline-flex items-center gap-1.5 text-[13px]" style={{ color: block ? undefined : p.soft }}><Instagram className="size-4" />{site.socials["instagram"]!.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@")}</a>}
           </div>, "contact");
         return null;
       })}
@@ -246,7 +246,7 @@ function Hero({ store, site, p, nav, cta, second }: { store: PublicStore; site: 
   const actions = <div className="mt-6 flex flex-wrap gap-2.5">{cta}{second}</div>;
 
   if (t.hero === "full" || t.hero === "centered") return (
-    <header className="relative flex min-h-[88svh] flex-col text-white">
+    <header className="relative flex min-h-[var(--s-hero)] flex-col text-white">
       {img ? <img src={img} alt="" className="absolute inset-0 size-full object-cover" /> : <div className="absolute inset-0" style={{ background: p.surface }} />}
       <div className="absolute inset-0" style={{ background: t.hero === "centered" ? "rgba(0,0,0,0.55)" : "linear-gradient(to top, rgba(0,0,0,0.75), rgba(0,0,0,0.05) 60%)" }} />
       <div className="relative">{nav}</div>
@@ -271,7 +271,7 @@ function Hero({ store, site, p, nav, cta, second }: { store: PublicStore; site: 
   );
   if (t.hero === "framed") return (
     <header className="p-3 @3xl:p-5">
-      <div className="relative flex min-h-[78svh] flex-col overflow-hidden text-white" style={{ borderRadius: site.radius === "square" ? 0 : 22, background: site.accent }}>
+      <div className="relative flex min-h-[calc(var(--s-hero)*0.9)] flex-col overflow-hidden text-white" style={{ borderRadius: site.radius === "square" ? 0 : 22, background: site.accent }}>
         {img && <img src={img} alt="" className="absolute inset-0 size-full object-cover" />}
         <div className="absolute inset-0" style={{ background: img ? "linear-gradient(to top, rgba(0,0,0,0.55), transparent 55%)" : "transparent" }} />
         <div className="relative p-2.5">{nav}</div>
@@ -299,7 +299,7 @@ function Hero({ store, site, p, nav, cta, second }: { store: PublicStore; site: 
   return (
     <header>
       <div className={p.nav ? "p-3" : ""} style={p.nav ? undefined : { borderBottom: `1px solid ${p.border}` }}>{nav}</div>
-      <div className="grid @3xl:min-h-[80svh] @3xl:grid-cols-2">
+      <div className="grid @3xl:min-h-[var(--s-hero)] @3xl:grid-cols-2">
         <div className="flex flex-col justify-center px-5 py-12 @3xl:px-12">
           <p className="mb-4 text-[11px] uppercase tracking-[0.2em]" style={{ color: p.soft }}>{store.workspace.address?.split(",").slice(-2, -1)[0]?.trim() || store.workspace.name}</p>
           <H1 className={`text-[12cqw] leading-[0.98] tracking-[-0.02em] @3xl:text-[72px] ${t.id === "botanical" ? "font-normal" : "font-semibold"}`} />
@@ -312,7 +312,7 @@ function Hero({ store, site, p, nav, cta, second }: { store: PublicStore; site: 
   );
 }
 
-function Faq({ q, a, soft, border }: { q: string; a: string; soft?: string; border: string }) {
+function Faq({ q, a, soft, border }: { q: string; a: string; soft?: string | undefined; border: string }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ borderColor: border }}>
@@ -323,7 +323,7 @@ function Faq({ q, a, soft, border }: { q: string; a: string; soft?: string; bord
 }
 
 const DAYS = [["mon", "Monday"], ["tue", "Tuesday"], ["wed", "Wednesday"], ["thu", "Thursday"], ["fri", "Friday"], ["sat", "Saturday"], ["sun", "Sunday"]] as const;
-function Hours({ hours, border, soft }: { hours: Record<string, [string, string] | null>; border: string; soft?: string }) {
+function Hours({ hours, border, soft }: { hours: Record<string, [string, string] | null>; border: string; soft?: string | undefined }) {
   const rows = useMemo(() => DAYS.map(([k, label]) => [label, hours[k] ?? hours[label.toLowerCase()] ?? null] as const), [hours]);
   return (
     <dl className="text-[14px]">

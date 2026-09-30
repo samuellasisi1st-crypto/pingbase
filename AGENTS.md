@@ -55,3 +55,4 @@
 - The public store `/s/$slug` reads only through the service-role `public_store` SQL function (visible, active items only), and catalogue photos stay in the private `attachments` bucket under `<workspace_id>/catalog/` served via signed URLs, since public buckets are blocked.
 
 - Public store self-booking goes through `src/lib/store-booking.functions.ts`, which re-checks the slot with `isSlotStillFree` before inserting, so customers can never double-book.
+- Website templates are one catalogue in `src/config/site-templates.ts` (categories, templates, sections) rendered by `src/components/site/SiteRenderer.tsx` with container queries, so the same template looks right in the editor phone preview and on real phones; settings live in `website_configs` and reach the public site through `site_data`.

@@ -43,7 +43,7 @@ function CataloguePage() {
   return <AppShell><Page>
     <PageHeader title="Catalogue" subtitle="Everything customers can book or buy — used by Nia and your public store."
       actions={<>
-        {storeUrl && <Button variant="secondary" size="sm" onClick={() => window.open(storeUrl, "_blank")}><ExternalLink className="size-3.5" />View store</Button>}
+        <Link to="/website"><Button variant="secondary" size="sm">Design website</Button></Link>{storeUrl && <Button variant="secondary" size="sm" onClick={() => window.open(storeUrl, "_blank")}><ExternalLink className="size-3.5" />View store</Button>}
         {tab === "products" ? <Button size="sm" onClick={() => setProductEdit("new")}><Plus className="size-3.5" />New product</Button>
           : <Button size="sm" onClick={() => navigate({ to: "/services/$serviceId", params: { serviceId: "new" } })}><Plus className="size-3.5" />New service</Button>}
       </>} />

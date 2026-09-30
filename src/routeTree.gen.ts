@@ -32,6 +32,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TeamChatRouteImport } from './routes/team-chat'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TesterRouteImport } from './routes/tester'
+import { Route as WebsiteRouteImport } from './routes/website'
 import { Route as WhatsNewRouteImport } from './routes/whats-new'
 import { Route as AiAgentsAgentIdRouteImport } from './routes/ai-agents_.$agentId'
 import { Route as PayPaymentIdRouteImport } from './routes/pay.$paymentId'
@@ -156,6 +157,11 @@ const TesterRoute = TesterRouteImport.update({
   path: '/tester',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WebsiteRoute = WebsiteRouteImport.update({
+  id: '/website',
+  path: '/website',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const WhatsNewRoute = WhatsNewRouteImport.update({
   id: '/whats-new',
   path: '/whats-new',
@@ -223,6 +229,7 @@ export interface FileRoutesByFullPath {
   '/team-chat': typeof TeamChatRoute
   '/terms': typeof TermsRoute
   '/tester': typeof TesterRoute
+  '/website': typeof WebsiteRoute
   '/whats-new': typeof WhatsNewRoute
   '/ai-agents/$agentId': typeof AiAgentsAgentIdRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
@@ -256,6 +263,7 @@ export interface FileRoutesByTo {
   '/team-chat': typeof TeamChatRoute
   '/terms': typeof TermsRoute
   '/tester': typeof TesterRoute
+  '/website': typeof WebsiteRoute
   '/whats-new': typeof WhatsNewRoute
   '/ai-agents/$agentId': typeof AiAgentsAgentIdRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
@@ -290,6 +298,7 @@ export interface FileRoutesById {
   '/team-chat': typeof TeamChatRoute
   '/terms': typeof TermsRoute
   '/tester': typeof TesterRoute
+  '/website': typeof WebsiteRoute
   '/whats-new': typeof WhatsNewRoute
   '/ai-agents_/$agentId': typeof AiAgentsAgentIdRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
@@ -325,6 +334,7 @@ export interface FileRouteTypes {
     | '/team-chat'
     | '/terms'
     | '/tester'
+    | '/website'
     | '/whats-new'
     | '/ai-agents/$agentId'
     | '/pay/$paymentId'
@@ -358,6 +368,7 @@ export interface FileRouteTypes {
     | '/team-chat'
     | '/terms'
     | '/tester'
+    | '/website'
     | '/whats-new'
     | '/ai-agents/$agentId'
     | '/pay/$paymentId'
@@ -391,6 +402,7 @@ export interface FileRouteTypes {
     | '/team-chat'
     | '/terms'
     | '/tester'
+    | '/website'
     | '/whats-new'
     | '/ai-agents_/$agentId'
     | '/pay/$paymentId'
@@ -425,6 +437,7 @@ export interface RootRouteChildren {
   TeamChatRoute: typeof TeamChatRoute
   TermsRoute: typeof TermsRoute
   TesterRoute: typeof TesterRoute
+  WebsiteRoute: typeof WebsiteRoute
   WhatsNewRoute: typeof WhatsNewRoute
   AiAgentsAgentIdRoute: typeof AiAgentsAgentIdRoute
   PayPaymentIdRoute: typeof PayPaymentIdRoute
@@ -598,6 +611,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TesterRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/website': {
+      id: '/website'
+      path: '/website'
+      fullPath: '/website'
+      preLoaderRoute: typeof WebsiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/whats-new': {
       id: '/whats-new'
       path: '/whats-new'
@@ -681,6 +701,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeamChatRoute: TeamChatRoute,
   TermsRoute: TermsRoute,
   TesterRoute: TesterRoute,
+  WebsiteRoute: WebsiteRoute,
   WhatsNewRoute: WhatsNewRoute,
   AiAgentsAgentIdRoute: AiAgentsAgentIdRoute,
   PayPaymentIdRoute: PayPaymentIdRoute,

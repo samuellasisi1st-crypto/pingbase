@@ -7,6 +7,7 @@ import { joinWorkspace } from "@/lib/concierge.functions";
 import defaultLogo from "@/assets/workspace-logo.jpg.asset.json";
 import {
   Inbox, Users, CalendarDays, Bot, Search, Settings, ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, Zap, Scissors, LayoutDashboard, MoreHorizontal, X, Bell, CircleHelp,
+  Globe,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
@@ -22,6 +23,7 @@ const NAV = [
   { to: "/contacts", label: "Contacts", icon: Users },
   { to: "/appointments", label: "Appointments", icon: CalendarDays },
   { to: "/services", label: "Catalogue", icon: Scissors },
+  { to: "/website", label: "Website", icon: Globe },
   { to: "/automations", label: "Automations", icon: Zap },
   { to: "/ai-agents", label: "AI Agents", icon: Bot },
 ] as const;
@@ -39,6 +41,7 @@ const MOBILE_NAV = [
 ] as const;
 const MOBILE_MORE = [
   { to: "/services", label: "Catalogue", icon: Scissors },
+  { to: "/website", label: "Website", icon: Globe },
   { to: "/automations", label: "Automations", icon: Zap },
   { to: "/ai-agents", label: "AI Agents", icon: Bot },
   { to: "/search", label: "Search", icon: Search },
