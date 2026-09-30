@@ -109,6 +109,7 @@ export const DEFAULT_TEMPLATE: Record<SiteCategoryId, string> = { beauty: "signa
 export function defaultSections(category: SiteCategoryId, hasProducts = false, hasServices = true): SectionSetting[] {
   const on = DEFAULT_SECTIONS[category].filter((s) => (s !== "shop" || hasProducts) && (s !== "services" || hasServices));
   if (hasProducts && !on.includes("shop")) on.splice(1, 0, "shop");
+  if (hasServices && !on.includes("services")) on.splice(1, 0, "services");
   return [...on.map((id) => ({ id, enabled: true })), ...SITE_SECTIONS.filter((s) => !on.includes(s.id)).map((s) => ({ id: s.id, enabled: false }))];
 }
 
