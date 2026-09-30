@@ -197,8 +197,11 @@ export const updateStoreSettings = createServerFn({ method: "POST" })
 
 /* ------------------------------- Public store ------------------------------- */
 
-type PublicStore = {
-  workspace: { id: string; name: string; slug: string; logo_url: string | null; tagline: string | null; address: string | null; phone: string | null };
+export type SiteConfigRow = { category: string; template: string; accent: string | null; mode: string; radius: string; sections: unknown; hero_image: string | null; headline: string | null; subheadline: string | null; about: string | null; faqs: Array<{ q: string; a: string }>; socials: Record<string, string> };
+export type PublicStore = {
+  workspace: { id: string; name: string; slug: string; logo_url: string | null; tagline: string | null; address: string | null; phone: string | null; email: string | null; opening_hours: Record<string, [string, string] | null> | null };
+  site: SiteConfigRow | null;
+  team: Array<{ name: string; role: string | null }>;
   categories: Array<{ id: string; name: string; kind: string }>;
   services: Array<{ id: string; name: string; description: string | null; price_pence: number; duration_minutes: number; deposit_pence: number; category_id: string | null; location_type: string; image_urls: string[]; online_booking: boolean; payment_mode: string; variants: Array<{ name: string; price_pence: number; duration_minutes: number }>; addons: Array<{ name: string; price_pence: number }> }>;
   products: Array<{ id: string; name: string; description: string | null; price_pence: number; compare_at_pence: number | null; image_urls: string[]; fulfilment: "reserve" | "enquiry"; category_id: string | null; in_stock: boolean }>;
@@ -211,25 +214,32 @@ export const getPublicStore = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: store, error } = await supabaseAdmin.rpc("public_store" as never, { _slug: data.slug } as never);
     if (error || !store) return null;
-    const s = store as unknown as Omit<PublicStore, "whatsapp">;
-    // Images live in private storage; hand out signed links that last a day.
-    const paths = [...s.services.flatMap((x) => x.image_urls ?? []), ...s.products.flatMap((x) => x.image_urls ?? [])].filter((p) => !/^https?:/.test(p));
-    const signed = new Map<string, string>();
-    if (paths.length) {
-      const { data: urls } = await supabaseAdmin.storage.from("attachments").createSignedUrls(paths, 60 * 60 * 24);
-      for (const u of urls ?? []) if (u.path && u.signedUrl) signed.set(u.path, u.signedUrl);
-    }
-    const fix = (list: string[]) => (list ?? []).map((p) => (/^https?:/.test(p) ? p : signed.get(p))).filter(Boolean) as string[];
-    const { data: wa } = await supabaseAdmin.from("channel_connections").select("config,status").eq("workspace_id", s.workspace.id).eq("channel", "whatsapp").maybeSingle();
-    const waNumber = wa?.status === "CONNECTED" ? String((wa.config as { display_phone_number?: string } | null)?.display_phone_number ?? "").replace(/\D/g, "") || null : null;
-    return {
-      ...s,
-      workspace: { ...s.workspace, logo_url: s.workspace.logo_url && /^https?:/.test(s.workspace.logo_url) ? s.workspace.logo_url : null },
-      services: s.services.map((x) => ({ ...x, image_urls: fix(x.image_urls) })),
-      products: s.products.map((x) => ({ ...x, image_urls: fix(x.image_urls) })),
-      whatsapp: waNumber,
-    };
+    return hydrateStore(supabaseAdmin, store);
   });
+
+/** Signs private photo paths and adds the WhatsApp number. Server-only callers pass the admin client. */
+export async function hydrateStore(admin: any, raw: unknown): Promise<PublicStore> {
+  const s = raw as Omit<PublicStore, "whatsapp">;
+  const paths = [...s.services.flatMap((x) => x.image_urls ?? []), ...s.products.flatMap((x) => x.image_urls ?? []), ...(s.site?.hero_image ? [s.site.hero_image] : [])].filter((p) => !/^https?:/.test(p));
+  const signed = new Map<string, string>();
+  if (paths.length) {
+    const { data: urls } = await admin.storage.from("attachments").createSignedUrls(paths, 60 * 60 * 24);
+    for (const u of (urls ?? []) as Array<{ path: string | null; signedUrl: string }>) if (u.path && u.signedUrl) signed.set(u.path, u.signedUrl);
+  }
+  const one = (p: string) => (/^https?:/.test(p) ? p : signed.get(p));
+  const fix = (list: string[]) => (list ?? []).map(one).filter(Boolean) as string[];
+  const { data: wa } = await admin.from("channel_connections").select("config,status").eq("workspace_id", s.workspace.id).eq("channel", "whatsapp").maybeSingle();
+  const waNumber = wa?.status === "CONNECTED" ? String((wa.config as { display_phone_number?: string } | null)?.display_phone_number ?? "").replace(/\D/g, "") || null : null;
+  return {
+    ...s,
+    site: s.site ? { ...s.site, hero_image: s.site.hero_image ? one(s.site.hero_image) ?? null : null } : null,
+    team: s.team ?? [],
+    workspace: { ...s.workspace, logo_url: s.workspace.logo_url && /^https?:/.test(s.workspace.logo_url) ? s.workspace.logo_url : null },
+    services: s.services.map((x) => ({ ...x, image_urls: fix(x.image_urls) })),
+    products: s.products.map((x) => ({ ...x, image_urls: fix(x.image_urls) })),
+    whatsapp: waNumber,
+  };
+}
 
 export const submitProductRequest = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({
