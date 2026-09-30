@@ -45,7 +45,7 @@ export function BookingSheet({ slug, service, onClose }: { slug: string; service
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-2">
             {slot && !done && <button type="button" aria-label="Back" onClick={() => setSlot(null)}><ChevronLeft className="mt-0.5 size-5 text-secondary" /></button>}
-            <div><p className="text-[16px] text-foreground">{call ? "Book a call" : "Book"} · {service.name}</p><p className="text-[12px] text-secondary">{service.duration_minutes} min · {service.price_pence ? money(service.price_pence) : "Free"}{service.deposit_pence ? ` · ${money(service.deposit_pence)} deposit` : ""}</p></div>
+            <div><p className="text-[16px] text-foreground">{call ? "Book a call" : "Book"} · {service.name}</p><p className="text-[12px] text-secondary">{service.duration_minutes} min · {service.price_pence ? money(service.price_pence) : "Free"} · pay on the day</p></div>
           </div>
           <button type="button" onClick={onClose} aria-label="Close"><X className="size-5 text-secondary" /></button>
         </div>
