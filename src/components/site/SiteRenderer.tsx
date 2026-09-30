@@ -312,7 +312,7 @@ function Hero({ store, site, p, nav, cta, second }: { store: PublicStore; site: 
   );
 }
 
-function Faq({ q, a, soft, border }: { q: string; a: string; soft?: string; border: string }) {
+function Faq({ q, a, soft, border }: { q: string; a: string; soft?: string | undefined; border: string }) {
   const [open, setOpen] = useState(false);
   return (
     <div style={{ borderColor: border }}>
@@ -323,7 +323,7 @@ function Faq({ q, a, soft, border }: { q: string; a: string; soft?: string; bord
 }
 
 const DAYS = [["mon", "Monday"], ["tue", "Tuesday"], ["wed", "Wednesday"], ["thu", "Thursday"], ["fri", "Friday"], ["sat", "Saturday"], ["sun", "Sunday"]] as const;
-function Hours({ hours, border, soft }: { hours: Record<string, [string, string] | null>; border: string; soft?: string }) {
+function Hours({ hours, border, soft }: { hours: Record<string, [string, string] | null>; border: string; soft?: string | undefined }) {
   const rows = useMemo(() => DAYS.map(([k, label]) => [label, hours[k] ?? hours[label.toLowerCase()] ?? null] as const), [hours]);
   return (
     <dl className="text-[14px]">

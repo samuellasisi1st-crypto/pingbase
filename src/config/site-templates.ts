@@ -40,7 +40,7 @@ export type SiteTemplate = {
   /** Uppercase tracked labels and buttons (Bookwan editorial register). */
   caps?: boolean;
   radius: "square" | "rounded" | "pill";
-  palette: { bg: string; surface: string; text: string; soft: string; border: string; accent: string; onAccent: string; nav?: string; onNav?: string };
+  palette: { bg: string; surface: string; text: string; soft: string; border: string; accent: string; onAccent: string; nav?: string | undefined; onNav?: string | undefined };
   /** Colours the Playful template rotates through for section blocks. */
   blocks?: string[];
 };
