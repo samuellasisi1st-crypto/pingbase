@@ -73,8 +73,8 @@ export const createStoreBooking = createServerFn({ method: "POST" })
       const r = await upsertGoogleEvent(ws.id, {
         appointmentId: appt.id, summary: `${service.name} — ${data.name}`,
         description: `${service.name}. Booked online with ${ws.name}.`, location: service.location_type === "online" ? "Phone / video call" : bs?.address ?? null,
-        startISO: appt.starts_at, endISO: appt.ends_at, attendeeEmail: data.email || null,
-      } as never);
+        startISO: appt.starts_at, endISO: appt.ends_at, attendeeEmail: data.email || null, attendeeName: data.name, timeZone: "Europe/London",
+      });
       invite = Boolean(r);
     } catch (e) { console.error("store booking calendar sync", e); }
 

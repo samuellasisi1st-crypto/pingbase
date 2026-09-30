@@ -35,7 +35,7 @@ const QTYPES: Array<{ id: ServiceInput["questions"][number]["type"]; label: stri
 ];
 const empty: ServiceInput = {
   id: null, name: "", description: "", categoryName: "", pricePence: 0, durationMinutes: 60, bufferMinutes: 0, depositPence: 0,
-  locationType: "in_person", visibleInStore: true, onlineBooking: true, active: true, imagePaths: [], staffIds: [], variants: [], addons: [], questions: [],
+  locationType: "in_person", visibleInStore: true, onlineBooking: true, paymentMode: "in_store", active: true, imagePaths: [], staffIds: [], variants: [], addons: [], questions: [],
 };
 const pounds = (p: number) => (p ? String(p / 100) : "");
 const toPence = (v: string) => Math.max(0, Math.round(Number(v || 0) * 100));
@@ -126,7 +126,7 @@ function ServiceEditor() {
               </Section>
               <Section title="Visibility">
                 <Toggle label="Show in my store" body="Appears on your public store link." checked={form.visibleInStore} onChange={(v) => set("visibleInStore", v)} />
-                <Toggle label="Nia can book it" body="Turn off for enquiry-only services (e.g. needs a referral or consultation first)." checked={form.onlineBooking} onChange={(v) => set("onlineBooking", v)} />
+                <Toggle label="Online booking" body="Nia and customers on your store can book this. Turn off for enquiry-only services (e.g. needs a referral first)." checked={form.onlineBooking} onChange={(v) => set("onlineBooking", v)} />
                 <Toggle label="Active" body="Hidden services are kept but not offered anywhere." checked={form.active} onChange={(v) => set("active", v)} />
               </Section>
             </>}
@@ -155,7 +155,10 @@ function ServiceEditor() {
               <Section title="Time between bookings" body="Clean-up, notes or travel time blocked after each appointment.">
                 <div className="flex flex-wrap gap-1.5">{[0, 5, 10, 15, 30, 45, 60].map((d) => <button type="button" key={d} onClick={() => set("bufferMinutes", d)} className={`rounded-full border px-2.5 py-1 text-[11px] ${form.bufferMinutes === d ? "border-primary bg-primary text-primary-foreground" : "border-border text-secondary hover:bg-hover"}`}>{d ? `${d} min` : "None"}</button>)}</div>
               </Section>
-              <Section title="Deposit" body="Recorded on the booking. Online payments aren't switched on yet, so it's collected in person for now.">
+              <Section title="Payment" body="How customers pay when they book. Online card payments aren't switched on yet, so bookings show 'pay in store' until they are.">
+                <div className="grid gap-2 sm:grid-cols-3">{([["in_store","Pay in store","Pay at the appointment"],["deposit","Deposit online","Deposit at booking, rest later"],["full","Pay in full online","Full price at booking"]] as const).map(([id,t,b])=><button key={id} type="button" onClick={() => set("paymentMode", id)} className={`rounded-lg border p-3 text-left ${form.paymentMode === id ? "border-primary bg-panel-subtle" : "border-border hover:bg-hover"}`}><span className="block text-[13px] text-foreground">{t}</span><span className="block text-[11px] text-tertiary">{b}</span></button>)}</div>
+              </Section>
+              <Section title="Deposit" body="Recorded on the booking and collected in person for now.">
                 <Field label="Deposit (£)"><Input type="number" min="0" step="0.01" value={pounds(form.depositPence)} onChange={(e) => set("depositPence", toPence(e.target.value))} placeholder="No deposit" /></Field>
               </Section>
             </>}
