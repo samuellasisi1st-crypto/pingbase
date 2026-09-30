@@ -3,12 +3,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Copy, ExternalLink, Eye, HelpCircle, Image, Info, LayoutGrid, MapPin, MessageCircle, Package, Palette, Pencil, Plus, Scissors, Smartphone, Trash2, UsersRound, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Copy, ExternalLink, Eye, HelpCircle, Image, Info, LayoutGrid, MapPin, MessageCircle, Package, Palette, Pencil, Plus, Scissors, Smartphone, Trash2, Type, UsersRound, X } from "lucide-react";
 import { AppShell, Page, PageHeader } from "@/components/AppShell";
 import { Badge, Button, IconButton, Input, Switch, Tabs, Textarea } from "@/design-system";
 import { CatalogImages, useSignedImages } from "@/components/CatalogImages";
 import { SiteRenderer, resolveSite } from "@/components/site/SiteRenderer";
-import { SITE_FONTS_HREF, SITE_SECTIONS, SITE_TEMPLATES, normaliseSections, templateById, type SiteSectionId, type SectionSetting } from "@/config/site-templates";
+import { SITE_ACCENTS, SITE_FONTS_HREF, SITE_HEADING_FONTS, SITE_SECTIONS, SITE_TEMPLATES, normaliseSections, templateById, type SiteSectionId, type SectionSetting } from "@/config/site-templates";
 import type { PublicStore } from "@/lib/catalog.functions";
 import { getWebsiteEditor, saveWebsite, type SiteInput } from "@/lib/website.functions";
 
@@ -42,6 +42,7 @@ function initial(d: Data): SiteInput {
   const r = resolveSite(d.store);
   return {
     category: r.category, template: r.template.id, accent: d.store.site?.accent ?? null, mode: r.mode, radius: r.radius,
+    headingFont: (d.store.site as { heading_font?: string | null } | null | undefined)?.heading_font ?? null,
     sections: r.sections, heroImage: d.heroPath, headline: d.store.site?.headline ?? "", subheadline: d.store.site?.subheadline ?? "",
     about: r.about, faqs: r.faqs, socials: { instagram: r.socials["instagram"] ?? "", tiktok: r.socials["tiktok"] ?? "", facebook: r.socials["facebook"] ?? "" },
     published: d.published,
@@ -64,6 +65,7 @@ function Editor({ data }: { data: Data }) {
     ...data.store,
     site: {
       category: f.category, template: f.template, accent: f.accent, mode: f.mode, radius: f.radius, sections: f.sections,
+      heading_font: f.headingFont,
       hero_image: f.heroImage ? (/^https?:/.test(f.heroImage) ? f.heroImage : signed(f.heroImage) ?? null) : null,
       headline: f.headline || null, subheadline: f.subheadline || null, about: f.about || null, faqs: f.faqs, socials: f.socials,
     },
@@ -73,7 +75,7 @@ function Editor({ data }: { data: Data }) {
 
   const pickTemplate = (id: string) => {
     const t = templateById(id);
-    setF((x) => ({ ...x, template: id, accent: null, radius: t.radius, mode: t.palette.bg.startsWith("#0") ? "dark" : "light" }));
+    setF((x) => ({ ...x, template: id, accent: null, headingFont: null, radius: t.radius, mode: t.palette.bg.startsWith("#0") ? "dark" : "light" }));
   };
   const move = (i: number, d: -1 | 1) => { const s = [...f.sections]; const j = i + d; if (j < 0 || j >= s.length) return; [s[i], s[j]] = [s[j]!, s[i]!]; set("sections", s); };
 
@@ -125,10 +127,13 @@ function Editor({ data }: { data: Data }) {
               ))}
             </div>
             <div className="border-t border-border-subtle pt-5"><div className="mb-4 flex items-center gap-2"><Palette className="size-4 text-secondary"/><p className="text-[14px] text-foreground">Style</p></div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div><span className={label}>Brand colour</span><div className="flex items-center gap-2"><input type="color" value={f.accent ?? tpl.palette.accent} onChange={(e) => set("accent", e.target.value)} className="h-9 w-12 cursor-pointer rounded border border-border bg-panel" />{f.accent && <button type="button" className="text-[11px] text-secondary underline" onClick={() => set("accent", null)}>Reset</button>}</div></div>
-              <div><span className={label}>Mode</span><Seg value={f.mode} options={[["light", "Light"], ["dark", "Dark"]]} onChange={(v) => set("mode", v as SiteInput["mode"])} /></div>
-              <div><span className={label}>Corners</span><Seg value={f.radius} options={[["square", "Square"], ["rounded", "Soft"], ["pill", "Round"]]} onChange={(v) => set("radius", v as SiteInput["radius"])} /></div>
+            <div className="space-y-5">
+              <AccentPicker value={f.accent ?? tpl.palette.accent} custom={f.accent} onSelect={(hex) => set("accent", hex)} onReset={() => set("accent", null)} />
+              <FontPicker value={f.headingFont} fallback={tpl.headingFont} onSelect={(id) => set("headingFont", id)} />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div><span className={label}>Mode</span><Seg value={f.mode} options={[["light", "Light"], ["dark", "Dark"]]} onChange={(v) => set("mode", v as SiteInput["mode"])} /></div>
+                <div><span className={label}>Corners</span><Seg value={f.radius} options={[["square", "Square"], ["rounded", "Soft"], ["pill", "Round"]]} onChange={(v) => set("radius", v as SiteInput["radius"])} /></div>
+              </div>
             </div>
             </div>
           </section>}
@@ -208,6 +213,67 @@ function Seg({ value, options, onChange }: { value: string; options: [string, st
   return (
     <div className="inline-flex rounded-md border border-border bg-panel p-0.5">
       {options.map(([v, l]) => <button key={v} type="button" onClick={() => onChange(v)} className={`rounded px-2.5 py-1 text-[12px] ${value === v ? "bg-primary text-primary-foreground" : "text-secondary"}`}>{l}</button>)}
+    </div>
+  );
+}
+
+/** Ink that stays readable on top of a chosen colour. */
+function onColour(hex: string) {
+  const n = Number.parseInt(hex.replace("#", ""), 16);
+  const l = (0.299 * ((n >> 16) & 255) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+  return l > 0.62 ? "#111111" : "#FFFFFF";
+}
+
+/** Curated brand-colour swatches plus a free hex field. */
+function AccentPicker({ value, custom, onSelect, onReset }: { value: string; custom: string | null; onSelect: (hex: string) => void; onReset: () => void }) {
+  const current = value.toUpperCase();
+  const [hex, setHex] = useState(current);
+  useEffect(() => { setHex(current); }, [current]);
+  const swatches = SITE_ACCENTS.some((c) => c.toUpperCase() === current) ? [...SITE_ACCENTS] : [current, ...SITE_ACCENTS];
+  return (
+    <div>
+      <span className="mb-2 block text-[12px] text-secondary">Brand colour</span>
+      <div className="flex flex-wrap gap-2">
+        {swatches.map((c) => {
+          const on = c.toUpperCase() === current;
+          return <button key={c} type="button" aria-label={`Brand colour ${c}`} aria-pressed={on} onClick={() => onSelect(c)}
+            className={`grid size-8 place-items-center rounded-full border transition-transform hover:scale-105 ${on ? "border-foreground/30 ring-2 ring-primary/40" : "border-border"}`}
+            style={{ background: c, color: onColour(c) }}>{on && <Check className="size-3.5" />}</button>;
+        })}
+      </div>
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <span className="size-8 shrink-0 rounded-full border border-border" style={{ background: current }} />
+        <input value={hex} spellCheck={false} aria-label="Custom colour hex" placeholder="#B4593A"
+          onChange={(e) => setHex(e.target.value)}
+          onBlur={() => { const v = hex.trim(); if (/^#[0-9a-fA-F]{6}$/.test(v)) onSelect(v.toUpperCase()); else setHex(current); }}
+          onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+          className="h-9 w-28 rounded-md border border-border bg-panel px-3 font-mono text-[12px] uppercase text-foreground outline-none focus:border-primary" />
+        <span className="text-[11px] text-tertiary">Or paste any hex</span>
+        {custom && <button type="button" className="text-[11px] text-secondary underline" onClick={onReset}>Reset to template</button>}
+      </div>
+    </div>
+  );
+}
+
+/** Heading faces, each previewed in its own typeface. */
+function FontPicker({ value, fallback, onSelect }: { value: string | null; fallback: string; onSelect: (id: string | null) => void }) {
+  return (
+    <div>
+      <span className="mb-2 flex items-center gap-1.5 text-[12px] text-secondary"><Type className="size-3.5" />Heading font</span>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <button type="button" aria-pressed={value === null} onClick={() => onSelect(null)}
+          className={`rounded-lg border p-3 text-left transition-colors ${value === null ? "border-primary bg-hover" : "border-border hover:bg-hover"}`}>
+          <span className="block truncate text-[18px] leading-tight text-foreground" style={{ fontFamily: fallback }}>Ag</span>
+          <span className="mt-1 block truncate text-[11px] text-tertiary">Template default</span>
+        </button>
+        {SITE_HEADING_FONTS.map((font) => (
+          <button key={font.id} type="button" aria-pressed={value === font.id} onClick={() => onSelect(font.id)}
+            className={`rounded-lg border p-3 text-left transition-colors ${value === font.id ? "border-primary bg-hover" : "border-border hover:bg-hover"}`}>
+            <span className="block truncate text-[18px] leading-tight text-foreground" style={{ fontFamily: font.stack }}>Ag</span>
+            <span className="mt-1 block truncate text-[11px] text-tertiary">{font.name}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

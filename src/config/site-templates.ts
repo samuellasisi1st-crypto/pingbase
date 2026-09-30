@@ -67,11 +67,6 @@ export const SITE_TEMPLATES: SiteTemplate[] = [
     palette: { bg: "#0B0B0B", surface: "#141414", text: "#EFE9DF", soft: "#9B9285", border: "#2A261F", accent: "#CEA96A", onAccent: "#0B0B0B" },
   },
   {
-    id: "studio", name: "Studio", hint: "Swiss grid, gallery first", categories: ["beauty", "health", "services"], source: "bookwan",
-    hero: "split", headingFont: "'Space Grotesk', sans-serif", bodyFont: "'Inter', sans-serif", radius: "square",
-    palette: { bg: "#FFFFFF", surface: "#F4F4F2", text: "#111111", soft: "#6B6B6B", border: "#E4E4E0", accent: "#1F4BFF", onAccent: "#FFFFFF" },
-  },
-  {
     id: "playful", name: "Playful", hint: "Bold colour blocks, social", categories: ["beauty", "services"], source: "bookwan",
     hero: "blocks", headingFont: "'Syne', sans-serif", bodyFont: "'DM Sans', sans-serif", radius: "rounded",
     palette: { bg: "#DCC6FF", surface: "#FFFFFF", text: "#2A0F52", soft: "#5B4285", border: "#C4A8F2", accent: "#3A1470", onAccent: "#F4ECFF" },
@@ -83,19 +78,53 @@ export const SITE_TEMPLATES: SiteTemplate[] = [
     palette: { bg: "#F3F1EC", surface: "#8FA8DC", text: "#1F2A22", soft: "#5E6660", border: "#DAD6CD", accent: "#F26A21", onAccent: "#FFFFFF", nav: "#F3F1EC", onNav: "#1F4A32" },
   },
   {
-    id: "botanical", name: "Botanical", hint: "Deep green, serif headlines, calm shop", categories: ["shop", "health"], source: "pingbase",
-    hero: "split", headingFont: "'Instrument Serif', serif", bodyFont: "'Inter', sans-serif", radius: "rounded",
-    palette: { bg: "#FFFFFF", surface: "#F1F1EF", text: "#14201A", soft: "#5F6B64", border: "#E6E8E4", accent: "#E4F5A1", onAccent: "#14201A", nav: "#0F2A1D", onNav: "#FFFFFF" },
+    // Organic wellness: parchment paper, forest nav, framed natural hero.
+    id: "botanical", name: "Botanical", hint: "Parchment, forest green, organic shop", categories: ["shop", "health"], source: "pingbase",
+    hero: "framed", headingFont: "'Instrument Serif', serif", bodyFont: "'Inter', sans-serif", radius: "rounded",
+    palette: { bg: "#F7F5EE", surface: "#EEF0E7", text: "#182A20", soft: "#5F6B60", border: "#DDDED2", accent: "#2E5E3F", onAccent: "#F3F6EC", nav: "#0F2A1D", onNav: "#F0F3E8" },
   },
   {
-    id: "clinic", name: "Clinic", hint: "Calm, clear and trust-first", categories: ["health", "services"], source: "pingbase",
-    hero: "split", headingFont: "'Manrope', sans-serif", bodyFont: "'Manrope', sans-serif", radius: "rounded",
-    palette: { bg: "#F6F8FA", surface: "#FFFFFF", text: "#0F1B2A", soft: "#5A6778", border: "#E1E6EC", accent: "#0F766E", onAccent: "#FFFFFF" },
+    // Swiss poster: stark monochrome, hard square corners, tracked caps.
+    id: "studio", name: "Studio", hint: "Swiss poster grid, stark monochrome", categories: ["beauty", "health", "services"], source: "pingbase",
+    hero: "editorial", headingFont: "'Space Grotesk', sans-serif", bodyFont: "'Inter', sans-serif", radius: "square", caps: true,
+    palette: { bg: "#FFFFFF", surface: "#EFEFEC", text: "#0A0A0A", soft: "#6B6B6B", border: "#111111", accent: "#1F4BFF", onAccent: "#FFFFFF" },
+  },
+  {
+    // Healthcare: cool slate-ice page, white cards, soft pill corners.
+    id: "clinic", name: "Clinic", hint: "Calm slate-ice, trust-first, soft pills", categories: ["health", "services"], source: "pingbase",
+    hero: "split", headingFont: "'Manrope', sans-serif", bodyFont: "'Manrope', sans-serif", radius: "pill",
+    palette: { bg: "#F1F5FA", surface: "#FFFFFF", text: "#0F1B2A", soft: "#5A6778", border: "#DCE5EF", accent: "#0F766E", onAccent: "#FFFFFF" },
   },
 ];
 
+/** Heading faces a business can swap in, Bookwan-style. `null` keeps the template's own face. */
+export const SITE_HEADING_FONTS = [
+  { id: "instrument", name: "Instrument Serif", stack: "'Instrument Serif', Georgia, serif" },
+  { id: "playfair", name: "Playfair Display", stack: "'Playfair Display', Georgia, serif" },
+  { id: "fraunces", name: "Fraunces", stack: "'Fraunces', Georgia, serif" },
+  { id: "cormorant", name: "Cormorant Garamond", stack: "'Cormorant Garamond', Georgia, serif" },
+  { id: "bricolage", name: "Bricolage Grotesque", stack: "'Bricolage Grotesque', system-ui, sans-serif" },
+  { id: "space", name: "Space Grotesk", stack: "'Space Grotesk', system-ui, sans-serif" },
+  { id: "syne", name: "Syne", stack: "'Syne', system-ui, sans-serif" },
+  { id: "outfit", name: "Outfit", stack: "'Outfit', system-ui, sans-serif" },
+  { id: "manrope", name: "Manrope", stack: "'Manrope', system-ui, sans-serif" },
+  { id: "dmsans", name: "DM Sans", stack: "'DM Sans', system-ui, sans-serif" },
+  { id: "inter", name: "Inter", stack: "'Inter', system-ui, sans-serif" },
+] as const;
+export type SiteHeadingFontId = (typeof SITE_HEADING_FONTS)[number]["id"];
+
+export function headingFontStack(id?: string | null): string | null {
+  return SITE_HEADING_FONTS.find((f) => f.id === id)?.stack ?? null;
+}
+
+/** Curated brand colours shown as swatches; any hex is still allowed. */
+export const SITE_ACCENTS = [
+  "#111111", "#B4593A", "#B7241C", "#F26522", "#CEA96A", "#2E7D50",
+  "#0F766E", "#2E7BAA", "#1F4BFF", "#5B21D6", "#C2295E", "#5F1E48",
+] as const;
+
 export const SITE_FONTS_HREF =
-  "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Fraunces:opsz,wght@9..144,400;9..144,600&family=DM+Sans:wght@400;500;700&family=Cormorant+Garamond:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&family=Syne:wght@500;700;800&family=Outfit:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap";
+  "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Fraunces:opsz,wght@9..144,400;9..144,600&family=DM+Sans:wght@400;500;700&family=Cormorant+Garamond:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&family=Syne:wght@500;700;800&family=Outfit:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap";
 
 const DEFAULT_SECTIONS: Record<SiteCategoryId, SiteSectionId[]> = {
   beauty: ["services", "gallery", "about", "team", "faq", "location", "contact"],

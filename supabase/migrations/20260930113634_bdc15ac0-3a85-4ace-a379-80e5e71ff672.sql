@@ -1,0 +1,1 @@
+ALTER TABLE public.website_configs ADD COLUMN IF NOT EXISTS heading_font text;

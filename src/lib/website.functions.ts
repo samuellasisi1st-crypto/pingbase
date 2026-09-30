@@ -27,6 +27,7 @@ const siteInput = z.object({
   category: z.enum(["beauty", "shop", "health", "services"]),
   template: z.string().min(1).max(40),
   accent: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable(),
+  headingFont: z.string().max(30).nullable(),
   mode: z.enum(["light", "dark"]),
   radius: z.enum(["square", "rounded", "pill"]),
   sections: z.array(z.object({ id: z.string().max(30), enabled: z.boolean() })).max(20),
@@ -48,6 +49,7 @@ export const saveWebsite = createServerFn({ method: "POST" })
     if (data.heroImage && !/^https?:/.test(data.heroImage) && !data.heroImage.startsWith(`${w}/`)) throw new Error("Invalid photo.");
     const { error } = await context.supabase.from("website_configs").upsert({
       workspace_id: w, category: data.category, template: data.template, accent: data.accent, mode: data.mode, radius: data.radius,
+      heading_font: data.headingFont,
       sections: data.sections, hero_image: data.heroImage, headline: data.headline || null, subheadline: data.subheadline || null,
       about: data.about || null, faqs: data.faqs, socials: data.socials,
     });

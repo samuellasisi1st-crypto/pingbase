@@ -1,7 +1,7 @@
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { ArrowRight, CalendarDays, ChevronDown, Clock3, Instagram, Mail, MapPin, MessageCircle, Phone, ShoppingBag, Video } from "lucide-react";
 import type { PublicStore } from "@/lib/catalog.functions";
-import { templateById, normaliseSections, defaultSections, type SiteCategoryId, type SiteTemplate, type SectionSetting } from "@/config/site-templates";
+import { templateById, normaliseSections, defaultSections, headingFontStack, type SiteCategoryId, type SiteTemplate, type SectionSetting } from "@/config/site-templates";
 import { money } from "@/lib/time";
 
 export type Service = PublicStore["services"][number];
@@ -23,9 +23,12 @@ export type ResolvedSite = {
 };
 
 export function resolveSite(store: PublicStore): ResolvedSite {
-  const c = store.site;
+  const c = store.site as (typeof store.site & { heading_font?: string | null }) | null | undefined;
   const category = (c?.category ?? (store.products.length && !store.services.length ? "shop" : "beauty")) as SiteCategoryId;
-  const template = templateById(c?.template ?? (category === "shop" ? "bold" : "signature"));
+  const base = templateById(c?.template ?? (category === "shop" ? "bold" : "signature"));
+  // A chosen heading face overrides the template's own, everywhere it is used.
+  const chosen = headingFontStack(c?.heading_font);
+  const template = chosen ? { ...base, headingFont: chosen } : base;
   return {
     template, category,
     sections: normaliseSections(c?.sections, defaultSections(category, store.products.length > 0, store.services.length > 0)),

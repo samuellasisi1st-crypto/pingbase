@@ -1711,6 +1711,7 @@ export type Database = {
           category: string
           created_at: string
           faqs: Json
+          heading_font: string | null
           headline: string | null
           hero_image: string | null
           mode: string
@@ -1728,6 +1729,7 @@ export type Database = {
           category?: string
           created_at?: string
           faqs?: Json
+          heading_font?: string | null
           headline?: string | null
           hero_image?: string | null
           mode?: string
@@ -1745,6 +1747,7 @@ export type Database = {
           category?: string
           created_at?: string
           faqs?: Json
+          heading_font?: string | null
           headline?: string | null
           hero_image?: string | null
           mode?: string
