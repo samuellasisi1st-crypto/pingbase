@@ -184,6 +184,9 @@ export async function logIntegration(
 }
 
 async function setChannelError(workspaceId: string, channel: string, message: string) {
+  // Only connection-level failures (expired/invalid token, permissions) take the channel offline.
+  // Per-recipient errors like "No matching user found" must not block every other conversation.
+  if (!/OAuth|token|permission|#190|#10\b|#200/i.test(message)) return;
   await supabaseAdmin
     .from("channel_connections")
     .update({ status: /OAuth|token/i.test(message) ? "NEEDS_REAUTH" : "ERROR", last_error: message, updated_at: new Date().toISOString() })
