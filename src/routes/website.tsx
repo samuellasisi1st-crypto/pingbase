@@ -3,12 +3,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Copy, ExternalLink, Eye, HelpCircle, Image, Info, LayoutGrid, MapPin, MessageCircle, Package, Palette, Pencil, Plus, Scissors, Smartphone, Trash2, UsersRound, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Copy, ExternalLink, Eye, HelpCircle, Image, Info, LayoutGrid, MapPin, MessageCircle, Package, Palette, Pencil, Plus, Scissors, Smartphone, Trash2, Type, UsersRound, X } from "lucide-react";
 import { AppShell, Page, PageHeader } from "@/components/AppShell";
 import { Badge, Button, IconButton, Input, Switch, Tabs, Textarea } from "@/design-system";
 import { CatalogImages, useSignedImages } from "@/components/CatalogImages";
 import { SiteRenderer, resolveSite } from "@/components/site/SiteRenderer";
-import { SITE_FONTS_HREF, SITE_SECTIONS, SITE_TEMPLATES, normaliseSections, templateById, type SiteSectionId, type SectionSetting } from "@/config/site-templates";
+import { SITE_ACCENTS, SITE_FONTS_HREF, SITE_HEADING_FONTS, SITE_SECTIONS, SITE_TEMPLATES, normaliseSections, templateById, type SiteSectionId, type SectionSetting } from "@/config/site-templates";
 import type { PublicStore } from "@/lib/catalog.functions";
 import { getWebsiteEditor, saveWebsite, type SiteInput } from "@/lib/website.functions";
 
@@ -75,7 +75,7 @@ function Editor({ data }: { data: Data }) {
 
   const pickTemplate = (id: string) => {
     const t = templateById(id);
-    setF((x) => ({ ...x, template: id, accent: null, radius: t.radius, mode: t.palette.bg.startsWith("#0") ? "dark" : "light" }));
+    setF((x) => ({ ...x, template: id, accent: null, headingFont: null, radius: t.radius, mode: t.palette.bg.startsWith("#0") ? "dark" : "light" }));
   };
   const move = (i: number, d: -1 | 1) => { const s = [...f.sections]; const j = i + d; if (j < 0 || j >= s.length) return; [s[i], s[j]] = [s[j]!, s[i]!]; set("sections", s); };
 
