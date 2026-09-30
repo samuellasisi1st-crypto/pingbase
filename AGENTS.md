@@ -48,3 +48,8 @@
 
 ## Multi-tenancy
 - Each account gets its own workspace via `joinWorkspace` (creates an empty workspace on first sign-in) and must finish `/onboarding` before using the app; server functions resolve the caller's workspace from membership, never a hard-coded ID, so no business sees another's or demo data.
+
+## Catalogue & store
+- Services are edited in a 4-step wizard at `/services/$serviceId` and saved in one `saveService` call that replaces variants, add-ons, intake questions and staff links together, so a service is never half-saved.
+- Products live in `products`; each chooses `reserve` (pay in store) or `enquiry`, because online payments aren't enabled yet.
+- The public store `/s/$slug` reads only through the service-role `public_store` SQL function (visible, active items only), and catalogue photos stay in the private `attachments` bucket under `<workspace_id>/catalog/` served via signed URLs, since public buckets are blocked.

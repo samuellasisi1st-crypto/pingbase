@@ -935,7 +935,7 @@ export async function runAgent(ctx: Ctx): Promise<string> {
       .eq("conversation_id", ctx.conversationId)
       .order("created_at")
       .limit(60),
-    db.from("services").select("id,name,price_pence,duration_minutes,deposit_pence").eq("workspace_id", ctx.workspaceId).eq("active", true),
+    db.from("services").select("id,name,description,price_pence,duration_minutes,deposit_pence,online_booking,location_type,service_variants(name,price_pence,duration_minutes),service_addons(name,price_pence,duration_minutes),service_questions(label,type,options,required)").eq("workspace_id", ctx.workspaceId).eq("active", true).eq("archived", false),
     db.from("staff").select("id,name,role_title").eq("workspace_id", ctx.workspaceId).eq("active", true),
     db
       .from("appointments")
@@ -957,6 +957,11 @@ export async function runAgent(ctx: Ctx): Promise<string> {
       .limit(12),
   ]);
 
+  const [{ data: products }, { data: wsRow }] = await Promise.all([
+    db.from("products").select("name,price_pence,fulfilment,stock").eq("workspace_id", ctx.workspaceId).eq("active", true).limit(60),
+    db.from("workspaces").select("slug,store_enabled").eq("id", ctx.workspaceId).maybeSingle(),
+  ]);
+  const storeSlug = wsRow?.store_enabled ? wsRow.slug : null;
   const now = new Date();
   const system = [
     `You are ${agent?.agent_name ?? "the assistant"}, the booking concierge for ${settings?.legal_name ?? "this business"}.`,
@@ -970,9 +975,18 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     `Booking rules: minimum ${settings?.min_notice_minutes ?? 120} minutes notice, up to ${settings?.max_days_ahead ?? 90} days ahead, ${settings?.buffer_minutes ?? 15} minutes buffer between appointments.`,
     "",
     "Services (id | name | price | duration | deposit):",
-    ...(services ?? []).map(
-      (s) => `- ${s.id} | ${s.name} | ${money(s.price_pence)} | ${s.duration_minutes} min | ${s.deposit_pence ? money(s.deposit_pence) : "no deposit"}`,
-    ),
+    ...(services ?? []).flatMap((s) => {
+      const x = s as unknown as { online_booking: boolean; location_type: string; description: string | null; service_variants: Array<{ name: string; price_pence: number; duration_minutes: number }>; service_addons: Array<{ name: string; price_pence: number; duration_minutes: number }>; service_questions: Array<{ label: string; type: string; options: string[]; required: boolean }> };
+      return [
+        `- ${s.id} | ${s.name} | ${money(s.price_pence)} | ${s.duration_minutes} min | ${s.deposit_pence ? money(s.deposit_pence) : "no deposit"} | ${x.location_type === "online" ? "online" : x.location_type === "at_customer" ? "at customer's address" : "at the business"}${x.online_booking ? "" : " | ENQUIRY ONLY: do not book; take details and escalate_to_human"}`,
+        ...(x.description ? [`    about: ${x.description.slice(0, 240)}`] : []),
+        ...(x.service_variants?.length ? [`    options (price/duration differ; ask which one; book the base service and note the option): ${x.service_variants.map((v) => `${v.name} ${money(v.price_pence)} ${v.duration_minutes}min`).join("; ")}`] : []),
+        ...(x.service_addons?.length ? [`    add-ons: ${x.service_addons.map((a) => `${a.name} +${money(a.price_pence)}${a.duration_minutes ? ` +${a.duration_minutes}min` : ""}`).join("; ")}`] : []),
+        ...(x.service_questions?.length ? [`    intake questions to ask before confirming (save answers in the booking notes / internal note): ${x.service_questions.map((q) => `${q.label}${q.required ? " (required)" : ""}${q.options?.length ? ` [${q.options.join("/")}]` : ""}`).join("; ")}`] : []),
+      ];
+    }),
+    ...((products ?? []).length ? ["Products (not bookable; customers reserve and pay in store, or enquire; share the store link):", ...(products ?? []).map((p) => `- ${p.name} | ${money(p.price_pence)} | ${p.fulfilment === "reserve" ? (p.stock === 0 ? "out of stock" : "reserve & pay in store") : "enquiry"}`)] : []),
+    ...(storeSlug ? [`Public store link: ${process.env["PUBLIC_APP_URL"] ?? "https://pingbase.lovable.app"}/s/${storeSlug}`] : []),
     "Team:",
     ...(staff ?? []).map((s) => `- ${s.id} | ${s.name} (${s.role_title ?? ""})`),
     "",

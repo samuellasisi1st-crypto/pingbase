@@ -35,6 +35,8 @@ import { Route as TesterRouteImport } from './routes/tester'
 import { Route as WhatsNewRouteImport } from './routes/whats-new'
 import { Route as AiAgentsAgentIdRouteImport } from './routes/ai-agents_.$agentId'
 import { Route as PayPaymentIdRouteImport } from './routes/pay.$paymentId'
+import { Route as SSlugRouteImport } from './routes/s.$slug'
+import { Route as ServicesServiceIdRouteImport } from './routes/services_.$serviceId'
 import { Route as ApiPublicWebhooksMetaRouteImport } from './routes/api/public/webhooks/meta'
 import { Route as ApiPublicOauthGoogleCallbackRouteImport } from './routes/api/public/oauth/google/callback'
 import { Route as ApiPublicOauthMetaCallbackRouteImport } from './routes/api/public/oauth/meta/callback'
@@ -169,6 +171,16 @@ const PayPaymentIdRoute = PayPaymentIdRouteImport.update({
   path: '/pay/$paymentId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SSlugRoute = SSlugRouteImport.update({
+  id: '/s/$slug',
+  path: '/s/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ServicesServiceIdRoute = ServicesServiceIdRouteImport.update({
+  id: '/services_/$serviceId',
+  path: '/services/$serviceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksMetaRoute = ApiPublicWebhooksMetaRouteImport.update({
   id: '/api/public/webhooks/meta',
   path: '/api/public/webhooks/meta',
@@ -214,6 +226,8 @@ export interface FileRoutesByFullPath {
   '/whats-new': typeof WhatsNewRoute
   '/ai-agents/$agentId': typeof AiAgentsAgentIdRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
+  '/s/$slug': typeof SSlugRoute
+  '/services/$serviceId': typeof ServicesServiceIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/oauth/google/callback': typeof ApiPublicOauthGoogleCallbackRoute
   '/api/public/oauth/meta/callback': typeof ApiPublicOauthMetaCallbackRoute
@@ -245,6 +259,8 @@ export interface FileRoutesByTo {
   '/whats-new': typeof WhatsNewRoute
   '/ai-agents/$agentId': typeof AiAgentsAgentIdRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
+  '/s/$slug': typeof SSlugRoute
+  '/services/$serviceId': typeof ServicesServiceIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/oauth/google/callback': typeof ApiPublicOauthGoogleCallbackRoute
   '/api/public/oauth/meta/callback': typeof ApiPublicOauthMetaCallbackRoute
@@ -277,6 +293,8 @@ export interface FileRoutesById {
   '/whats-new': typeof WhatsNewRoute
   '/ai-agents_/$agentId': typeof AiAgentsAgentIdRoute
   '/pay/$paymentId': typeof PayPaymentIdRoute
+  '/s/$slug': typeof SSlugRoute
+  '/services_/$serviceId': typeof ServicesServiceIdRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/oauth/google/callback': typeof ApiPublicOauthGoogleCallbackRoute
   '/api/public/oauth/meta/callback': typeof ApiPublicOauthMetaCallbackRoute
@@ -310,6 +328,8 @@ export interface FileRouteTypes {
     | '/whats-new'
     | '/ai-agents/$agentId'
     | '/pay/$paymentId'
+    | '/s/$slug'
+    | '/services/$serviceId'
     | '/api/public/webhooks/meta'
     | '/api/public/oauth/google/callback'
     | '/api/public/oauth/meta/callback'
@@ -341,6 +361,8 @@ export interface FileRouteTypes {
     | '/whats-new'
     | '/ai-agents/$agentId'
     | '/pay/$paymentId'
+    | '/s/$slug'
+    | '/services/$serviceId'
     | '/api/public/webhooks/meta'
     | '/api/public/oauth/google/callback'
     | '/api/public/oauth/meta/callback'
@@ -372,6 +394,8 @@ export interface FileRouteTypes {
     | '/whats-new'
     | '/ai-agents_/$agentId'
     | '/pay/$paymentId'
+    | '/s/$slug'
+    | '/services_/$serviceId'
     | '/api/public/webhooks/meta'
     | '/api/public/oauth/google/callback'
     | '/api/public/oauth/meta/callback'
@@ -404,6 +428,8 @@ export interface RootRouteChildren {
   WhatsNewRoute: typeof WhatsNewRoute
   AiAgentsAgentIdRoute: typeof AiAgentsAgentIdRoute
   PayPaymentIdRoute: typeof PayPaymentIdRoute
+  SSlugRoute: typeof SSlugRoute
+  ServicesServiceIdRoute: typeof ServicesServiceIdRoute
   ApiPublicWebhooksMetaRoute: typeof ApiPublicWebhooksMetaRoute
   ApiPublicOauthGoogleCallbackRoute: typeof ApiPublicOauthGoogleCallbackRoute
   ApiPublicOauthMetaCallbackRoute: typeof ApiPublicOauthMetaCallbackRoute
@@ -593,6 +619,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PayPaymentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/s/$slug': {
+      id: '/s/$slug'
+      path: '/s/$slug'
+      fullPath: '/s/$slug'
+      preLoaderRoute: typeof SSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/services_/$serviceId': {
+      id: '/services_/$serviceId'
+      path: '/services/$serviceId'
+      fullPath: '/services/$serviceId'
+      preLoaderRoute: typeof ServicesServiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/meta': {
       id: '/api/public/webhooks/meta'
       path: '/api/public/webhooks/meta'
@@ -644,6 +684,8 @@ const rootRouteChildren: RootRouteChildren = {
   WhatsNewRoute: WhatsNewRoute,
   AiAgentsAgentIdRoute: AiAgentsAgentIdRoute,
   PayPaymentIdRoute: PayPaymentIdRoute,
+  SSlugRoute: SSlugRoute,
+  ServicesServiceIdRoute: ServicesServiceIdRoute,
   ApiPublicWebhooksMetaRoute: ApiPublicWebhooksMetaRoute,
   ApiPublicOauthGoogleCallbackRoute: ApiPublicOauthGoogleCallbackRoute,
   ApiPublicOauthMetaCallbackRoute: ApiPublicOauthMetaCallbackRoute,

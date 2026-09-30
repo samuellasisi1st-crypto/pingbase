@@ -16,3 +16,4 @@
 - [x] Tighten landing grid boxes, carousels, dark Nia section, patterns, testimonials, CTA, and footer strokes
 - [x] Soften landing patterns, animate sections, restore Nia CTA contrast, and replace the footer landscape
 - [x] Add authentic industry photography, hero word transitions, industry autoplay, and a blended photographic footer
+- [x] Bookwan-style service wizard, products, reservations and public store link
