@@ -275,7 +275,7 @@ export const sendHumanReply = createServerFn({ method: "POST" })
       })
       .eq("id", conversation.id);
 
-    return { ok: true, delivered: conversation.channel === "test" };
+    return { ok: true, delivered: delivery.delivered, error: delivery.error ?? undefined };
   });
 
 /** Take over / hand back to the AI. */
