@@ -21,7 +21,7 @@ const NAV = [
   { to: "/inbox", label: "Inbox", icon: Inbox },
   { to: "/contacts", label: "Contacts", icon: Users },
   { to: "/appointments", label: "Appointments", icon: CalendarDays },
-  { to: "/services", label: "Services", icon: Scissors },
+  { to: "/services", label: "Catalogue", icon: Scissors },
   { to: "/automations", label: "Automations", icon: Zap },
   { to: "/ai-agents", label: "AI Agents", icon: Bot },
 ] as const;
@@ -38,7 +38,7 @@ const MOBILE_NAV = [
   { to: "/appointments", label: "Bookings", icon: CalendarDays },
 ] as const;
 const MOBILE_MORE = [
-  { to: "/services", label: "Services", icon: Scissors },
+  { to: "/services", label: "Catalogue", icon: Scissors },
   { to: "/automations", label: "Automations", icon: Zap },
   { to: "/ai-agents", label: "AI Agents", icon: Bot },
   { to: "/search", label: "Search", icon: Search },
