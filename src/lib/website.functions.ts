@@ -27,6 +27,7 @@ const siteInput = z.object({
   category: z.enum(["beauty", "shop", "health", "services"]),
   template: z.string().min(1).max(40),
   accent: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable(),
+  headingFont: z.string().max(30).nullable(),
   mode: z.enum(["light", "dark"]),
   radius: z.enum(["square", "rounded", "pill"]),
   sections: z.array(z.object({ id: z.string().max(30), enabled: z.boolean() })).max(20),
