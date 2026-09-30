@@ -11,7 +11,7 @@ type Slot = { starts_at: string; ends_at: string; staff_id: string; staff_name: 
 
 function londonDay(offset: number) {
   const d = new Date(Date.now() + offset * 86400000);
-  const [y, m, day] = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).format(d).split("-").map(Number);
+  const [y, m, day] = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/London", year: "numeric", month: "2-digit", day: "2-digit" }).format(d).split("-").map(Number) as [number, number, number];
   return { key: `${y}-${m}-${day}`, start: zonedToUtc(y, m, day, 0, 0), label: new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/London", weekday: "short", day: "numeric" }).format(d) };
 }
 
@@ -24,7 +24,8 @@ export function BookingSheet({ slug, service, onClose }: { slug: string; service
   const [done, setDone] = useState<{ starts_at: string; staff_name: string | null; invite: boolean } | null>(null);
   const fetchSlots = useServerFn(getStoreSlots);
   const book = useServerFn(createStoreBooking);
-  const slots = useQuery({ queryKey: ["store-slots", slug, service.id, days[day].key], queryFn: () => fetchSlots({ data: { slug, serviceId: service.id, fromISO: days[day].start.toISOString() } }) });
+  const today = days[day]!;
+  const slots = useQuery({ queryKey: ["store-slots", slug, service.id, today.key], queryFn: () => fetchSlots({ data: { slug, serviceId: service.id, fromISO: today.start.toISOString() } }) });
   const call = service.location_type === "online";
   const payNote = service.payment_mode === "in_store" ? "Pay at your appointment" : "Pay in store for now — online payment is coming soon";
 
