@@ -71,7 +71,7 @@ export const getServiceEditor = createServerFn({ method: "POST" })
     const service: ServiceInput = {
       id: s.id, name: s.name, description: s.description ?? "", categoryName: cat?.name ?? "",
       pricePence: s.price_pence, durationMinutes: s.duration_minutes, bufferMinutes: s.buffer_minutes, depositPence: s.deposit_pence,
-      locationType: s.location_type, visibleInStore: s.visible_in_store, onlineBooking: s.online_booking, active: s.active,
+      locationType: s.location_type as ServiceInput["locationType"], visibleInStore: s.visible_in_store, onlineBooking: s.online_booking, active: s.active,
       imagePaths: s.image_urls ?? [], staffIds: (links ?? []).map((l: any) => l.staff_id),
       variants: (variants ?? []).map((v: any) => ({ name: v.name, pricePence: v.price_pence, durationMinutes: v.duration_minutes })),
       addons: (addons ?? []).map((a: any) => ({ name: a.name, pricePence: a.price_pence, durationMinutes: a.duration_minutes })),

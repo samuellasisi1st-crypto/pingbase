@@ -13,7 +13,7 @@ import { money } from "@/lib/time";
 
 type Tab = "services" | "products" | "requests" | "store";
 export const Route = createFileRoute("/services")({
-  validateSearch: (s: Record<string, unknown>): { tab?: Tab } => ({ tab: ["services", "products", "requests", "store"].includes(s.tab as string) ? (s.tab as Tab) : undefined }),
+  validateSearch: (s: Record<string, unknown>): { tab?: Tab | undefined } => ({ tab: ["services", "products", "requests", "store"].includes(s["tab"] as string) ? (s["tab"] as Tab) : undefined }),
   head: () => ({ meta: [
     { title: "Catalogue — Pingbase" },
     { name: "description", content: "Manage your services, products and public store link in one catalogue." },
@@ -59,7 +59,7 @@ function CataloguePage() {
   </AppShell>;
 }
 
-function Cover({ path, icon: Icon }: { path?: string; icon: typeof Scissors }) {
+function Cover({ path, icon: Icon }: { path?: string | undefined; icon: typeof Scissors }) {
   const src = useSignedImages(path ? [path] : []);
   const url = path ? src(path) : undefined;
   return <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-hover">{url ? <img src={url} alt="" className="size-full object-cover" /> : <Icon className="size-4 text-tertiary" />}</span>;
