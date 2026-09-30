@@ -1,4 +1,4 @@
-import { Globe, Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
