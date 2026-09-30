@@ -42,6 +42,7 @@ function initial(d: Data): SiteInput {
   const r = resolveSite(d.store);
   return {
     category: r.category, template: r.template.id, accent: d.store.site?.accent ?? null, mode: r.mode, radius: r.radius,
+    headingFont: (d.store.site as { heading_font?: string | null } | null | undefined)?.heading_font ?? null,
     sections: r.sections, heroImage: d.heroPath, headline: d.store.site?.headline ?? "", subheadline: d.store.site?.subheadline ?? "",
     about: r.about, faqs: r.faqs, socials: { instagram: r.socials["instagram"] ?? "", tiktok: r.socials["tiktok"] ?? "", facebook: r.socials["facebook"] ?? "" },
     published: d.published,
