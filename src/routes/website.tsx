@@ -120,7 +120,7 @@ function Editor({ data }: { data: Data }) {
               {SITE_TEMPLATES.map((t) => (
                 <button key={t.id} type="button" onClick={() => pickTemplate(t.id)} aria-pressed={f.template === t.id} className={`overflow-hidden rounded-lg border text-left transition-colors ${f.template === t.id ? "border-primary ring-2 ring-primary/25" : "border-border hover:border-border-strong"}`}>
                   <TemplateSwatch id={t.id} />
-                  <div className="p-2.5"><p className="flex items-center gap-1.5 text-[13px] text-foreground">{t.name}{f.template === t.id && <Badge variant="blue">Selected</Badge>}</p><p className="text-[11px] text-tertiary">{t.hint}</p></div>
+                  <div className="p-2.5"><p className="flex items-center gap-1.5 text-[13px] text-foreground">{t.name}{f.template === t.id && <Badge variant="cyan">Selected</Badge>}</p><p className="text-[11px] text-tertiary">{t.hint}</p></div>
                 </button>
               ))}
             </div>
