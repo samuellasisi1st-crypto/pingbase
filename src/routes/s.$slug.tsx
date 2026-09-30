@@ -1,7 +1,8 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Clock3, MapPin, MessageCircle, Phone, ShoppingBag, X } from "lucide-react";
+import { CalendarDays, Clock3, MapPin, MessageCircle, Phone, ShoppingBag, Video, X } from "lucide-react";
+import { BookingSheet } from "@/components/StoreBookingSheet";
 import { toast } from "sonner";
 import { getPublicStore, submitProductRequest } from "@/lib/catalog.functions";
 import { money } from "@/lib/time";
@@ -26,6 +27,7 @@ export const Route = createFileRoute("/s/$slug")({
   component: Store,
 });
 
+type Service = NonNullable<Awaited<ReturnType<typeof getPublicStore>>>["services"][number];
 type Product = NonNullable<Awaited<ReturnType<typeof getPublicStore>>>["products"][number];
 
 function Store() {
@@ -34,6 +36,7 @@ function Store() {
   const [tab, setTab] = useState<"services" | "products">(store.services.length || !store.products.length ? "services" : "products");
   const [cat, setCat] = useState<string>("all");
   const [picked, setPicked] = useState<Product | null>(null);
+  const [booking, setBooking] = useState<Service | null>(null);
   const cats = store.categories.filter((c) => c.kind === (tab === "services" ? "service" : "product"));
   const items = useMemo(() => (tab === "services" ? store.services : store.products).filter((x) => cat === "all" || x.category_id === cat), [tab, cat, store]);
   const chat = (text: string) => store.whatsapp ? `https://wa.me/${store.whatsapp}?text=${encodeURIComponent(text)}` : store.workspace.phone ? `tel:${store.workspace.phone}` : null;
@@ -74,7 +77,11 @@ function Store() {
                   {s.description && <p className="line-clamp-3 text-[13px] text-secondary">{s.description}</p>}
                   {s.variants.length > 1 && <ul className="space-y-0.5 text-[12px] text-secondary">{s.variants.map((v) => <li key={v.name} className="flex justify-between"><span>{v.name}</span><span>{money(v.price_pence)}</span></li>)}</ul>}
                   <div className="mt-auto flex items-center justify-between pt-2 text-[13px]"><span className="flex items-center gap-1 text-secondary"><Clock3 className="size-3.5" />{s.duration_minutes} min</span><span>{s.variants.length > 1 ? "from " : ""}{from ? money(from) : "Free"}</span></div>
-                  {link && <a href={link} target="_blank" rel="noreferrer" className="mt-2 inline-flex h-9 items-center justify-center rounded-md bg-primary text-[13px] text-primary-foreground hover:opacity-90">Book</a>}
+                  {s.location_type === "online" && <span className="flex items-center gap-1.5 text-[12px] text-secondary"><Video className="size-3.5" />Phone or video call</span>}
+                  <div className="mt-2 grid gap-2">
+                    {s.online_booking && <button type="button" onClick={() => setBooking(s)} className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md bg-primary text-[13px] text-primary-foreground hover:opacity-90"><CalendarDays className="size-4" />{s.location_type === "online" ? "Book a call" : "Pick a time"}</button>}
+                    {link && <a href={link} target="_blank" rel="noreferrer" className={`inline-flex h-9 items-center justify-center gap-1.5 rounded-md text-[13px] ${s.online_booking ? "border border-border text-foreground hover:bg-hover" : "bg-primary text-primary-foreground hover:opacity-90"}`}><MessageCircle className="size-4" />{store.whatsapp ? "Book via WhatsApp" : "Call to book"}</a>}
+                  </div>
                 </div>
               </article>
             );
@@ -92,6 +99,8 @@ function Store() {
         </div>
       </main>
       <footer className="border-t border-border py-6 text-center text-[12px] text-tertiary">Powered by Pingbase</footer>
+      {store.whatsapp && <a href={chat("Hi! I'd like to book an appointment.")!} target="_blank" rel="noreferrer" aria-label="Chat on WhatsApp" className="fixed bottom-5 right-5 z-40 inline-flex h-12 items-center gap-2 rounded-full bg-foreground px-4 text-[14px] text-background shadow-lg hover:opacity-90"><MessageCircle className="size-5" /><span className="hidden sm:inline">Book via WhatsApp</span></a>}
+      {booking && <BookingSheet slug={slug} service={booking} onClose={() => setBooking(null)} />}
       {picked && <RequestSheet slug={slug} product={picked} onClose={() => setPicked(null)} />}
     </div>
   );
