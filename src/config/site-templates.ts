@@ -67,11 +67,6 @@ export const SITE_TEMPLATES: SiteTemplate[] = [
     palette: { bg: "#0B0B0B", surface: "#141414", text: "#EFE9DF", soft: "#9B9285", border: "#2A261F", accent: "#CEA96A", onAccent: "#0B0B0B" },
   },
   {
-    id: "studio", name: "Studio", hint: "Swiss grid, gallery first", categories: ["beauty", "health", "services"], source: "bookwan",
-    hero: "split", headingFont: "'Space Grotesk', sans-serif", bodyFont: "'Inter', sans-serif", radius: "square",
-    palette: { bg: "#FFFFFF", surface: "#F4F4F2", text: "#111111", soft: "#6B6B6B", border: "#E4E4E0", accent: "#1F4BFF", onAccent: "#FFFFFF" },
-  },
-  {
     id: "playful", name: "Playful", hint: "Bold colour blocks, social", categories: ["beauty", "services"], source: "bookwan",
     hero: "blocks", headingFont: "'Syne', sans-serif", bodyFont: "'DM Sans', sans-serif", radius: "rounded",
     palette: { bg: "#DCC6FF", surface: "#FFFFFF", text: "#2A0F52", soft: "#5B4285", border: "#C4A8F2", accent: "#3A1470", onAccent: "#F4ECFF" },
