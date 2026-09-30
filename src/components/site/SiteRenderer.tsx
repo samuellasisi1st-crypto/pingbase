@@ -129,9 +129,11 @@ export function SiteRenderer({ store, site, onBook, onProduct, preview }: Props)
                         <span className="flex items-center gap-1"><Clock3 className="size-3.5" />{s.duration_minutes} min</span>
                         {s.location_type === "online" && <span className="flex items-center gap-1"><Video className="size-3.5" />Phone or video call</span>}
                       </p>
-                      <div className="mt-auto grid grid-cols-1 gap-2 pt-2 @md:grid-cols-2">
-                        {s.online_booking && <button type="button" onClick={() => onBook?.(s)} className={`inline-flex h-10 items-center justify-center gap-1.5 font-medium ${caps}`} style={{ background: accent, color: onAccent, borderRadius: r }}><CalendarDays className="size-4" />{s.location_type === "online" ? "Book a call" : "Pick a time"}</button>}
-                        {wa && <a href={wa} target="_blank" rel="noreferrer" className={`inline-flex h-10 items-center justify-center gap-1.5 ${caps} ${s.online_booking ? "" : "@md:col-span-2"}`} style={{ border: `1px solid ${p.border}`, borderRadius: r }}><MessageCircle className="size-4" />{store.whatsapp ? "Book via WhatsApp" : "Call to book"}</a>}
+                      {/* One action per service; the floating chat button covers WhatsApp. */}
+                      <div className="mt-auto pt-2">
+                        {s.online_booking
+                          ? <button type="button" onClick={() => onBook?.(s)} className={`inline-flex h-10 w-full items-center justify-center gap-1.5 font-medium ${caps}`} style={{ background: accent, color: onAccent, borderRadius: r }}><CalendarDays className="size-4" />{s.location_type === "online" ? "Book a call" : "Pick a time"}</button>
+                          : wa && <a href={wa} target="_blank" rel="noreferrer" className={`inline-flex h-10 w-full items-center justify-center gap-1.5 ${caps}`} style={{ border: `1px solid ${p.border}`, borderRadius: r }}><MessageCircle className="size-4" />{store.whatsapp ? "Enquire" : "Call us"}</a>}
                       </div>
                     </div>
                   </article>

@@ -377,17 +377,16 @@ export function buildTools(ctx: Ctx) {
 
     create_booking: tool({
       description:
-        "Create an appointment. Only call with a slot returned by find_available_slots. payment_method: 'IN_STORE' confirms the booking immediately and the customer pays at the salon; 'ONLINE' is not available yet. Returns the booking.",
+        "Create an appointment. Only call with a slot returned by find_available_slots. Everyone pays in person on the day, so booking never depends on payment. Returns the booking.",
       inputSchema: z.object({
         service_id: z.string(),
         staff_id: z.string(),
         starts_at: z.string(),
         notes: z.string().nullable(),
+        // Kept for compatibility: every booking is confirmed as pay-on-the-day.
         payment_method: z.enum(["IN_STORE", "ONLINE"]).default("IN_STORE"),
       }),
       execute: wrap(ctx, "create_booking", async (args) => {
-        if (args.payment_method === "ONLINE")
-          return { ok: false, error: "ONLINE_PAYMENT_UNAVAILABLE", message: "Online payment isn't available yet. Offer pay in store instead." };
         const { data: service } = await db.from("services").select("*").eq("id", args.service_id).maybeSingle();
         if (!service) return { ok: false, error: "Service not found" };
         const start = new Date(args.starts_at);
@@ -414,7 +413,7 @@ export function buildTools(ctx: Ctx) {
             price_pence: service.price_pence,
             deposit_pence: service.deposit_pence,
             deposit_status: service.deposit_pence > 0 ? "PAY_IN_STORE" : "NOT_REQUIRED",
-            notes: [args.notes, "Payment: in store"].filter(Boolean).join(" · "),
+            notes: [args.notes, "Payment: in person on the day"].filter(Boolean).join(" · "),
           })
           .select("*, service:service_id(name), staff:staff_id(name)")
           .single();
@@ -1009,10 +1008,11 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     "- Offer at most 3 options at a time and keep replies short, like a real person messaging.",
     "- Remember what the customer already told you. Never re-ask for information you already have.",
     "- Ask only for information you genuinely still need (name is required before booking).",
-    "- Payment: before booking, tell the customer the price and ask how they'd like to pay — cash/in person at the salon on the day, or online. If they choose cash/in person, confirm the booking immediately by calling create_booking with payment_method 'IN_STORE'. If they choose online/card, explain online payment isn't available yet and offer to complete the booking with pay in person instead; if they agree, book it as IN_STORE. Do not use send_payment_link.",
-    "- Booking checklist: service, stylist (or any), a slot from find_available_slots, customer name, and ask once for email. Then create_booking, then send_calendar_invite, then send a short confirmation with service, stylist, date/time, price payable in store, and that they can message here to reschedule or cancel.",
-    "- Paying in store / cash / on the day is fully accepted and is NEVER a reason to escalate. Never hand over to a person because of payment, deposits, or online payment being unavailable — just complete the booking as IN_STORE. If the customer says they want to 'pay', offer pay in store and book it.",
-    "- If the customer already has a PENDING appointment for the same request and chooses pay in store, don't create a duplicate: cancel the old pending one with cancel_booking and create the new booking as IN_STORE, or reschedule it.",
+    "- Payment: there is only one way to pay — in person on the day of the appointment (card or cash at the salon). Never ask the customer how they want to pay, never offer online payment, deposits up front or payment links, and never make the booking wait on payment. Just state the price and that it's payable on the day, then book.",
+    "- If a customer asks to pay now, online, by card, by link or by bank transfer, say warmly that payment is taken in person on the day, and carry straight on with confirming the booking. This is never a blocker and never a reason to escalate or hand over to a person. Never call send_payment_link.",
+    "- Booking checklist: service, stylist (or any), a slot from find_available_slots, customer name, and ask once for email. Then create_booking, then send_calendar_invite, then send a short confirmation with service, stylist, date/time, price payable on the day, and that they can message here to reschedule or cancel.",
+    "- If the customer already has a PENDING appointment for the same request, don't create a duplicate: cancel the old pending one with cancel_booking and create the new booking, or reschedule it.",
+    "- If the customer names a service we don't offer under that exact name (e.g. 'cut and finish', 'trim', 'blow dry'), do NOT escalate. Suggest the closest one or two real services from the list by name and price and ask which they'd like, or offer a consultation. Only escalate if nothing on the list could possibly match.",
     "- Use escalate_to_human only for refunds, complaints, policy exceptions, explicit requests for a person, or repeated tool failures. After escalating, tell the customer a team member will pick it up, and stop.",
     "- You can see photos customers send. Use them naturally: e.g. recognise an inspiration hairstyle and suggest the matching service from the list, or read a screenshot. Only suggest services that exist in the list, never quote prices or durations from the photo, and don't make medical judgements — if a photo shows a skin/scalp concern, suggest a consultation or add an internal note for the stylist. If a photo is unclear, say so and ask.",
     "- A message starting with '🎤 Voice note:' is the transcript of a customer's voice note. Reply as if you listened to it; if a voice note couldn't be transcribed (just '[Customer sent a audio]'), politely ask them to type it.",

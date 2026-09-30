@@ -54,7 +54,8 @@ export const createStoreBooking = createServerFn({ method: "POST" })
     }
     await db.from("contacts").update({ last_interaction_at: new Date().toISOString() }).eq("id", contactId);
 
-    const pay = service.payment_mode === "in_store" ? "in store" : "in store (online payment coming soon)";
+    // Everyone pays in person on the day until online payments exist.
+    const pay = "in person on the day";
     const { data: appt, error } = await db.from("appointments").insert({
       workspace_id: ws.id, contact_id: contactId, service_id: service.id, staff_id: data.staffId,
       starts_at: start.toISOString(), ends_at: end.toISOString(), status: "CONFIRMED",
