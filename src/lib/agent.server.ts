@@ -377,17 +377,16 @@ export function buildTools(ctx: Ctx) {
 
     create_booking: tool({
       description:
-        "Create an appointment. Only call with a slot returned by find_available_slots. payment_method: 'IN_STORE' confirms the booking immediately and the customer pays at the salon; 'ONLINE' is not available yet. Returns the booking.",
+        "Create an appointment. Only call with a slot returned by find_available_slots. Everyone pays in person on the day, so booking never depends on payment. Returns the booking.",
       inputSchema: z.object({
         service_id: z.string(),
         staff_id: z.string(),
         starts_at: z.string(),
         notes: z.string().nullable(),
+        // Kept for compatibility: every booking is confirmed as pay-on-the-day.
         payment_method: z.enum(["IN_STORE", "ONLINE"]).default("IN_STORE"),
       }),
       execute: wrap(ctx, "create_booking", async (args) => {
-        if (args.payment_method === "ONLINE")
-          return { ok: false, error: "ONLINE_PAYMENT_UNAVAILABLE", message: "Online payment isn't available yet. Offer pay in store instead." };
         const { data: service } = await db.from("services").select("*").eq("id", args.service_id).maybeSingle();
         if (!service) return { ok: false, error: "Service not found" };
         const start = new Date(args.starts_at);
