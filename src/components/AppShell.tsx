@@ -7,6 +7,7 @@ import { joinWorkspace } from "@/lib/concierge.functions";
 import defaultLogo from "@/assets/workspace-logo.jpg.asset.json";
 import {
   Inbox, Users, CalendarDays, Bot, Search, Settings, ChevronDown, LogOut, PanelLeftClose, PanelLeftOpen, Zap, Scissors, LayoutDashboard, MoreHorizontal, X, Bell, CircleHelp,
+  Globe,
 } from "lucide-react";
 
 import { useAuth } from "@/hooks/useAuth";
