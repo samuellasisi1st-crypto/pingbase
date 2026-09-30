@@ -413,7 +413,7 @@ export function buildTools(ctx: Ctx) {
             price_pence: service.price_pence,
             deposit_pence: service.deposit_pence,
             deposit_status: service.deposit_pence > 0 ? "PAY_IN_STORE" : "NOT_REQUIRED",
-            notes: [args.notes, "Payment: in store"].filter(Boolean).join(" · "),
+            notes: [args.notes, "Payment: in person on the day"].filter(Boolean).join(" · "),
           })
           .select("*, service:service_id(name), staff:staff_id(name)")
           .single();
