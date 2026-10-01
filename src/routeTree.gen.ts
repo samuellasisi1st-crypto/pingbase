@@ -38,6 +38,7 @@ import { Route as AiAgentsAgentIdRouteImport } from './routes/ai-agents_.$agentI
 import { Route as PayPaymentIdRouteImport } from './routes/pay.$paymentId'
 import { Route as SSlugRouteImport } from './routes/s.$slug'
 import { Route as ServicesServiceIdRouteImport } from './routes/services_.$serviceId'
+import { Route as ApiPublicCronFollowupsRouteImport } from './routes/api/public/cron/followups'
 import { Route as ApiPublicWebhooksMetaRouteImport } from './routes/api/public/webhooks/meta'
 import { Route as ApiPublicOauthGoogleCallbackRouteImport } from './routes/api/public/oauth/google/callback'
 import { Route as ApiPublicOauthMetaCallbackRouteImport } from './routes/api/public/oauth/meta/callback'
@@ -187,6 +188,11 @@ const ServicesServiceIdRoute = ServicesServiceIdRouteImport.update({
   path: '/services/$serviceId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronFollowupsRoute = ApiPublicCronFollowupsRouteImport.update({
+  id: '/api/public/cron/followups',
+  path: '/api/public/cron/followups',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicWebhooksMetaRoute = ApiPublicWebhooksMetaRouteImport.update({
   id: '/api/public/webhooks/meta',
   path: '/api/public/webhooks/meta',
@@ -235,6 +241,7 @@ export interface FileRoutesByFullPath {
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/s/$slug': typeof SSlugRoute
   '/services/$serviceId': typeof ServicesServiceIdRoute
+  '/api/public/cron/followups': typeof ApiPublicCronFollowupsRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/oauth/google/callback': typeof ApiPublicOauthGoogleCallbackRoute
   '/api/public/oauth/meta/callback': typeof ApiPublicOauthMetaCallbackRoute
@@ -269,6 +276,7 @@ export interface FileRoutesByTo {
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/s/$slug': typeof SSlugRoute
   '/services/$serviceId': typeof ServicesServiceIdRoute
+  '/api/public/cron/followups': typeof ApiPublicCronFollowupsRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/oauth/google/callback': typeof ApiPublicOauthGoogleCallbackRoute
   '/api/public/oauth/meta/callback': typeof ApiPublicOauthMetaCallbackRoute
@@ -304,6 +312,7 @@ export interface FileRoutesById {
   '/pay/$paymentId': typeof PayPaymentIdRoute
   '/s/$slug': typeof SSlugRoute
   '/services_/$serviceId': typeof ServicesServiceIdRoute
+  '/api/public/cron/followups': typeof ApiPublicCronFollowupsRoute
   '/api/public/webhooks/meta': typeof ApiPublicWebhooksMetaRoute
   '/api/public/oauth/google/callback': typeof ApiPublicOauthGoogleCallbackRoute
   '/api/public/oauth/meta/callback': typeof ApiPublicOauthMetaCallbackRoute
@@ -340,6 +349,7 @@ export interface FileRouteTypes {
     | '/pay/$paymentId'
     | '/s/$slug'
     | '/services/$serviceId'
+    | '/api/public/cron/followups'
     | '/api/public/webhooks/meta'
     | '/api/public/oauth/google/callback'
     | '/api/public/oauth/meta/callback'
@@ -374,6 +384,7 @@ export interface FileRouteTypes {
     | '/pay/$paymentId'
     | '/s/$slug'
     | '/services/$serviceId'
+    | '/api/public/cron/followups'
     | '/api/public/webhooks/meta'
     | '/api/public/oauth/google/callback'
     | '/api/public/oauth/meta/callback'
@@ -408,6 +419,7 @@ export interface FileRouteTypes {
     | '/pay/$paymentId'
     | '/s/$slug'
     | '/services_/$serviceId'
+    | '/api/public/cron/followups'
     | '/api/public/webhooks/meta'
     | '/api/public/oauth/google/callback'
     | '/api/public/oauth/meta/callback'
@@ -443,6 +455,7 @@ export interface RootRouteChildren {
   PayPaymentIdRoute: typeof PayPaymentIdRoute
   SSlugRoute: typeof SSlugRoute
   ServicesServiceIdRoute: typeof ServicesServiceIdRoute
+  ApiPublicCronFollowupsRoute: typeof ApiPublicCronFollowupsRoute
   ApiPublicWebhooksMetaRoute: typeof ApiPublicWebhooksMetaRoute
   ApiPublicOauthGoogleCallbackRoute: typeof ApiPublicOauthGoogleCallbackRoute
   ApiPublicOauthMetaCallbackRoute: typeof ApiPublicOauthMetaCallbackRoute
@@ -653,6 +666,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesServiceIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/followups': {
+      id: '/api/public/cron/followups'
+      path: '/api/public/cron/followups'
+      fullPath: '/api/public/cron/followups'
+      preLoaderRoute: typeof ApiPublicCronFollowupsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/webhooks/meta': {
       id: '/api/public/webhooks/meta'
       path: '/api/public/webhooks/meta'
@@ -707,6 +727,7 @@ const rootRouteChildren: RootRouteChildren = {
   PayPaymentIdRoute: PayPaymentIdRoute,
   SSlugRoute: SSlugRoute,
   ServicesServiceIdRoute: ServicesServiceIdRoute,
+  ApiPublicCronFollowupsRoute: ApiPublicCronFollowupsRoute,
   ApiPublicWebhooksMetaRoute: ApiPublicWebhooksMetaRoute,
   ApiPublicOauthGoogleCallbackRoute: ApiPublicOauthGoogleCallbackRoute,
   ApiPublicOauthMetaCallbackRoute: ApiPublicOauthMetaCallbackRoute,

@@ -19,3 +19,7 @@
 - [x] Bookwan-style service wizard, products, reservations and public store link
 - [x] Website templates: categories, template catalogue, section toggles, Website editor with phone preview, public site renders chosen template (Bookwan themes + Bold/Botanical/Clinic)
 - [x] Unify Website templates into one gallery and add Bookwan-style per-section editing
+- [x] Returning-client memory for Nia (usual service, preferred stylist, last visit)
+- [x] Follow-up engine: 24h/2h reminders with in-chat reschedule, abandoned-enquiry check-ins, 5-week rebooking nudges
+- [ ] Run follow-ups automatically every 15 min (blocked: scheduler permission on backend)
+- [ ] Cancellation slot filler (next)

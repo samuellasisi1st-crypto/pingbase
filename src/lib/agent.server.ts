@@ -991,6 +991,19 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     "",
     `Customer: ${contact?.full_name ?? "unknown name"}${contact?.email ? `, ${contact.email}` : ""}${contact?.phone ? `, ${contact.phone}` : ""}. Channel: ${ctx.channel}.`,
     `Their appointments: ${(appointments ?? []).length ? (appointments ?? []).map((a) => `${a.id} ${formatSalonDateTime(a.starts_at)} ${(a.service as unknown as { name: string })?.name} with ${(a.staff as unknown as { name: string })?.name} [${a.status}/${a.deposit_status}]`).join("; ") : "none"}`,
+    ...(() => {
+      const past = (appointments ?? []).filter((a) => ["CONFIRMED", "COMPLETED"].includes(a.status) && new Date(a.starts_at) < now);
+      if (!past.length) return ["Client profile: new client (no past visits)."];
+      const top = (key: "service" | "staff") => {
+        const counts = new Map<string, number>();
+        for (const a of past) { const n = (a[key] as unknown as { name: string } | null)?.name; if (n) counts.set(n, (counts.get(n) ?? 0) + 1); }
+        return [...counts.entries()].sort((x, y) => y[1] - x[1])[0]?.[0] ?? "unknown";
+      };
+      const last = past[past.length - 1]!;
+      const days = Math.floor((now.getTime() - new Date(last.starts_at).getTime()) / 86400000);
+      const dayName = new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: SALON_TZ }).format(new Date(last.starts_at));
+      return [`Client profile: RETURNING client, ${past.length} past visit(s). Usual service: ${top("service")}. Preferred stylist: ${top("staff")}. Last visit ${days} days ago (a ${dayName}).${contact?.notes ? ` Notes: ${String(contact.notes).slice(0, 200)}` : ""}`];
+    })(),
     `Conversation state: ${conversation?.state ?? "DISCOVERY"}.`,
     `Channels this same person uses: ${(linkedChannels ?? []).length ? (linkedChannels ?? []).map((c) => `${c.channel}${c.display_name ? ` (${c.display_name})` : ""}`).join(", ") : ctx.channel}.`,
     ...((otherChannelHistory ?? []).length
@@ -1007,6 +1020,9 @@ export async function runAgent(ctx: Ctx): Promise<string> {
     "- Never say an appointment is booked, moved, cancelled or paid unless the matching tool returned success.",
     "- Offer at most 3 options at a time and keep replies short, like a real person messaging.",
     "- Remember what the customer already told you. Never re-ask for information you already have.",
+    "- For a RETURNING client, greet them by first name as a welcome back and offer their usual service with their preferred stylist (e.g. 'Welcome back Naomi! Wash + Style with Maya again?'), checking availability around their usual day. Skip discovery questions you can answer from the profile; let them change anything.",
+    "- If they reply YES/confirm to an appointment reminder, thank them briefly — no tools needed. If they say they can't make it, offer to reschedule with find_available_slots and reschedule_booking, or cancel_booking if they prefer; never make them call the business.",
+    "- If they reply to a 'still want one of those times?' check-in, re-run find_available_slots before offering times again — earlier slots may be gone.",
     "- Ask only for information you genuinely still need (name is required before booking).",
     "- Payment: there is only one way to pay — in person on the day of the appointment (card or cash at the salon). Never ask the customer how they want to pay, never offer online payment, deposits up front or payment links, and never make the booking wait on payment. Just state the price and that it's payable on the day, then book.",
     "- If a customer asks to pay now, online, by card, by link or by bank transfer, say warmly that payment is taken in person on the day, and carry straight on with confirming the booking. This is never a blocker and never a reason to escalate or hand over to a person. Never call send_payment_link.",
