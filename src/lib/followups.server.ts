@@ -163,7 +163,56 @@ async function queueRebooking() {
   return rows.length;
 }
 
+/** A booking was just cancelled: offer the freed slot to up to 3 people who recently enquired but didn't book. */
+async function fillCancelledSlots() {
+  const now = Date.now();
+  const { data: cancelled } = await db()
+    .from("appointments")
+    .select("id,workspace_id,contact_id,starts_at,service:service_id(name),staff:staff_id(name)")
+    .eq("status", "CANCELLED")
+    .gte("updated_at", new Date(now - 2 * HOUR).toISOString())
+    .gte("starts_at", new Date(now + 3 * HOUR).toISOString())
+    .limit(20);
+  let sent = 0;
+  for (const a of cancelled ?? []) {
+    const { data: convs } = await db()
+      .from("conversations")
+      .select("id,contact_id,channel")
+      .eq("workspace_id", a.workspace_id)
+      .eq("handling_mode", "AI")
+      .neq("contact_id", a.contact_id)
+      .neq("channel", "test")
+      .gte("last_message_at", new Date(now - 7 * 24 * HOUR).toISOString())
+      .in("state", ["AWAITING_SLOT_SELECTION", "CHECKING_AVAILABILITY", "AWAITING_DETAILS", "DISCOVERY", "COLLECTING_REQUIREMENTS"])
+      .order("last_message_at", { ascending: false })
+      .limit(10);
+    let offered = 0;
+    for (const c of convs ?? []) {
+      if (offered >= 3) break;
+      const { count } = await db().from("appointments").select("id", { count: "exact", head: true })
+        .eq("contact_id", c.contact_id).gt("starts_at", new Date().toISOString()).in("status", ["CONFIRMED", "PENDING"]);
+      if (count) continue;
+      const { data: ins, error } = await db().from("automation_events").insert({
+        workspace_id: a.workspace_id, conversation_id: c.id, appointment_id: a.id, kind: "SLOT_OPENING", channel: c.channel,
+        scheduled_for: new Date().toISOString(), status: "SENDING", dedupe_key: `${a.id}:SLOT:${c.contact_id}`,
+      }).select("id").maybeSingle();
+      if (error || !ins) continue;
+      const svc = (a.service as unknown as { name: string } | null)?.name;
+      const who = (a.staff as unknown as { name: string } | null)?.name;
+      const text = `Good news, a spot just opened up: ${formatSalonDateTime(a.starts_at)}${who ? ` with ${who}` : ""}${svc ? ` (${svc} slot)` : ""}. Would you like it? Reply here and I'll check it's still free and book you in.`;
+      const r = await sendToConversation(c.id, text, "SLOT_OPENING");
+      await db().from("automation_events").update({ status: r.delivered ? "SENT" : "FAILED", sent_at: new Date().toISOString() }).eq("id", ins.id);
+      offered++;
+      if (r.delivered) sent++;
+    }
+  }
+  return sent;
+}
+
 export async function runFollowups() {
-  const [reminders, recovered, queued] = [await sendDueEvents(), await recoverAbandoned(), await queueRebooking()];
-  return { reminders, recovered, queued };
+  const reminders = await sendDueEvents();
+  const recovered = await recoverAbandoned();
+  const slotOffers = await fillCancelledSlots();
+  const queued = await queueRebooking();
+  return { reminders, recovered, slotOffers, queued };
 }
