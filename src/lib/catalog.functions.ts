@@ -174,8 +174,8 @@ export const getStoreSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const w = await myWorkspace(context);
-    const { data } = await context.supabase.from("workspaces").select("id,name,slug,store_enabled,store_tagline").eq("id", w).single();
-    return data as { id: string; name: string; slug: string; store_enabled: boolean; store_tagline: string | null };
+    const { data } = await context.supabase.from("workspaces").select("id,name,slug,store_enabled,store_tagline,external_website_url").eq("id", w).single();
+    return data as { id: string; name: string; slug: string; store_enabled: boolean; store_tagline: string | null; external_website_url: string | null };
   });
 
 export const updateStoreSettings = createServerFn({ method: "POST" })
@@ -184,13 +184,14 @@ export const updateStoreSettings = createServerFn({ method: "POST" })
     slug: z.string().trim().toLowerCase().regex(/^[a-z0-9](?:[a-z0-9-]{1,46}[a-z0-9])$/, "Use 3–48 lowercase letters, numbers or dashes."),
     tagline: z.string().trim().max(160).default(""),
     enabled: z.boolean(),
+    externalWebsite: z.string().trim().max(300).default("").refine((v) => v === "" || /^https?:\/\/\S+$/.test(v), "Use a full link starting with https://"),
   }).parse(d))
   .handler(async ({ data, context }) => {
     const w = await myWorkspace(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: taken } = await supabaseAdmin.from("workspaces").select("id").eq("slug", data.slug).neq("id", w).maybeSingle();
     if (taken) throw new Error("That link is already taken — try another.");
-    const { error } = await supabaseAdmin.from("workspaces").update({ slug: data.slug, store_tagline: data.tagline || null, store_enabled: data.enabled }).eq("id", w);
+    const { error } = await supabaseAdmin.from("workspaces").update({ slug: data.slug, store_tagline: data.tagline || null, store_enabled: data.enabled, external_website_url: data.externalWebsite || null }).eq("id", w);
     if (error) throw error;
     return { ok: true };
   });
