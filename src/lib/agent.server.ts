@@ -958,7 +958,7 @@ export async function runAgent(ctx: Ctx): Promise<string> {
 
   const [{ data: products }, { data: wsRow }] = await Promise.all([
     db.from("products").select("name,price_pence,fulfilment,stock").eq("workspace_id", ctx.workspaceId).eq("active", true).limit(60),
-    db.from("workspaces").select("slug,store_enabled").eq("id", ctx.workspaceId).maybeSingle(),
+    db.from("workspaces").select("slug,store_enabled,external_website_url").eq("id", ctx.workspaceId).maybeSingle(),
   ]);
   const storeSlug = wsRow?.store_enabled ? wsRow.slug : null;
   const now = new Date();
@@ -985,7 +985,7 @@ export async function runAgent(ctx: Ctx): Promise<string> {
       ];
     }),
     ...((products ?? []).length ? ["Products (not bookable; customers reserve and pay in store, or enquire; share the store link):", ...(products ?? []).map((p) => `- ${p.name} | ${money(p.price_pence)} | ${p.fulfilment === "reserve" ? (p.stock === 0 ? "out of stock" : "reserve & pay in store") : "enquiry"}`)] : []),
-    ...(storeSlug ? [`Public store link: ${process.env["PUBLIC_APP_URL"] ?? "https://pingbase.lovable.app"}/s/${storeSlug}`] : []),
+    ...((wsRow?.external_website_url || storeSlug) ? [`Website links (share these whenever a customer asks for the website, or wants to browse or book online):`, ...(wsRow?.external_website_url ? [`- Their own website: ${wsRow.external_website_url}`] : []), ...(storeSlug ? [`- Online booking page (customers can pick their own time here): ${process.env["PUBLIC_APP_URL"] ?? "https://pingbase.lovable.app"}/s/${storeSlug}`] : [])] : []),
     "Team:",
     ...(staff ?? []).map((s) => `- ${s.id} | ${s.name} (${s.role_title ?? ""})`),
     "",
