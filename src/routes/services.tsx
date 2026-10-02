@@ -130,16 +130,17 @@ function RequestsTab() {
     </div>))}</div>;
 }
 
-function StoreTab({ settings, url }: { settings: { slug: string; store_enabled: boolean; store_tagline: string | null }; url: string }) {
+function StoreTab({ settings, url }: { settings: { slug: string; store_enabled: boolean; store_tagline: string | null; external_website_url: string | null }; url: string }) {
   const qc = useQueryClient();
   const update = useServerFn(updateStoreSettings);
   const [slug, setSlug] = useState(settings.slug);
   const [tagline, setTagline] = useState(settings.store_tagline ?? "");
   const [enabled, setEnabled] = useState(settings.store_enabled);
+  const [site, setSite] = useState(settings.external_website_url ?? "");
   const [busy, setBusy] = useState(false);
   const save = async () => {
     setBusy(true);
-    try { await update({ data: { slug, tagline, enabled } }); await qc.invalidateQueries({ queryKey: ["store-settings"] }); toast.success("Store updated"); }
+    try { await update({ data: { slug, tagline, enabled, externalWebsite: site.trim() } }); await qc.invalidateQueries({ queryKey: ["store-settings"] }); toast.success("Store updated"); }
     catch (e) { const m = e instanceof Error ? e.message : ""; toast.error(m.includes("[") ? "Use 3–48 lowercase letters, numbers or dashes for the link." : m || "Couldn't save."); } finally { setBusy(false); }
   };
   const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -149,6 +150,7 @@ function StoreTab({ settings, url }: { settings: { slug: string; store_enabled: 
       <Button size="sm" variant="secondary" onClick={() => { void navigator.clipboard.writeText(url); toast.success("Link copied"); }}><Copy className="size-3.5" />Copy</Button></div>
     <label className="grid gap-1.5 text-[11px] text-secondary"><span>Link name</span><div className="flex items-center rounded-md border border-border bg-panel pl-2.5 text-[13px] text-tertiary"><span className="shrink-0">{origin}/s/</span><input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))} className="h-9 min-w-0 flex-1 bg-transparent pr-2.5 text-foreground focus:outline-none" /></div></label>
     <label className="grid gap-1.5 text-[11px] text-secondary"><span>Tagline</span><Input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="e.g. Natural hair specialists in Shoreditch" /></label>
+    <label className="grid gap-1.5 text-[11px] text-secondary"><span>Your own website (optional)</span><Input value={site} onChange={(e) => setSite(e.target.value)} placeholder="https://your-domain.com" /><span className="text-[11px] text-tertiary">If you already have a website, your assistant will share it when customers ask.</span></label>
     <div className="flex items-center justify-between rounded-lg border border-border bg-panel-subtle p-3"><div><p className="text-[12px] text-foreground">Store is live</p><p className="text-[11px] text-tertiary">Turn off to hide the page from everyone.</p></div><Switch label="Store is live" checked={enabled} onCheckedChange={setEnabled} /></div>
     <Button size="sm" disabled={busy} onClick={() => void save()}><Check className="size-3.5" />{busy ? "Saving…" : "Save store"}</Button>
   </div>;
